@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Harbor Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 1526,
+      "bodyTextHash": "e6dc0502885127f3dc98f5456956b749f80f31e91254dfa2ff272b56bc13cee5",
+      "bodyTextPrefix": "DÓNDE ESTÁS PRÓLOGO Prólogo CAPÍTULO I Historia de dos hermanos ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Harbor Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 763,
+      "bodyTextHash": "f6368ff3d7ed5322fccf76ce701a6b30d52cb6e4200a3f28c8aac355efbde8fb",
+      "bodyTextPrefix": "DÓNDE ESTÁS Prólogo I II III IV V Harbor Buddy Anno 1800 · basta",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

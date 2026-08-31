@@ -1,0 +1,1661 @@
+//#region node_modules/.nitro/vite/services/ssr/assets/play-CGDHSrxw.js
+var buildingsById = Object.fromEntries([
+	{
+		id: "lumberjack",
+		name: "Cabaña de leñador",
+		unlock: "Desde el arranque",
+		where: "En un bosque, afuera de los 10×10 de casas. Precisa árboles en pie dentro del círculo.",
+		buddy: "Este es el edificio número uno. Tiralo en los árboles, calle al aserradero. Si se seca la madera, pausá todo lo demás y plantá otra cabaña. Las ciudades lindas se arman con tablones.",
+		trap: "No tires todo el bosque para hacer casas. Dejá un lote de madera."
+	},
+	{
+		id: "sawmill",
+		name: "Aserradero",
+		unlock: "Desde el arranque",
+		where: "Al lado del leñador o en la calle hacia el almacén.",
+		buddy: "Convierte troncos en tablones. Uno al lado de tu primera cabaña alcanza para el pueblo de arranque. Armá otro cuando construir se sienta trabado.",
+		trap: "Un aserradero sin calle al almacén se queda ahí, como si laburara."
+	},
+	{
+		id: "marketplace",
+		name: "Mercado",
+		unlock: "Desde el arranque",
+		where: "Cerca de las primeras casas y del puerto. Uno cubre un área enorme.",
+		buddy: "Ponelo una vez, cerca de donde ya vive gente. No guardes un ‘centro perfecto’ para después. El alcance es enorme — no vas a precisar un segundo hasta que la ciudad sea posta grande.",
+		trap: "Las casas tienen que estar en una calle que llegue caminando. Un 10×10 aislado no hace nada."
+	},
+	{
+		id: "farmer-house",
+		name: "Residencia de granjeros",
+		unlock: "Desde el arranque",
+		where: "Adentro de los 10×10. 3×3. Dejá un casillero de jardín entre casas.",
+		buddy: "Plantá, no te armes un plano. Diez casas ya es un pueblo. Seguí el mismo patrón así después tirás una taberna o una escuela en un hueco, sin desarmar la ciudad.",
+		trap: "Una tira larga de casas parece eficiente y se siente fea. El 10×10 ya mete gente de sobra."
+	},
+	{
+		id: "fishery",
+		name: "Pescadería",
+		unlock: "50 granjeros",
+		where: "En la costa, calle a un almacén. Dejá libre la boca del puerto.",
+		buddy: "Una pescadería alimenta el primer pueblo. No estás armando una conservera. Volvé a la orilla recién cuando la barra de pescado se ponga hambrienta.",
+		trap: "Taparte el puesto comercial con una tira de pescaderías. Dejale aire al muelle."
+	},
+	{
+		id: "sheep",
+		name: "Granja de ovejas",
+		unlock: "100 granjeros",
+		where: "Pasto abierto, afuera de la ciudad. Pintá módulos alrededor.",
+		buddy: "Lana para ropa de trabajo y, más adelante, velas. Ponéla en terreno plano, no en un 10×10. Los módulos son la granja — el edificio es apenas la puerta.",
+		trap: "Meter campos adentro de los bloques de casas. Las granjas quieren espacio; las casas quieren calles."
+	},
+	{
+		id: "knitters",
+		name: "Telares",
+		unlock: "100 granjeros",
+		where: "Borde de la ciudad, en una calle, cerca de un almacén. Los granjeros laburan acá.",
+		buddy: "Una granja de ovejas a unos telares cubre la ropa por un rato largo. Así dejan de quejarse los granjeros a los 100. Todavía no precisás un obrero.",
+		trap: "Subir casas a obreros antes de que fluya la ropa. Van a querer las mismas camisas, y más cosas encima."
+	},
+	{
+		id: "potato",
+		name: "Granja de papas",
+		unlock: "100 granjeros (Schnapps)",
+		where: "En fertilidad de papa, afuera de la ciudad. Módulos alrededor de la granja.",
+		buddy: "Las papas existen para volverse Schnapps. Buscá el ícono de papa en la isla, plantá, pintá campos, calle a casa. Si la isla no tiene papa, saltealo — segunda isla, o comprá la bebida un tiempo.",
+		trap: "Armar la destilería primero, sin papas en el almacén. El edificio se duerme."
+	},
+	{
+		id: "distillery",
+		name: "Destilería de Schnapps",
+		unlock: "100 granjeros",
+		where: "Borde de la ciudad o al lado de la calle de las papas. La laburan granjeros.",
+		buddy: "Lujo, no supervivencia. Los granjeros se ponen más contentos y pagan un toque más. Una granja más una destilería es toda la receta de arranque. La campaña te va a pedir que sostengas el surtido un minuto — este es ese edificio.",
+		trap: "Llenar la ciudad de destilerías. Huelen, y todavía no precisás tantas."
+	},
+	{
+		id: "pub",
+		name: "Taberna",
+		unlock: "150 granjeros",
+		where: "Adentro de un 10×10, reemplazando una casa. Cobertura enorme.",
+		buddy: "Esta es toda la idea: la taberna vive en un bloque, no en una fortaleza de servicios. Una taberna, más o menos al medio de tus 10×10. La gente camina. Podés ponerle un árbol al lado y sentirte orgulloso.",
+		trap: "Una plaza con todos los edificios públicos apilados. Feo, y cubrís de más las mismas veinte casas."
+	},
+	{
+		id: "worker-house",
+		name: "Residencia de obreros",
+		unlock: "Cuando la historia te deja mejorar",
+		where: "Mejorá algunas casas de granjeros en los 10×10 que ya tenés. Dejá bloques de granjeros para las granjas.",
+		buddy: "Subí un puñado, no la calle. Los granjeros siguen laburando papas, ovejas, madera, pescado. Los obreros, las fábricas. Si subís a todos, los campos se quedan mudos y el pueblo se muere de hambre en casas de ladrillo lindas.",
+		trap: "La picazón de ‘mejorar todo’. Dejá un barrio de granjeros a propósito."
+	},
+	{
+		id: "sausage",
+		name: "Granja de cerdos + Matadero",
+		unlock: "Los obreros piden salchichas",
+		where: "Cerdos en campo abierto. Matadero en el borde de la ciudad (obreros).",
+		buddy: "La misma lógica de granja que las ovejas. Cerdos afuera, procesamiento en el borde. Armá esto cuando los obreros lo pidan de verdad, no porque una guía dijo que prearmes todo el árbol.",
+		trap: "Prearmar todas las cadenas de obreros antes de tener obreros que las laburen."
+	},
+	{
+		id: "bread",
+		name: "Granja de trigo, molino, panadería",
+		unlock: "Los obreros piden pan",
+		where: "Trigo en fertilidad de trigo. Molino y panadería en el borde, con obreros.",
+		buddy: "Tres edificios, una calle. Campo de trigo allá lejos, molino y después panadería caminando hacia el almacén. Cuando el pan esté amarillo, sumá una segunda granja, no una segunda filosofía.",
+		trap: "Panadería sin molino, o molino sin trigo. Siempre caminá la cadena para atrás, desde la casa."
+	},
+	{
+		id: "soap",
+		name: "Fábrica de jabón",
+		unlock: "Los obreros piden jabón",
+		where: "Borde de la ciudad. Usa sebo de la cadena de cerdos.",
+		buddy: "Se cuelga de las salchichas. Si ya hay cerdos, el jabón es un edificio más, no una isla nueva. Si no hay, primero los cerdos.",
+		trap: "Una fábrica de jabón solita, sin sebo entrando."
+	},
+	{
+		id: "school",
+		name: "Escuela",
+		unlock: "Obreros, después artesanos",
+		where: "Un 10×10, reemplazando una casa. El alcance es enorme.",
+		buddy: "Precisás muy pocas escuelas. Poné una al medio de tus 10×10. Los bordes pueden esperar. Es lo contrario de las guías de diamante con una escuela en cada patio.",
+		trap: "Cuatro escuelas superpuestas. Eso es ajedrez. Una es un pueblo."
+	},
+	{
+		id: "church",
+		name: "Iglesia",
+		unlock: "Lujo de obreros, cuando ya se asientan",
+		where: "Un 10×10. Opcional para sobrevivir, linda para el ánimo y la plata.",
+		buddy: "Lujo, como la taberna. Si la gente está inquieta, tirás una. Si están bien, seguí armando la historia.",
+		trap: "Frenar la campaña para adornar cada bloque."
+	},
+	{
+		id: "warehouse",
+		name: "Almacén / Puesto comercial",
+		unlock: "Desde el arranque (almacén chico más adelante)",
+		where: "El puerto viene gratis. Almacenes extra donde granjas o minas quedan lejos.",
+		buddy: "Si una granja está lejos, tirás un almacén chico en su calle. Los bienes se mueven solo si el depósito los alcanza. Esa es la razón silenciosa de que una cadena ‘no anda’.",
+		trap: "Asumir que el puesto comercial cubre toda la isla. No cubre."
+	},
+	{
+		id: "iron-mine",
+		name: "Mina de hierro",
+		unlock: "Capítulo 2, en un yacimiento de hierro",
+		where: "En el yacimiento de la montaña. La montaña elige el lugar, no vos.",
+		buddy: "Tocá el hierro. Armá la mina ahí. Y llevá el resto de la calle de acero a esa calle. La geología no se muda.",
+		trap: "Planear un barrio de acero en la otra orilla y preguntarte por qué nunca llega el mineral."
+	},
+	{
+		id: "charcoal",
+		name: "Carbonera",
+		unlock: "Con la historia del acero",
+		where: "Al lado de un bosque que puedas ceder. Después podés pasar a carbón si encontrás.",
+		buddy: "Se come los árboles. Está bien. Ponéla lejos de los bloques lindos. Una carbonera alimenta la fundición de arranque.",
+		trap: "Matar el último bosque que precisan tus leñadores. Dejá un lote de madera y un lote de carbón."
+	},
+	{
+		id: "furnace",
+		name: "Fundición",
+		unlock: "Cadena de acero del capítulo 2",
+		where: "En la calle industrial, junto a la mina. Obreros.",
+		buddy: "Mineral más carbón entra, vigas de acero después por la acería. Ponéla, conectá, andáte. La campaña solo te pide tener los edificios, no exprimir el rendimiento.",
+		trap: "Esperar un plano industrial ‘perfecto’. Una calle derecha ya es un plano."
+	},
+	{
+		id: "steelworks",
+		name: "Acería",
+		unlock: "Capítulo 2",
+		where: "Al lado de la fundición, misma calle.",
+		buddy: "Fundición y después acería, como dos negocios en un mismo callejón. Almacén cerca. Eso es todo el pueblo de acero para la historia.",
+		trap: "Separarlos a través de la isla ‘para los trenes de después’. Reacomodás si alguna vez aparecen trenes. En este capítulo no aparecen."
+	},
+	{
+		id: "weapons",
+		name: "Fábrica de armas",
+		unlock: "Justo después del acero, capítulo 2",
+		where: "En la calle del acero. Precisa acero.",
+		buddy: "La historia quiere una. Armá una. Hoy no estás armando una guerra mundial. Guardá unas armas y volvé a la isla.",
+		trap: "Cinco fábricas porque se viene combate. Una, después barcos, y más adelante sumás."
+	},
+	{
+		id: "sails",
+		name: "Fábrica de velas",
+		unlock: "Cuando la historia pide velas, o cuando arrancás un astillero",
+		where: "Borde de la ciudad. Lana entra, velas salen. Obreros.",
+		buddy: "Las mismas ovejas que hicieron ropa pueden alimentar velas. Si la lana está justa, sumá una granja de ovejas, no un ataque de pánico. El número de la campaña es chico — cuatro toneladas es un cajón, no una industria.",
+		trap: "Una isla nueva de ovejas para cuatro velas. Usá la granja que ya tenés."
+	},
+	{
+		id: "jornalero",
+		name: "Residencia de jornaleros",
+		unlock: "Nuevo Mundo, capítulo 3",
+		where: "El mismo 10×10 que los granjeros. Primero el mercado.",
+		buddy: "Isla nueva, misma gramática. Mercado, casas, calle, y después su comida. No te traigas el estrés del Viejo Mundo. Alojá el número que pide la misión, y pará.",
+		trap: "Armar un pueblo de acero del Viejo Mundo en la selva porque te agarró ganas de construir."
+	},
+	{
+		id: "plantain",
+		name: "Plantación de plátanos + Cocina",
+		unlock: "Comida del Nuevo Mundo",
+		where: "Campos de fertilidad, afuera de los 10×10.",
+		buddy: "Esto es pescado-y-ropa, edición tropical. Granja afuera, cocina en el borde. Una cadena, y después escuchá las casas.",
+		trap: "Copiar un plano gigante del Nuevo Mundo de un video. Precisás 50, después 300 personas — no una capital."
+	},
+	{
+		id: "police",
+		name: "Comisaría",
+		unlock: "Historia del capítulo 3",
+		where: "En un 10×10 de La Isla. Cobertura, no una fortaleza.",
+		buddy: "La historia pide una por los incendios. Armála, conectála, dejá que labure. A los saboteadores los cazás después de que el edificio esté puesto.",
+		trap: "Ignorar los fuegos para perfeccionar la calle. Poné la comisaría, y recién ahí mirá alrededor."
+	},
+	{
+		id: "hospital",
+		name: "Hospital",
+		unlock: "Cuando entran los obreros, capítulo 3",
+		where: "Un 10×10. Alcance grande.",
+		buddy: "Igual que la escuela. Un hospital, buena calle, listo. La misión quiere el edificio más que una simulación de salud.",
+		trap: "Un distrito de hospitales. Ponelo en un bloque y andá a rescatar a la gente que señala la historia."
+	},
+	{
+		id: "obrero",
+		name: "Residencia de obreros",
+		unlock: "Mejorá jornaleros, capítulo 3",
+		where: "Mejorá algunos, no todos. Dejá jornaleros para las granjas.",
+		buddy: "La misma regla que los obreros del Viejo Mundo. Los campos siguen precisando jornaleros. Subí los suficientes para el número de refugio, y dejá un barrio de granja.",
+		trap: "Subir toda la isla, y mirar cómo se congelan las plantaciones."
+	},
+	{
+		id: "defenses",
+		name: "Cañones montados, torres de cañón, grúa de reparación",
+		unlock: "Capítulo 4, en Ditch Water",
+		where: "Donde dice el marcador de la misión. Defensa de puerto, no adorno de ciudad.",
+		buddy: "Esto no es un acertijo de plano. Armá las defensas contadas en la isla que nombra. Y respirá. Ahora la historia está haciendo el laburo pesado.",
+		trap: "Rediseñar la capital en vez de poner dos cañones donde señala el mapa."
+	}
+].map((building) => [building.id, building]));
+var chapters = [
+	{
+		id: "prologue",
+		roman: "0",
+		title: "Prólogo",
+		subtitle: "Un mandado tropical",
+		missionIds: ["pro-blast"]
+	},
+	{
+		id: "ch1",
+		roman: "I",
+		title: "Historia de dos hermanos",
+		subtitle: "Fundá la primera ciudad",
+		missionIds: [
+			"ch1-spark",
+			"ch1-apple",
+			"ch1-loyalty",
+			"ch1-ditchwater",
+			"ch1-earth",
+			"ch1-toast",
+			"ch1-family",
+			"ch1-blacksheep",
+			"ch1-polish",
+			"ch1-pleas",
+			"ch1-hardtimes",
+			"ch1-press",
+			"ch1-debt",
+			"ch1-raise",
+			"ch1-ashes",
+			"ch1-heroes",
+			"ch1-lackey",
+			"ch1-scapegoats",
+			"ch1-business",
+			"ch1-photograph"
+		]
+	},
+	{
+		id: "ch2",
+		roman: "II",
+		title: "Una señal de fuego",
+		subtitle: "Acero, y después el mar",
+		missionIds: [
+			"ch2-bulk",
+			"ch2-iron",
+			"ch2-mountains",
+			"ch2-expert",
+			"ch2-industrial",
+			"ch2-warfare",
+			"ch2-smuggler",
+			"ch2-pyrphorians",
+			"ch2-newworld"
+		]
+	},
+	{
+		id: "ch3",
+		roman: "III",
+		title: "Prosperidad",
+		subtitle: "Una segunda casa del otro lado del océano",
+		missionIds: [
+			"ch3-hand",
+			"ch3-rebels",
+			"ch3-rescue",
+			"ch3-bastion",
+			"ch3-heat",
+			"ch3-lookout",
+			"ch3-wolves",
+			"ch3-release",
+			"ch3-defense",
+			"ch3-refugees",
+			"ch3-evac",
+			"ch3-wildfire",
+			"ch3-ransom",
+			"ch3-lead"
+		]
+	},
+	{
+		id: "ch4",
+		roman: "IV",
+		title: "La antorcha cambia de manos",
+		subtitle: "Defendé el puerto",
+		missionIds: [
+			"ch4-confrontation",
+			"ch4-justitia",
+			"ch4-come",
+			"ch4-noblesse",
+			"ch4-prosecution",
+			"ch4-battle",
+			"ch4-flame"
+		]
+	},
+	{
+		id: "end",
+		roman: "V",
+		title: "Un sueño propio",
+		subtitle: "Ingenieros en Bright Sands",
+		missionIds: ["end-dream"]
+	}
+];
+var missions = [
+	{
+		id: "pro-blast",
+		chapterId: "prologue",
+		title: "A lo grande",
+		kind: "errand",
+		objective: "Buscá la dinamita, aturdí tres cardúmenes y entregá el pescado chamuscado.",
+		why: "Un tutorial chiquito antes del pueblo de verdad. Seguí los marcadores. Nada de lo que armes acá importa después.",
+		do: [
+			"Andá al faro y levantá la dinamita.",
+			"Tirá a tres cardúmenes que se mueven — adelantá un toque el tiro.",
+			"Llevá el pescado a la oficina del vapor."
+		],
+		dont: "No empieces a planear una ciudad del Viejo Mundo desde esta playa.",
+		trap: "Errarle a los cardúmenes que se mueven. Esperá, tirá adelante, agarrá la carga.",
+		overwhelmed: "Seguí el marcador amarillo. Tres tiros, una entrega, y se abre el capítulo 1.",
+		buildingIds: [],
+		suggestedAsks: ["¿Puedo saltearme el prólogo?", "¿Y ahora qué hago?"]
+	},
+	{
+		id: "ch1-spark",
+		chapterId: "ch1",
+		title: "Una chispa que vuelve",
+		kind: "build",
+		objective: "Construí 1 mercado, 10 casas de granjeros y atraé 50 granjeros.",
+		why: "Este es el juego entero, en chiquito. Madera, un mercado, unos 10×10. Si esto te cierra, llegás al final de la historia.",
+		do: [
+			"Leñador en los árboles, aserradero al lado, los dos con calle al puesto comercial.",
+			"Mercado cerca del puerto — no en un centro imaginario.",
+			"Plantá 10 casas de granjeros en bloques 10×10 (casas 3×3, un casillero de hueco, calle alrededor)."
+		],
+		dont: "No te armes la capital soñada. Diez casas. Y pará, que se muden.",
+		trap: "Casa sin calle al mercado queda vacía. Tocá una: si está gris, se cortó la calle.",
+		overwhelmed: "Madera, un mercado, diez casas con calle. Esa es toda la misión.",
+		buildingIds: [
+			"lumberjack",
+			"sawmill",
+			"marketplace",
+			"farmer-house",
+			"warehouse"
+		],
+		layoutId: "first-city",
+		suggestedAsks: [
+			"¿Dónde pongo el mercado?",
+			"Mostrame el 10×10 de nuevo",
+			"No tengo tablones"
+		]
+	},
+	{
+		id: "ch1-apple",
+		chapterId: "ch1",
+		title: "La manzana no cae lejos del árbol",
+		kind: "errand",
+		objective: "Limpiá un distrito de residencias en ruinas.",
+		why: "La isla ya tiene escombros. Limpiarlos te da materiales y espacio. Tus 10×10 pueden esperar un toque.",
+		do: [
+			"Buscá el distrito en ruinas que marca la misión.",
+			"Usá la herramienta de demoler / limpiar ruinas, no el menú de construir lindo.",
+			"Guardate los materiales que sobren."
+		],
+		dont: "No reconstruyas la ruina como copia perfecta de una ciudad de un video.",
+		trap: "Tirar abajo tus casas nuevas sin querer. Acercá la cámara.",
+		overwhelmed: "Tocá las ruinas marcadas y limpialas. Después volvé a tus 10×10.",
+		buildingIds: ["farmer-house"],
+		suggestedAsks: ["¿Sigo agrandando mientras limpio ruinas?"]
+	},
+	{
+		id: "ch1-loyalty",
+		chapterId: "ch1",
+		title: "Lealtad pagada",
+		kind: "build",
+		objective: "Construí 1 pescadería y atraé 100 granjeros.",
+		why: "Cincuenta granjeros desbloquean el pescado. No estás rediseñando la ciudad — estás alimentando la que tenés, y después plantás unas casas más.",
+		do: [
+			"Poné una pescadería en costa libre, con calle al almacén.",
+			"Sumá un par de 10×10 más si te faltan granjeros para 100.",
+			"Dejá el leñador laburando. Diez casas extra se comen tablones."
+		],
+		dont: "No arranques con obreros, Schnapps ni una segunda isla todavía.",
+		trap: "Pescadería sin acceso al almacén. Si el pescado nunca aparece en el mercado, fijate la calle.",
+		overwhelmed: "Una pescadería en la costa, y unas casas más. Parás en 100.",
+		buildingIds: [
+			"fishery",
+			"farmer-house",
+			"marketplace"
+		],
+		layoutId: "fishery-coast",
+		suggestedAsks: [
+			"¿Cuántas pescaderías preciso?",
+			"Se me quedaron vacías las casas",
+			"¿Dónde va la pescadería?"
+		]
+	},
+	{
+		id: "ch1-ditchwater",
+		chapterId: "ch1",
+		title: "Aburrido como Ditch Water",
+		kind: "errand",
+		objective: "Limpiá el distrito del mercado abandonado.",
+		why: "Otra pasada de ruinas. Tu pueblo puede quedar quieto. Limpiar ahora te ahorra encajar 10×10 entre escombros después.",
+		do: [
+			"Andá a las ruinas marcadas.",
+			"Limpiá el distrito.",
+			"Dejá el terreno libre para 10×10 o granjas más adelante."
+		],
+		dont: "No tires un segundo mercado solo porque limpiaste una ruina con forma de mercado.",
+		trap: "Tu primer mercado ya cubre un montón. Confiá en el alcance.",
+		overwhelmed: "Limpiá las ruinas marcadas. El mercado que ya tenés está bien.",
+		buildingIds: ["marketplace"],
+		suggestedAsks: ["¿Pongo otro mercado?"]
+	},
+	{
+		id: "ch1-earth",
+		chapterId: "ch1",
+		title: "Sacar de la tierra",
+		kind: "errand",
+		objective: "Limpiá una ruina chica para conseguir tablones.",
+		why: "Madera gratis. Siempre agarrá la madera gratis.",
+		do: [
+			"Limpiá la ruina chica marcada.",
+			"Dejá que los tablones lleguen al almacén.",
+			"Si estabas trabado con las casas, seguí plantando."
+		],
+		dont: "No pauses la pescadería porque te regalaron tablones.",
+		trap: "Ninguna. Es un cajón de madera con toques de más.",
+		overwhelmed: "Limpiá la ruinita, llevate los tablones, volvé a las casas.",
+		buildingIds: ["lumberjack", "sawmill"],
+		suggestedAsks: ["Sigo sin madera suficiente"]
+	},
+	{
+		id: "ch1-toast",
+		chapterId: "ch1",
+		title: "Brindis al futuro",
+		kind: "build",
+		objective: "Atraé 150 granjeros, construí una taberna y mantené el Schnapps arriba del 70% durante un minuto.",
+		why: "Este es el primer momento de producción de verdad. Papas afuera, destilería en el borde, taberna adentro de un 10×10. Después esperás un minuto. Eso es un triunfo.",
+		do: [
+			"Granja de papas en fertilidad de papa, módulos alrededor, calle al almacén.",
+			"Una destilería de Schnapps en el borde de la ciudad.",
+			"Plantá casas hasta 150 granjeros, y después tirás una taberna en un 10×10 (reemplazá una casa)."
+		],
+		dont: "No subas a nadie a obrero. Los granjeros bancan toda esta receta.",
+		trap: "Arrancar el minuto antes de que el Schnapps llegue de verdad a las casas. Mirá la barra verde, y recién ahí esperá.",
+		overwhelmed: "Papas → destilería → taberna en un bloque. Y quedate quieto sesenta segundos.",
+		buildingIds: [
+			"potato",
+			"distillery",
+			"pub",
+			"farmer-house"
+		],
+		layoutId: "pub-block",
+		suggestedAsks: [
+			"¿Las granjas dónde van?",
+			"¿Cuántas destilerías?",
+			"La taberna no conecta"
+		]
+	},
+	{
+		id: "ch1-family",
+		chapterId: "ch1",
+		title: "Lazos de familia",
+		kind: "errand",
+		objective: "Tené 4 Schnapps en el almacén.",
+		why: "Ya estás haciendo Schnapps. Dejá que el almacén junte cuatro toneladas. La ciudad no precisa un barrio nuevo.",
+		do: [
+			"Mirada al almacén.",
+			"Si el Schnapps está fluyendo, esperá.",
+			"Si no, fijate papa → destilería → calle."
+		],
+		dont: "No armes una segunda destilería para cuatro cajones.",
+		trap: "Las casas se lo toman todo. Pausá casas extra, o dejá que la granja alcance. Cuatro toneladas es poco.",
+		overwhelmed: "Esperá a que haya cuatro Schnapps en el almacén. No agrandes.",
+		buildingIds: ["potato", "distillery"],
+		layoutId: "farms-outside",
+		suggestedAsks: ["¿Por qué el almacén está vacío si tengo destilería?"],
+		spoilers: "Edvard te va a seguir pidiendo cajones. Es joda de hermano, no una industria nueva."
+	},
+	{
+		id: "ch1-blacksheep",
+		chapterId: "ch1",
+		title: "La oveja negra de la familia",
+		kind: "build",
+		objective: "Tené 4 ropas de trabajo en el almacén.",
+		why: "El mismo patrón que el Schnapps: ovejas afuera, telares en el borde, cuatro toneladas en el almacén. La ropa también hace que se muden granjeros.",
+		do: [
+			"Granja de ovejas en el pasto, con módulos.",
+			"Unos telares en una calle.",
+			"Dejá que se junten cuatro ropas de trabajo. Las casas extra pueden esperar."
+		],
+		dont: "No armes un distrito de moda. Una granja, un taller.",
+		trap: "Telares sin lana, o lana sin calle. Siempre caminá la cadena del campo al almacén.",
+		overwhelmed: "Ovejas en un campo, telares en una calle, esperá cuatro camisas.",
+		buildingIds: ["sheep", "knitters"],
+		layoutId: "farms-outside",
+		suggestedAsks: ["¿Los granjeros laburan en los telares?", "No aparecen las ropas"]
+	},
+	{
+		id: "ch1-polish",
+		chapterId: "ch1",
+		title: "Un último retoque",
+		kind: "errand",
+		objective: "Limpiá el distrito de la iglesia abandonada.",
+		why: "Más espacio, más ladrillos de yapa. Todavía no precisás una catedral.",
+		do: ["Limpiá las ruinas de iglesia marcadas.", "Quedate con tu única taberna. Con eso alcanza para el ánimo, por ahora."],
+		dont: "No armes una iglesia porque las ruinas tenían forma de iglesia. Se desbloquea después.",
+		trap: "Gastar los materiales que sobraron en adornos de más. Los tablones siguen sirviendo para casas.",
+		overwhelmed: "Limpiá las ruinas de la iglesia. Hoy la felicidad es la taberna.",
+		buildingIds: ["pub"],
+		suggestedAsks: ["¿Armo una iglesia ahora?"]
+	},
+	{
+		id: "ch1-pleas",
+		chapterId: "ch1",
+		title: "Los ruegos de un pariente pobre",
+		kind: "errand",
+		objective: "Encontrá a tu primo cerca de la exposición de Edvard.",
+		why: "Un mandado a pie o a vela. El pueblo puede ir solo. Si los bienes están en verde, dejalo.",
+		do: [
+			"Navegá o caminá hasta el marcador en la ciudad de Edvard.",
+			"Tocá al primo.",
+			"Volvé a casa si las casas empiezan a quejarse."
+		],
+		dont: "No reconstruyas la isla mientras esta misión está abierta solo porque te aburrís.",
+		trap: "Perder a la persona en el gentío. La banderita está en un personaje, no en un edificio.",
+		overwhelmed: "Seguí el marcador. Hablá. Volvé. La ciudad no te precisa para esta.",
+		buildingIds: [],
+		suggestedAsks: ["¿Puedo dejar la isla un toque?"],
+		spoilers: "La política familiar se va a poner más ruidosa. Tu laburo sigue siendo ‘mantener a los granjeros comidos’."
+	},
+	{
+		id: "ch1-hardtimes",
+		chapterId: "ch1",
+		title: "Tiempos duros",
+		kind: "errand",
+		objective: "Encontrá 5 turbas amotinadas en la ciudad de Edvard.",
+		why: "Mirar y tocar. Alejá la cámara, recorré las calles, tocá los grupitos enojados.",
+		do: [
+			"Andá a la ciudad de Edvard.",
+			"Encontrá cinco grupos de motín.",
+			"No intentes ponerles policía con edificios que no tenés."
+		],
+		dont: "No copies su plano. Su ciudad es escenografía.",
+		trap: "Buscarlos en el mar. Están en tierra, en sus calles.",
+		overwhelmed: "Cinco grupos para tocar. Y te volvés a tus 10×10.",
+		buildingIds: [],
+		suggestedAsks: ["No encuentro a los revoltosos"]
+	},
+	{
+		id: "ch1-press",
+		chapterId: "ch1",
+		title: "Libertad y prensa libre",
+		kind: "errand",
+		objective: "Seleccioná al editor y su barco en el puerto de Edvard.",
+		why: "Dos toques en un muelle. Después la historia te deja quieto a propósito.",
+		do: [
+			"Seleccioná al editor.",
+			"Seleccioná su barco.",
+			"Dejá que entre la próxima misión."
+		],
+		dont: "No arranques una cadena de periódico. Todavía no hay.",
+		trap: "Seleccionar tu propio barco por error. Es el puerto de él, el barco de él.",
+		overwhelmed: "Dos selecciones en el muelle de Edvard. Esa es la misión.",
+		buildingIds: [],
+		suggestedAsks: ["¿Qué construyo mientras espero?"]
+	},
+	{
+		id: "ch1-debt",
+		chapterId: "ch1",
+		title: "La deuda es oficial",
+		kind: "wait",
+		objective: "Esperá a que Edvard te contacte por la licencia de navegación.",
+		why: "Una pausa a propósito. Usala para ordenar: más madera, más casas, más Schnapps. Nada de sistemas nuevos.",
+		do: [
+			"Mantené en verde madera, pescado, ropa y Schnapps.",
+			"Plantá otro 10×10 si te pinta.",
+			"Cuando llame Edvard, agarrá la misión — esa licencia es la que abre obreros."
+		],
+		dont: "No fundes tres islas nuevas de puro aburrimiento.",
+		trap: "Pensar que se trabó el juego. Está esperando un temporizador / un aviso de historia.",
+		overwhelmed: "Cuidá los bienes. No inventes un proyecto nuevo. Él te va a llamar.",
+		buildingIds: [
+			"lumberjack",
+			"fishery",
+			"knitters",
+			"distillery"
+		],
+		suggestedAsks: ["¿Se trabó el juego?", "¿Qué construyo mientras espero?"]
+	},
+	{
+		id: "ch1-raise",
+		chapterId: "ch1",
+		title: "Hora de un aumento",
+		kind: "build",
+		objective: "Mejorá 1 residencia de granjeros a residencia de obreros.",
+		why: "Una casa. No una revolución de clase. Todavía precisás granjeros en los campos.",
+		do: [
+			"Elegí una casa de granjeros bien adentro de la cobertura de mercado + taberna.",
+			"Mejorá exactamente una.",
+			"Dejá el resto como granjeros."
+		],
+		dont: "No subas toda una calle. Los obreros piden comida nueva que todavía no armaste.",
+		trap: "Mejorar una casa que estaba laburando una granja. La granja se traba. Subí una casa de más, no una que está en uso.",
+		overwhelmed: "Una mejora. Y pará, mirá la próxima misión antes de armar palacios de salchichas.",
+		buildingIds: ["worker-house", "farmer-house"],
+		layoutId: "block-10",
+		suggestedAsks: ["¿Cuántos granjeros dejo?", "¿Qué va a pedir este obrero después?"]
+	},
+	{
+		id: "ch1-ashes",
+		chapterId: "ch1",
+		title: "Construir sobre las cenizas",
+		kind: "errand",
+		objective: "Limpiá la fundición abandonada.",
+		why: "Es un adelanto del acero, no una orden de armar acero. Limpiá, llevate los restos, quedate tranqui.",
+		do: ["Limpiá las ruinas de fundición marcadas.", "No pongas una mina de hierro todavía, salvo que la próxima misión lo pida."],
+		dont: "No arranques toda la cadena de acero porque viste una ruina con forma de horno.",
+		trap: "Gastar todos los tablones en industria antes de tener casas de obreros para laburarla.",
+		overwhelmed: "Limpiá la fundición. El acero es el próximo capítulo, no este toque.",
+		buildingIds: [],
+		suggestedAsks: ["¿Mino hierro ahora?"]
+	},
+	{
+		id: "ch1-heroes",
+		chapterId: "ch1",
+		title: "Héroes de la clase obrera",
+		kind: "build",
+		objective: "Atraé 150 obreros.",
+		why: "Ahora sí podés crecer obreros — de a poco. Dejá la mitad del pueblo en granjeros. Sumá salchichas, después pan, después jabón cuando lo pidan, no todo junto.",
+		do: [
+			"Dejá suficientes casas de granjeros para madera, pescado, papas y ovejas.",
+			"Mejorá casas de más, o plantá más 10×10 y subí esas.",
+			"Cuando una necesidad se ponga amarilla, armá esa cadena. Cerdos para salchichas primero."
+		],
+		dont: "No te desbloquees artesanos en la cabeza. 150 obreros es la misión. Parás cerca de eso.",
+		trap: "Subir a todos los granjeros y mirar cómo se congela el campo de papas y se muere el Schnapps.",
+		overwhelmed: "Los granjeros se quedan. Subí los de más hasta 150 obreros. Una cadena de comida nueva a la vez.",
+		buildingIds: [
+			"worker-house",
+			"sausage",
+			"bread",
+			"soap",
+			"school"
+		],
+		layoutId: "block-10",
+		suggestedAsks: [
+			"¿Los obreros qué comen primero?",
+			"Se me pararon las granjas",
+			"¿Ya preciso escuela?"
+		]
+	},
+	{
+		id: "ch1-lackey",
+		chapterId: "ch1",
+		title: "El lacayo de Edvard",
+		kind: "build",
+		objective: "Tené 4 velas en el almacén.",
+		why: "Lana que ya criás, más una fábrica de velas. Cuatro toneladas. Es una lista de compras, no una marina.",
+		do: [
+			"Poné una fábrica de velas en una calle.",
+			"Alimentala con lana de la granja de ovejas.",
+			"Esperá cuatro velas."
+		],
+		dont: "No fundes una isla de lana para esto.",
+		trap: "Ropa y velas compartiendo una sola granja de ovejas — si baja la ropa, sumá una segunda granja, igual no una isla nueva.",
+		overwhelmed: "Una fábrica de velas, la lana que ya tenés, cuatro cajones. Listo.",
+		buildingIds: ["sails", "sheep"],
+		suggestedAsks: ["La ropa y las velas se pelean la lana"],
+		spoilers: "Te está usando. Entregá el cajón igual; la historia se encarga del resto."
+	},
+	{
+		id: "ch1-scapegoats",
+		chapterId: "ch1",
+		title: "Chivos expiatorios",
+		kind: "errand",
+		objective: "Rescatá náufragos y restos del naufragio del transporte de prisioneros con un barco.",
+		why: "Navegá, tocá el pecio, volvé. Pausá el cerebro de construir ciudad.",
+		do: [
+			"Llevá un barco al marcador del naufragio.",
+			"Levantá gente y restos.",
+			"Volvé."
+		],
+		dont: "No armes una flota nueva para un recojo.",
+		trap: "Dejar el barco en una ruta comercial. Agarrá el control un minuto.",
+		overwhelmed: "Un barco, un naufragio, levantá las cosas.",
+		buildingIds: [],
+		suggestedAsks: ["¿Qué barco uso?"]
+	},
+	{
+		id: "ch1-business",
+		chapterId: "ch1",
+		title: "No es asunto tuyo / Curiosidad",
+		kind: "errand",
+		objective: "O entregás a los prisioneros, o abrís el documento sellado en tu barco.",
+		why: "Un tenedor de historia. Ninguna opción es un fallo. Elegí la que te sienta. Y seguí jugando.",
+		do: [
+			"Si querés la entrega simple, seguí ese marcador.",
+			"Si te pica la curiosidad, inspeccioná el documento en el barco.",
+			"Después de elegir, dejá de pensar en la otra rama."
+		],
+		dont: "No recargues diez veces para optimizar una decisión moral en un constructor de ciudades.",
+		trap: "Leer el final en una guía antes de elegir. Pediste no jugar al ajedrez.",
+		overwhelmed: "Elegí uno de los dos marcadores. Los dos siguen la campaña.",
+		buildingIds: [],
+		suggestedAsks: ["¿Esta decisión me arruina la historia?", "¿Cuál es la más buena?"],
+		spoilers: "Los dos caminos se juntan de nuevo. No te estás cerrando el final."
+	},
+	{
+		id: "ch1-photograph",
+		chapterId: "ch1",
+		title: "Recién salido de la imprenta",
+		kind: "errand",
+		objective: "Fotografiá un astillero de vela.",
+		why: "Cámara de misión, no un proyecto de construcción. Si ya tenés astillero, sacale la foto. Si no, el marcador te enseña.",
+		do: ["Usá la interacción de foto / misión en un astillero de vela.", "Si no tenés, armá el astillero de vela más barato en el puerto, sacá la foto, y olvidate."],
+		dont: "No arranques toda una industria naval por una foto.",
+		trap: "Fotografiar un astillero de vapor o un muelle cualquiera. Quiere un astillero de vela.",
+		overwhelmed: "Una foto de un astillero de vela. Y después el capítulo 2.",
+		buildingIds: [],
+		suggestedAsks: ["No tengo astillero"]
+	},
+	{
+		id: "ch2-bulk",
+		chapterId: "ch2",
+		title: "Pedido al por mayor",
+		kind: "errand",
+		objective: "Vendele a Blake una goleta, dos cañoneras y una fragata.",
+		why: "Un mandado de compras. Armá o comprá los cascos, vendelos en su muelle. Tus 10×10 pueden dormir una siesta.",
+		do: [
+			"Fijate qué barcos ya tenés.",
+			"Construí los que falten en un astillero, o compralos a un comerciante si estás con plata.",
+			"Vendé exactamente lo que listó — no tu último explorador si todavía lo precisás."
+		],
+		dont: "No desarmes tu único barco que anda para completar la cuenta.",
+		trap: "Vender el barco que usabas para comerciar. Dejá uno que siga haciendo rutas.",
+		overwhelmed: "Tres tipos de barco, vendidos a Blake. Usá el astillero, no una ciudad nueva.",
+		buildingIds: ["sails", "weapons"],
+		suggestedAsks: ["No me alcanzan las monedas para estos barcos", "¿Qué astillero hace una fragata?"]
+	},
+	{
+		id: "ch2-iron",
+		chapterId: "ch2",
+		title: "Cualquier hierro viejo",
+		kind: "errand",
+		objective: "Tocá el yacimiento de hierro.",
+		why: "La montaña es el barrio industrial. Tocála para que la historia abra la excavación.",
+		do: [
+			"Buscá el yacimiento de hierro en tu isla (o el marcado).",
+			"Tocálo.",
+			"No pongas la mina hasta que terminen las misiones de excavación si el yacimiento está bloqueado."
+		],
+		dont: "No aplanes los bosques de alrededor todavía. Vas a querer árboles para carbón.",
+		trap: "Tocar un nodo de arcilla o carbón. El hierro es el ícono de montaña oxidada.",
+		overwhelmed: "Tocá el hierro. Esa es toda la misión.",
+		buildingIds: ["iron-mine"],
+		suggestedAsks: ["No encuentro el hierro"]
+	},
+	{
+		id: "ch2-mountains",
+		chapterId: "ch2",
+		title: "Mover montañas",
+		kind: "wait",
+		objective: "Llevá el sitio de excavación por sus fases; la última, con un experto en demolición.",
+		why: "Es una obra a tiempo, como un monumento. Financiá, esperá, no rediseñes la capital.",
+		do: [
+			"Seleccioná el sitio de excavación cuando aparezca.",
+			"Pagá / esperá cada fase.",
+			"Cuando pida al experto, agarrá esa misión extra — no podés saltearte la última fase."
+		],
+		dont: "No demuelas el sitio porque queda feo. Es la misión.",
+		trap: "Dejar el sitio sin plata o sin bienes. Si una fase se traba, tocá el sitio y leé qué quiere.",
+		overwhelmed: "Tocá el pozo, financiálo, andá a buscar al experto cuando lo pida.",
+		buildingIds: ["iron-mine"],
+		suggestedAsks: ["La excavación está trabada", "¿Qué precisa la última fase?"]
+	},
+	{
+		id: "ch2-expert",
+		chapterId: "ch2",
+		title: "El experto en demolición",
+		kind: "errand",
+		objective: "Encontrá al experto (tienda, después isla prisión), pagá la fianza y esperálo en tu puerto.",
+		why: "Una búsqueda del tesoro. Seguí el texto: producción de tablones, después el pozo de piedra junto a la grúa, después la fianza del faro.",
+		do: [
+			"Buscá cerca de la madera de Edvard la tienda de explosivos.",
+			"Después el pozo de piedra de la isla prisión — él está al lado de la grúa.",
+			"Pagá 5.000 en el faro de la prisión y esperá en tu propio puerto."
+		],
+		dont: "No te saltees la espera en el puerto. Tiene que bajar de un barco.",
+		trap: "Pagar la fianza e irte del mapa de una. Esperá el aviso de ‘hablá con él’.",
+		overwhelmed: "Tienda, grúa en el pozo, pagá el faro, hablá en tu muelle.",
+		buildingIds: [],
+		suggestedAsks: ["¿Dónde está la isla prisión?", "Pagué y no pasa nada"]
+	},
+	{
+		id: "ch2-industrial",
+		chapterId: "ch2",
+		title: "Evolución industrial",
+		kind: "build",
+		objective: "Construí una mina de hierro, una carbonera, una fundición y una acería.",
+		why: "Una calle industrial. Mina en la roca, carbonera junto a los árboles, fundición y acería en fila. La historia quiere que existan los edificios, no un molino de primer mundo.",
+		do: [
+			"Mina en el yacimiento.",
+			"Carbonera al lado de un bosque que te sobre.",
+			"Fundición y acería en la misma calle, almacén a mano.",
+			"Personal con obreros. Si te faltan, mejorá unas casas extra de granjeros."
+		],
+		dont: "No pases el acero por tus 10×10 lindos. El humo y el reacomodo después no valen la pena.",
+		trap: "Sin calle / sin almacén / sin obreros. Si un edificio está dormido, casi siempre es una de esas tres.",
+		overwhelmed: "Cuatro edificios en una calle sucia al lado de la montaña. Y pará.",
+		buildingIds: [
+			"iron-mine",
+			"charcoal",
+			"furnace",
+			"steelworks",
+			"worker-house"
+		],
+		layoutId: "steel-row",
+		suggestedAsks: [
+			"¿La carbonera dónde va?",
+			"La fundición está parada",
+			"¿Preciso trenes?"
+		]
+	},
+	{
+		id: "ch2-warfare",
+		chapterId: "ch2",
+		title: "Guerra",
+		kind: "build",
+		objective: "Construí 1 fábrica de armas.",
+		why: "Acero entra, armas salen. Una fábrica. Lo difícil ya lo hiciste.",
+		do: [
+			"Poné una fábrica de armas en la calle del acero.",
+			"Conectá acero y obreros.",
+			"Dejá que se junten unas armas."
+		],
+		dont: "No armes todas las goletas ni rediseñes la marina.",
+		trap: "Una fábrica sin acero todavía. Esperá a que la acería suelte un cajón, o el edificio se duerme.",
+		overwhelmed: "Una fábrica de armas al lado de la acería. Misión cumplida.",
+		buildingIds: ["weapons", "steelworks"],
+		layoutId: "steel-row",
+		suggestedAsks: ["¿Con una fábrica alcanza?"]
+	},
+	{
+		id: "ch2-smuggler",
+		chapterId: "ch2",
+		title: "Seguir a un contrabandista",
+		kind: "errand",
+		objective: "Navegá hasta el faro de Madame Kahina.",
+		why: "Una navegada. La calle del acero puede seguir andando sin vos.",
+		do: [
+			"Llevá un barco al marcador del faro de Kahina.",
+			"Pasá la conversación.",
+			"Volvé a casa si los obreros se están muriendo de hambre."
+		],
+		dont: "No fundes una colonia en el Nuevo Mundo todavía. Eso es una misión de después.",
+		trap: "Navegar al faro equivocado. El de ella está marcado.",
+		overwhelmed: "Navegá al faro marcado. Y volvé.",
+		buildingIds: [],
+		suggestedAsks: ["¿Quién es Kahina?"]
+	},
+	{
+		id: "ch2-pyrphorians",
+		chapterId: "ch2",
+		title: "Los Pyrphorian",
+		kind: "errand",
+		objective: "Entregá el diario de tu padre en el faro de Blake.",
+		why: "Otra entrega. Tu ciudad no es el acertijo.",
+		do: [
+			"Asegurate de que el diario esté en un barco (carga de misión).",
+			"Navegá al faro de Blake.",
+			"Entregá."
+		],
+		dont: "No te tires horas en adornos mientras esto está en el registro.",
+		trap: "El objeto sentado en un almacén, no en una bodega. Cargálo.",
+		overwhelmed: "Poné el diario en un barco, navegá hasta Blake, entregá.",
+		buildingIds: [],
+		suggestedAsks: ["El diario no está en mi barco"],
+		spoilers: "Acá se nombra a los antagonistas. No precisás más historia que la que da la misión."
+	},
+	{
+		id: "ch2-newworld",
+		chapterId: "ch2",
+		title: "Misión al Nuevo Mundo",
+		kind: "expedition",
+		objective: "Completá la expedición ‘En busca de Isabel Sarmento’.",
+		why: "Equipá un barco decente, mandálo, y mantené el Viejo Mundo en verde mientras saltan eventos. Las opciones cautas / amables suelen cuidar la moral. No pierdas el barco por moral a cero.",
+		do: [
+			"Poné raciones de más, unos marineros extra si tenés, capaz ron.",
+			"Mandá la expedición. Jugá los eventos cuando te pausen — no ignores el aviso.",
+			"Mientras, mantené en verde pescado, ropa, Schnapps y la comida de obreros."
+		],
+		dont: "No vacíes tu flota de casa en la expedición. Un buen barco alcanza.",
+		trap: "Elegir siempre la opción valiente / codiciosa. Si la moral está a medias, elegí la segura o la decente.",
+		overwhelmed: "Mandá un barco bien comido. Contestá los eventos. Cuidá la isla vieja hasta que la encuentren.",
+		buildingIds: ["sails"],
+		suggestedAsks: [
+			"¿Qué llevo?",
+			"Se me caen todas las expediciones",
+			"¿Puedo ignorar los eventos?"
+		]
+	},
+	{
+		id: "ch3-hand",
+		chapterId: "ch3",
+		title: "Una mano lava la otra",
+		kind: "errand",
+		objective: "Cumplí los pedidos de Isabel para que te venda el contrato de Prosperity.",
+		why: "Una lista de compras de una amiga nueva. Leé lo que quiere, entregá, no reconstruyas el Viejo Mundo.",
+		do: [
+			"Abrí su pedido.",
+			"Entregá los bienes o la plata que nombró.",
+			"Agarrá el contrato cuando aparezca."
+		],
+		dont: "No mudes la capital acá.",
+		trap: "Dejar los bienes en el almacén del Viejo Mundo. Tienen que llegar a su isla.",
+		overwhelmed: "Leé su lista, embarcálo, agarrá el contrato. El plano de la ciudad puede esperar.",
+		buildingIds: [],
+		suggestedAsks: ["¿Cómo le mando bienes?"]
+	},
+	{
+		id: "ch3-rebels",
+		chapterId: "ch3",
+		title: "Un hogar para los rebeldes",
+		kind: "build",
+		objective: "Alojá 50 jornaleros en La Isla.",
+		why: "Nuevo Mundo, la misma gramática 10×10. Mercado, casas, una cadena de comida. Cincuenta personas es un caserío.",
+		do: [
+			"Reclamá / usá La Isla como pide la misión.",
+			"Mercado, y después 10×10 de jornaleros.",
+			"Cadena de plátanos cuando pidan comida. Parás en 50."
+		],
+		dont: "No copies tu calle de acero del Viejo Mundo en la selva.",
+		trap: "Olvidarte un almacén / puesto comercial del Nuevo Mundo, y no se guarda nada.",
+		overwhelmed: "Mercado, unos 10×10, comida. Cincuenta personas. Parás.",
+		buildingIds: [
+			"jornalero",
+			"marketplace",
+			"plantain"
+		],
+		layoutId: "first-city",
+		suggestedAsks: ["¿El 10×10 acá es el mismo?", "¿Los jornaleros qué comen?"]
+	},
+	{
+		id: "ch3-rescue",
+		chapterId: "ch3",
+		title: "Rescate y refugio",
+		kind: "errand",
+		objective: "Levantá refugiados de Prosperity y lleválos a La Isla.",
+		why: "Un traslado en barco. Las casas de La Isla tienen que tener lugar. Si no, plantá dos 10×10 más, y recién ahí navegá.",
+		do: [
+			"Asegurate de que La Isla tenga cupo libre de jornaleros.",
+			"Levantá el grupo de refugiados marcado.",
+			"Dejálos en La Isla."
+		],
+		dont: "No pelees el mapa entero de camino. Esto es un taxi.",
+		trap: "Sin camas libres, y falla la entrega. Primero las casas.",
+		overwhelmed: "Camas vacías en La Isla, y después el barco.",
+		buildingIds: ["jornalero"],
+		suggestedAsks: ["No quieren bajar del barco"]
+	},
+	{
+		id: "ch3-bastion",
+		chapterId: "ch3",
+		title: "Un bastión para todos",
+		kind: "build",
+		objective: "Alojá 300 jornaleros en La Isla.",
+		why: "El mismo pueblo, más 10×10. Sumá una segunda cadena de comida / ropa si las barras se ponen amarillas. Sigue sin ser una megaciudad.",
+		do: [
+			"Seguí plantando 10×10.",
+			"Sumá plátanos / ponchos cuando haga falta.",
+			"Una mirada al Viejo Mundo — no lo dejes arder mientras jugás a lo tropical."
+		],
+		dont: "No subas a todos a obreros todavía.",
+		trap: "El Viejo Mundo fundiéndose porque te quedaste una hora mirando La Isla. Pausá, reponé, volvé.",
+		overwhelmed: "Más 10×10 hasta 300. Una granja extra si la comida está amarilla.",
+		buildingIds: ["jornalero", "plantain"],
+		layoutId: "block-10",
+		suggestedAsks: ["El Viejo Mundo se me está cayendo a pedazos", "Acá también me falta ropa"]
+	},
+	{
+		id: "ch3-heat",
+		chapterId: "ch3",
+		title: "Ola de calor",
+		kind: "errand",
+		objective: "Apagá todos los incendios de La Isla.",
+		why: "Tocá los fuegos, mandá estaciones de bomberos / barcos con las herramientas que tengas. El plano puede esperar.",
+		do: [
+			"Encontrá cada ícono de fuego.",
+			"Usá las herramientas de incendio que tengas.",
+			"Reconstruís después, ahora apagás."
+		],
+		dont: "No rediseñes la ciudad mientras arde.",
+		trap: "Un fuego fuera de cámara. Rotá la isla.",
+		overwhelmed: "Apagá los fuegos. Construir viene después.",
+		buildingIds: ["police"],
+		suggestedAsks: ["¿Cómo apago un incendio?"]
+	},
+	{
+		id: "ch3-lookout",
+		chapterId: "ch3",
+		title: "Un puesto de vigilancia",
+		kind: "build",
+		objective: "Construí 1 comisaría.",
+		why: "Tirála en un 10×10. La historia quiere el edificio por los saboteadores, no porque hayas fallado el plano.",
+		do: [
+			"Poné una comisaría en un bloque de casas en La Isla.",
+			"Conectá la calle.",
+			"Dejá que cubra lo que cubra."
+		],
+		dont: "No rodees la isla de comisarías.",
+		trap: "Ponerla sin calle. Igual que cualquier edificio público.",
+		overwhelmed: "Una comisaría en un 10×10. Misión lista.",
+		buildingIds: ["police"],
+		layoutId: "pub-block",
+		suggestedAsks: ["¿La comisaría pide obreros o jornaleros?"]
+	},
+	{
+		id: "ch3-wolves",
+		chapterId: "ch3",
+		title: "Lobos con ropa de alpaca",
+		kind: "errand",
+		objective: "Encontrá 3 Pyrphorian para parar el incendio provocado.",
+		why: "Buscá en la isla a los personajes marcados. Alejá la cámara, barre.",
+		do: [
+			"Cazá a las tres personas marcadas.",
+			"Tocálas.",
+			"Dejá la comisaría laburando."
+		],
+		dont: "No tires abajo media ciudad buscando un espía debajo de una casa.",
+		trap: "Se pueden esconder en el borde de la niebla o detrás de un decorado. Mové la cámara despacio.",
+		overwhelmed: "Tres personas para tocar. Y volvés a dar refugio.",
+		buildingIds: ["police"],
+		suggestedAsks: ["No encuentro al tercero"]
+	},
+	{
+		id: "ch3-release",
+		chapterId: "ch3",
+		title: "Soltar y aliviar",
+		kind: "errand",
+		objective: "Levantá otro grupo de refugiados y lleválos a La Isla.",
+		why: "El mismo traslado de antes. Primero camas, después barco.",
+		do: [
+			"Fijate el cupo libre.",
+			"Levantá refugiados.",
+			"Entregálos en La Isla."
+		],
+		dont: "No arranques obreros solo para hacer lugar si todavía sirven los 10×10 de jornaleros.",
+		trap: "Casas llenas. Dos 10×10 más ganan a una mejora de emergencia.",
+		overwhelmed: "Hacé lugar, y después el barco. Igual que la vez pasada.",
+		buildingIds: ["jornalero"],
+		suggestedAsks: ["Me quedé sin espacio"]
+	},
+	{
+		id: "ch3-defense",
+		chapterId: "ch3",
+		title: "La mejor defensa es un buen ataque",
+		kind: "combat",
+		objective: "Tené 2 fragatas en el Nuevo Mundo.",
+		why: "Cruzá dos fragatas, o armálas y mandálas. El combate de después las va a querer igual.",
+		do: ["Llevá dos fragatas por el traslado / navegación al Nuevo Mundo.", "Estacionálas cerca de La Isla."],
+		dont: "No mandes a tu único defensor del Viejo Mundo si hay piratas activos allá. Armá uno de más.",
+		trap: "Fragatas sentadas en el Viejo Mundo. Tienen que estar de verdad en este mapa.",
+		overwhelmed: "Dos fragatas estacionadas en el Nuevo Mundo. Ese es el tilde.",
+		buildingIds: ["weapons", "sails"],
+		suggestedAsks: ["¿Cómo paso un barco al Nuevo Mundo?"]
+	},
+	{
+		id: "ch3-refugees",
+		chapterId: "ch3",
+		title: "Refugiados bienvenidos",
+		kind: "build",
+		objective: "Mejorá a 1 obrero, alojá 600 obreros y construí un hospital.",
+		why: "La misma lección de obreros, tropical. Dejá jornaleros en las plantaciones. Subí los de más. Un hospital en un 10×10. 600 es un pueblo más grande — plantá con paciencia, no armes una grilla de pánico.",
+		do: [
+			"Dejá las granjas de jornaleros con personal.",
+			"Mejorá casas extra, sumá 10×10 si hace falta.",
+			"Un hospital en un bloque. Llegá a 600, y descansá."
+		],
+		dont: "No subas toda la isla de un arrastre.",
+		trap: "Plantaciones congeladas, comida en caída, hospital parado por falta de calle. Tres revisiones distintas.",
+		overwhelmed: "Quedate con los granjeros (jornaleros). Subí los de más hasta 600. Un hospital. Pausá.",
+		buildingIds: [
+			"obrero",
+			"hospital",
+			"jornalero"
+		],
+		layoutId: "block-10",
+		suggestedAsks: [
+			"Se me pararon las plantaciones",
+			"¿El hospital dónde va?",
+			"Este número de población me asusta"
+		]
+	},
+	{
+		id: "ch3-evac",
+		chapterId: "ch3",
+		title: "Evacuación de emergencia",
+		kind: "combat",
+		objective: "Escoltá al menos una de las goletas de Isabel hasta La Isla.",
+		why: "Agarrá tus fragatas, quedate pegado a la goleta, ignorá peleas de costado si el escolta se está muriendo.",
+		do: [
+			"Acercate a la flota para arrancar.",
+			"Mantené una fragata al lado de una goleta.",
+			"Llegá a La Isla con por lo menos una viva."
+		],
+		dont: "No persigas cada vela enemiga. La goleta es la misión.",
+		trap: "Navegar adelante del escolta. Pegate a él.",
+		overwhelmed: "Pegá una fragata a una goleta y caminála hasta casa.",
+		buildingIds: [],
+		suggestedAsks: ["Se me mueren las goletas"]
+	},
+	{
+		id: "ch3-wildfire",
+		chapterId: "ch3",
+		title: "Incendio a pedido",
+		kind: "errand",
+		objective: "Encontrá 5 Pyrphorian para parar el incendio provocado.",
+		why: "La misma cacería, más gente. Barré despacio.",
+		do: [
+			"Encontrá cinco saboteadores marcados.",
+			"Tocálos.",
+			"Repará si algo se quemó."
+		],
+		dont: "No reinicies la isla.",
+		trap: "Un fuego que te lleva la cámara lejos del último saboteador. Fijá el rastreador de misión.",
+		overwhelmed: "Cinco toques. Después repará. Después respirá.",
+		buildingIds: ["police"],
+		suggestedAsks: ["Volvieron los incendios"]
+	},
+	{
+		id: "ch3-ransom",
+		chapterId: "ch3",
+		title: "No pagues rescate",
+		kind: "combat",
+		objective: "Rescatá rehenes de los campos de prisión del oeste, sur y este, y después entregálos en el faro de Isabel.",
+		why: "Tres campos, una entrega. Llevá las fragatas. La ciudad puede quedar quieta si los bienes estaban en verde.",
+		do: [
+			"Pegale a cada campo marcado.",
+			"Levantá rehenes.",
+			"Entregá en su faro — no en tu almacén."
+		],
+		dont: "No te separes en tres barcos solitarios si te va mal el combate. Andá juntos.",
+		trap: "Entregar en el muelle equivocado. Faro, no puesto comercial.",
+		overwhelmed: "Tres campos, después su faro. Quedate en grupo.",
+		buildingIds: [],
+		suggestedAsks: ["Perdí a los rehenes", "¿Cuál faro?"]
+	},
+	{
+		id: "ch3-lead",
+		chapterId: "ch3",
+		title: "Seguir la pista",
+		kind: "expedition",
+		objective: "Completá la expedición ‘El contrato’.",
+		why: "Los mismos modos de expedición que el rescate de Isabel. Equipá, mandá, contestá eventos, mantené los dos mundos comidos.",
+		do: [
+			"Llevá raciones y cosas de moral.",
+			"Mandá el barco.",
+			"Contestá los avisos. No dejes que el Viejo Mundo o La Isla se mueran de hambre mientras tanto."
+		],
+		dont: "No mandes tu última fragata si el Nuevo Mundo sigue caliente.",
+		trap: "Moral a cero. Elegí opciones más seguras cuando la barra está flaca.",
+		overwhelmed: "Un barco de expedición, opciones cautas, cuidá las dos islas.",
+		buildingIds: [],
+		suggestedAsks: ["¿Qué llevo esta vez?"]
+	},
+	{
+		id: "ch4-confrontation",
+		chapterId: "ch4",
+		title: "La confrontación",
+		kind: "errand",
+		objective: "Entregá el contrato de Prosperity desde tu puesto comercial a Edvard.",
+		why: "Carga en una bodega, navegá, entregá. Los sentimientos grandes son laburo de la historia.",
+		do: [
+			"Cargá el contrato.",
+			"Navegá hasta Edvard.",
+			"Entregá desde el puesto comercial / barco como esté marcado."
+		],
+		dont: "No arranques una ciudad nueva ‘de venganza’. Jugá la misión.",
+		trap: "El contrato quedado en el Nuevo Mundo. Tiene que estar en este mapa.",
+		overwhelmed: "Poné el contrato en un barco y lleváselo a Edvard.",
+		buildingIds: [],
+		suggestedAsks: ["No encuentro el contrato"],
+		spoilers: "Esto es familia, no un examen de planos. Entregá y seguí."
+	},
+	{
+		id: "ch4-justitia",
+		chapterId: "ch4",
+		title: "Justitia",
+		kind: "wait",
+		objective: "Construí y terminá cada fase de la Corte de Justicia.",
+		why: "Un monumento con fases. Financiá, esperá, tocá cuando una fase termina. Mantené los bienes en verde para poder pagarlo.",
+		do: [
+			"Seleccioná los cimientos de la corte cuando aparezcan.",
+			"Terminá la fase uno, la dos, y la última.",
+			"No dejes a tu gente sin comida para apurarlo."
+		],
+		dont: "No lo demuelas porque el predio queda raro. Es la misión.",
+		trap: "Una fase trabada. Tocá el edificio — siempre dice qué le falta.",
+		overwhelmed: "Tocá la corte, pagá lo que pide, esperá. Tres veces.",
+		buildingIds: [],
+		suggestedAsks: ["La corte está trabada"]
+	},
+	{
+		id: "ch4-come",
+		chapterId: "ch4",
+		title: "Pase lo que pase",
+		kind: "build",
+		objective: "En Ditch Water: 2 cañones montados, 2 torres de cañón, 1 grúa de reparación.",
+		why: "Juguetes de puerto en la isla que nombra. Contalos. Esto no es un problema de 10×10.",
+		do: [
+			"Andá a Ditch Water.",
+			"Poné dos cañones, dos torres de cañón, una grúa de reparación.",
+			"Conectálos para que cuenten como construidos."
+		],
+		dont: "No armes todas las islas que tenés.",
+		trap: "Construirlos en la isla equivocada. La misión dice Ditch Water.",
+		overwhelmed: "Cinco edificios de defensa en Ditch Water. Tachá la lista.",
+		buildingIds: ["defenses"],
+		suggestedAsks: ["¿Dónde queda Ditch Water?", "No me dejan colocarlos"]
+	},
+	{
+		id: "ch4-noblesse",
+		chapterId: "ch4",
+		title: "Noblesse Oblige",
+		kind: "errand",
+		objective: "Tocá el buque insignia de Su Majestad.",
+		why: "Un toque en un barco muy obvio.",
+		do: ["Encontrá el buque insignia de la Reina.", "Tocálo."],
+		dont: "No lo ataques.",
+		trap: "Tocar uno de tus propios navíos de línea.",
+		overwhelmed: "Tocá el buque insignia real.",
+		buildingIds: [],
+		suggestedAsks: ["No veo el buque insignia"]
+	},
+	{
+		id: "ch4-prosecution",
+		chapterId: "ch4",
+		title: "Acusación",
+		kind: "errand",
+		objective: "Levantá la citación de la corte del buque insignia de la Reina.",
+		why: "Un recojo. Después preparate de corazón para una pelea, no para una cadena nueva.",
+		do: [
+			"Volvé al buque insignia.",
+			"Agarrá la citación.",
+			"Repará tus fragatas si están abolladas."
+		],
+		dont: "No arranques torres de inversores. Primero terminá la guerra.",
+		trap: "Dejar la citación tirada porque te fuiste a hacer ladrillos.",
+		overwhelmed: "Levantá el papel. Repará barcos. El final viene ahora.",
+		buildingIds: [],
+		suggestedAsks: ["¿Sumo más barcos de guerra?"]
+	},
+	{
+		id: "ch4-battle",
+		chapterId: "ch4",
+		title: "Batalla final",
+		kind: "combat",
+		objective: "Destruí los barcos de guerra Pyrphorian marcados, los de mando y el crucero del gran maestre en Bright Sands.",
+		why: "Fuego concentrado. Usá la grúa de reparación / tus cañones de puerto si la pelea es en casa. Pausá y dale órdenes si se pone ruidoso.",
+		do: [
+			"Agrupá tus barcos de guerra.",
+			"Matá los objetivos listados, los cañones más grandes al crucero cuando aparezca.",
+			"Retirá los barcos abollados a la grúa de reparación en vez de dejarlos hundirse de orgullo."
+		],
+		dont: "No reconstruyas la ciudad a mitad de batalla.",
+		trap: "Repartir el fuego entre siete barcos. Tirás uno, después el siguiente.",
+		overwhelmed: "Un objetivo a la vez. Repará a los heridos. Ignorá el horizonte.",
+		buildingIds: ["defenses"],
+		suggestedAsks: ["Se me están hundiendo los barcos", "¿Qué es fuego concentrado?"]
+	},
+	{
+		id: "ch4-flame",
+		chapterId: "ch4",
+		title: "La primera llama",
+		kind: "combat",
+		objective: "Destruí los barcos de ataque y el barco de mando que se acercan a tu puerto.",
+		why: "Defensa de casa. Ahora importan los cañones del muelle. Quedate cerca de tu grúa de reparación.",
+		do: [
+			"Recibilos en tu puerto, no en mar abierto.",
+			"Usá cañones montados y torres.",
+			"Repará entre oleadas si podés."
+		],
+		dont: "No persigas sobrevivientes por el mapa mientras aparecen más en tu puerta.",
+		trap: "Salir del puerto a cazar. La misión es ‘acercándose a tu puerto’.",
+		overwhelmed: "Peleá en casa. Usá los cañones que ya pusiste.",
+		buildingIds: ["defenses"],
+		suggestedAsks: ["Los cañones del puerto no disparan"]
+	},
+	{
+		id: "end-dream",
+		chapterId: "end",
+		title: "Un sueño propio",
+		kind: "build",
+		objective: "Atraé 500 ingenieros en Bright Sands.",
+		why: "Una ciudad de vuelta olímpica. El mismo 10×10, ahora con los niveles altos que desbloqueaste. De a poco. Ya ganaste la trama.",
+		do: [
+			"Tratá Bright Sands como el capítulo 1: cobertura de mercado, 10×10, una necesidad nueva a la vez.",
+			"Mantené vivos los niveles bajos para laburar las granjas y fábricas de las que comen los ingenieros.",
+			"500 es un número, no una fecha límite. Plantá, alimentá, subí los de más."
+		],
+		dont: "No tires el 10×10 porque ‘deberías’ usar un diamante ahora. No hace falta.",
+		trap: "Subir a todos a ingenieros y vaciar el pozo de obreros. Dejá una base.",
+		overwhelmed: "10×10, quedate con obreros, subí los de más, una necesidad a la vez, hasta 500.",
+		buildingIds: [
+			"marketplace",
+			"worker-house",
+			"school"
+		],
+		layoutId: "block-10",
+		suggestedAsks: [
+			"¿Los ingenieros qué precisan primero?",
+			"¿Sigo pudiendo usar el 10×10?",
+			"Esto se siente enorme"
+		]
+	}
+];
+var missionsById = Object.fromEntries(missions.map((mission) => [mission.id, mission]));
+var chaptersById = Object.fromEntries(chapters.map((chapter) => [chapter.id, chapter]));
+function getMissionIndex(missionId) {
+	const mission = missionsById[missionId];
+	const chapter = mission ? chaptersById[mission.chapterId] : void 0;
+	if (!mission || !chapter) return null;
+	const index = chapter.missionIds.indexOf(missionId);
+	return {
+		chapter,
+		index,
+		total: chapter.missionIds.length,
+		nextId: chapter.missionIds[index + 1],
+		prevId: chapter.missionIds[index - 1]
+	};
+}
+var brokeSteps = [
+	"Pará de construir. Nada nuevo hasta que el Balance deje de ser rojo.",
+	"Estadísticas → Economía. Si Edificios de producción cuestan casi tanto como Impuestos, tenés demasiadas fábricas para la gente que vive.",
+	"Instituciones con zzz están cobrando y no laburan. Bomberos: una estación. Las otras, borralas.",
+	"Pausá o tirá fábricas dormidas. Vendé el sobrante a Kahina. El impuesto sube con casas llenas, no con más chimeneas."
+];
+var peopleById = Object.fromEntries([
+	{
+		id: "kahina",
+		name: "Madame Kahina",
+		role: "Comerciante, tu banco de emergencia",
+		buddy: "Te compra casi cualquier cosa y vende el bien que te olvidaste de hacer. Cuando bajen las monedas, andá en barco con cajones de más. Eso es diplomacia hecha plata.",
+		do: "Vendé el sobrante. Comprá un bien que te falta en vez de fundar toda una cadena nueva.",
+		dont: "No le hundás los barcos ni la ignores para siempre. Es el cajero más amable del Viejo Mundo."
+	},
+	{
+		id: "blake",
+		name: "Sir Archibald Blake",
+		role: "La Corona",
+		buddy: "Te tira laburos de historia y te compra barcos. Quedate educado, entregá lo que pide, y usalo cuando precisás un casco que no te pinta fabricar.",
+		do: "Cumplí sus pedidos chicos. Vendele la goleta / las cañoneras que nombra la misión.",
+		dont: "No agarres pelea con la Corona. No le ganás a la marina de la campaña."
+	},
+	{
+		id: "hannah",
+		name: "Hannah Goode",
+		role: "Tu hermana, la brújula de las misiones",
+		buddy: "Si Hannah lo marcó, hacélo. Así te enseña la campaña el próximo edificio. Tratá sus avisos como la lista de la sesión, no como contenido extra opcional.",
+		do: "Seguí en orden sus laburos de construir y limpiar ruinas.",
+		dont: "No te vayas a optimizar números mientras su misión está en el registro."
+	},
+	{
+		id: "edvard",
+		name: "Edvard Goode",
+		role: "Familia, y un pesado",
+		buddy: "Te va a pedir cajones chicos — Schnapps, ropa, velas. Entregá las cuatro toneladas. Sale más barato que un rencor, y la historia precisa la entrega.",
+		do: "Dejá unos cajones de más en el almacén así sus listas de compras salen de una.",
+		dont: "No reconstruyas la industria por cuatro toneladas, y no le declares la guerra."
+	},
+	{
+		id: "eli",
+		name: "Eli Bleakworth",
+		role: "Isla prisión",
+		buddy: "Vas a ir por fianzas, expertos y cargas raras. Pagá la tarifa, levantá a la persona, andáte. Es un lugar, no un rival para vencer.",
+		do: "Llevá la plata que nombra la misión. Hablá, andáte.",
+		dont: "No labures su isla ni arranques una guerra de prisión."
+	},
+	{
+		id: "isabel",
+		name: "Isabel Sarmento",
+		role: "Aliada del Nuevo Mundo",
+		buddy: "El capítulo 3 es su isla y su gente. Alojá a quien manda. Sus pedidos son la misión, no un acertijo para optimizar.",
+		do: "Dejá camas libres en La Isla para que los refugiados puedan bajar de verdad.",
+		dont: "No mudes la capital a la selva y dejes tirado el Viejo Mundo."
+	},
+	{
+		id: "competitors",
+		name: "Otras compañías",
+		role: "Rivales de la máquina en el mapa",
+		buddy: "Van a agarrar islas. Dejalas. La campaña ya tiene villanos. Una guerra en la primera partida es cómo se te ponen rojas las monedas y la historia espera.",
+		do: "Asentate en otra isla. Quedate neutral. Comerciá si quieren.",
+		dont: "No compres acciones, no insultes ni declares guerra en una primera campaña. Eso es ajedrez."
+	}
+].map((person) => [person.id, person]));
+var lifeByChapter = Object.fromEntries([
+	{
+		chapterId: "prologue",
+		money: {
+			pulse: "Todavía no hay economía. No te hagas la cabeza con las monedas.",
+			keepGreen: ["Seguí el tutorial del pescado.", "El libro del Viejo Mundo arranca en el capítulo 1."],
+			trap: "Armar una estrategia de impuestos en la playa."
+		},
+		diplomacy: {
+			pulse: "Nadie a quien impresionar. Subite al vapor.",
+			keepPeace: ["Terminá los tres tiros.", "El capítulo 1 es donde aparece la gente."],
+			trap: "Ninguna. Saludá al agua."
+		}
+	},
+	{
+		chapterId: "ch1",
+		money: {
+			pulse: "Las casas te pagan. Las casas vacías y los edificios parados te cobran. Necesidades en verde le ganan a una ciudad más grande.",
+			keepGreen: [
+				"Mercado + pescado + ropa hacen que se muden granjeros. La gente en las casas es el impuesto.",
+				"Schnapps y la taberna son lujo — opcionales para sobrevivir, excelentes para las monedas. Ese es tu primer aumento.",
+				"Si el saldo se pone rojo: Estadísticas → Economía. Producción más cara que impuestos = demasiadas fábricas. Instituciones con zzz = cobrando al pedo.",
+				"No subas a todos los granjeros. Se traban las granjas, baja el ingreso, y igual pagás las casas de ladrillo."
+			],
+			trap: "Diez casas más ‘para después’ mientras pescado y ropa ya están amarillos. Así arranca la primera quiebra."
+		},
+		diplomacy: {
+			pulse: "Sé la compañía nueva y educada. Los personajes de la historia son vendedores, no jefes para vencer.",
+			keepPeace: [
+				"Hacé los laburos de Hannah. Entregá las listas de cuatro toneladas de Edvard.",
+				"Kahina te compra el sobrante. Usala antes de fundar una segunda isla de producción.",
+				"Ignorá a las compañías rivales que reclaman otras islas. Agarrá una libre.",
+				"No declares guerra, no compres acciones ni insultes a nadie en una primera partida."
+			],
+			trap: "Hundir a un comerciante porque pasó cerca. Le acabás de pegar a tu banco."
+		}
+	},
+	{
+		chapterId: "ch2",
+		money: {
+			pulse: "El acero es una cuenta, no un regalo. Armá los cuatro edificios que pide la misión, y cortá las compras industriales.",
+			keepGreen: [
+				"Mantené corriendo los impuestos de granjeros mientras los obreros laburan la calle de acero.",
+				"Blake te va a comprar barcos — esa misión también es una inyección de plata. No desarmes tu último comerciante para completarla.",
+				"Una fábrica de armas. Militar de más es mantenimiento sin premio de campaña todavía.",
+				"Si bajan las monedas, vendé acero o ropa de más; no fundes un imperio de carbón esta noche."
+			],
+			trap: "Una acería completa más una flota nueva mientras las necesidades de granjeros se ponen amarillas en casa."
+		},
+		diplomacy: {
+			pulse: "Quedate amigo de la Corona. El viaje por mar es una expedición, no una guerra.",
+			keepPeace: [
+				"Vendele a Blake lo que listó. Quedate bien con él.",
+				"El faro de Kahina es una parada de historia — y también un negocio. Cargá cajones de más si las monedas están flacas.",
+				"Equipá la expedición con educación: comida, ron, marineros extra. Las opciones cautas cuidan el barco.",
+				"Todavía nada de guerras con otras compañías. Estás por agrandar un segundo mapa."
+			],
+			trap: "Arrancar una toma de acciones porque se te desbloqueó el botón. La campaña no precisa un monopolio."
+		}
+	},
+	{
+		chapterId: "ch3",
+		money: {
+			pulse: "Dos mundos, dos mantenimientos. El Viejo Mundo tiene que quedarse en verde mientras jugás a lo tropical.",
+			keepGreen: [
+				"Antes de cruzar, sobrecargá en casa pescado, ropa, Schnapps y comida de obreros.",
+				"La Isla solo precisa la gente que nombra la misión — 50, después 300, después 600. No una capital.",
+				"Si las monedas del Viejo Mundo se ponen rojas, pausá la selva, arreglá las necesidades amarillas, y volvé.",
+				"Comprá un bien tropical que te falte a un comerciante, antes que una tercera plantación que no vas a poder laburar."
+			],
+			trap: "Quedarte una hora mirando La Isla mientras se congelan las granjas de casa y el libro sangra."
+		},
+		diplomacy: {
+			pulse: "Isabel es el capítulo. Rivales y saboteadores son historia, no una excusa para conquistar el mapa.",
+			keepPeace: [
+				"Alojá a quien manda. Dejá camas de más para que anden las entregas.",
+				"Armá la única comisaría. Cazá a la gente marcada. No ocupes cada isla de la máquina.",
+				"Llevá dos fragatas como pide — eso es defensa, no una flota colonial.",
+				"Los comerciantes del Viejo Mundo siguen importando. No insultes a Kahina desde otro hemisferio."
+			],
+			trap: "Declarar la guerra en el Nuevo Mundo porque alguien se asentó en una isla linda. Los refugiados no pueden bajar en una zona de guerra que arrancaste vos."
+		}
+	},
+	{
+		chapterId: "ch4",
+		money: {
+			pulse: "La guerra se come las monedas. Repará barcos en vez de reemplazarlos. La ciudad que tenés alcanza.",
+			keepGreen: [
+				"Dejá la producción corriendo de fondo. Una pausa en la pelea para arreglar necesidades amarillas está permitida.",
+				"Usá la grúa de reparación. Una fragata abollada sale más barata que una nueva.",
+				"No arranques palacios de inversores ni juergas de adornos a mitad del final.",
+				"Vendé armas o ron que te sobren si el saldo se pone rojo entre batallas."
+			],
+			trap: "Reconstruir el horizonte porque estás nervioso. La misión quiere cañones en Ditch Water, no un código de impuestos nuevo."
+		},
+		diplomacy: {
+			pulse: "La historia es la guerra. El resto puede esperar.",
+			keepPeace: [
+				"Entregá el contrato. Tocá el buque insignia. Peleá solo los barcos Pyrphorian marcados.",
+				"No abras un segundo frente contra una compañía que te cae mal.",
+				"Mantené a Blake y a la Corona de tu lado — ya hiciste la tarea.",
+				"Después de la batalla, podés ser un vecino más copado. No durante."
+			],
+			trap: "Perseguir a un comerciante rival por el mapa mientras arde el puerto."
+		}
+	},
+	{
+		chapterId: "end",
+		money: {
+			pulse: "Los ingenieros son comedores caros. Crecélos como creciste granjeros: solo los de más, una necesidad a la vez.",
+			keepGreen: [
+				"Dejá obreros y granjeros en su lugar. Siguen bancando y laburando la isla.",
+				"Subí unos cuantos, mirá el saldo, y recién ahí subí unos cuantos más.",
+				"Si caen las monedas, frená las mejoras y arreglá la necesidad amarilla nueva. No plantes cincuenta casas de ingenieros.",
+				"Ya ganaste la trama. Ir lento está permitido."
+			],
+			trap: "Subir a todos a ingenieros y mirar cómo se mueren juntas las granjas, las fábricas y el libro."
+		},
+		diplomacy: {
+			pulse: "Sé un vecino quieto. El mapa es para disfrutarlo, no para limpiarlo.",
+			keepPeace: [
+				"Comerciá con quien todavía te banque.",
+				"Salteate las tomas de control salvo que de verdad quieras ese modo libre ahora.",
+				"Kahina sigue comprando el sobrante. Los viejos hábitos pueden quedarse."
+			],
+			trap: "Una guerra mundial de vuelta olímpica. Tus 10×10 no pidieron esto."
+		}
+	}
+].map((item) => [item.chapterId, item]));
+var lifeAsks = {
+	prologue: ["¿Qué importa después del prólogo?"],
+	ch1: [
+		"Se me pusieron rojas las monedas",
+		"¿Le vendo a Kahina?",
+		"¿Peleo con las otras compañías?"
+	],
+	ch2: [
+		"El acero me está drenando",
+		"¿Ya vale la pena la guerra?",
+		"¿Qué llevo a la expedición?"
+	],
+	ch3: [
+		"El Viejo Mundo se está fundiendo",
+		"¿Puedo ignorar a las otras compañías?",
+		"Isabel pide demasiado"
+	],
+	ch4: ["Reemplazar barcos me sale carísimo", "¿Contra quién tengo que pelear de verdad?"],
+	end: ["Los ingenieros me arruinaron el ingreso", "¿Ahora puedo quedarme en paz?"]
+};
+function peopleForChapter(chapterId) {
+	switch (chapterId) {
+		case "prologue": return [];
+		case "ch1": return pick([
+			"hannah",
+			"edvard",
+			"kahina",
+			"blake",
+			"competitors"
+		]);
+		case "ch2": return pick([
+			"blake",
+			"kahina",
+			"eli",
+			"hannah",
+			"competitors"
+		]);
+		case "ch3": return pick([
+			"isabel",
+			"hannah",
+			"kahina",
+			"competitors"
+		]);
+		case "ch4": return pick([
+			"blake",
+			"hannah",
+			"edvard",
+			"competitors"
+		]);
+		case "end": return pick(["kahina", "competitors"]);
+		default: return pick(["kahina", "competitors"]);
+	}
+}
+function pick(ids) {
+	return ids.map((id) => peopleById[id]).filter((person) => Boolean(person));
+}
+var defaultPulse = {
+	coins: "unknown",
+	houses: "unknown",
+	looking: "unknown"
+};
+function pulseLine(pulse) {
+	const bits = [];
+	if (pulse.coins === "up") bits.push("las monedas suben");
+	if (pulse.coins === "down") bits.push("las monedas están en rojo");
+	if (pulse.houses === "ok") bits.push("las casas se ven contentas");
+	if (pulse.houses === "yellow") bits.push("hay barras amarillas en las casas");
+	if (pulse.houses === "empty") bits.push("hay casas vacías");
+	if (pulse.looking === "city") bits.push("está en la ciudad");
+	if (pulse.looking === "quest") bits.push("está siguiendo un recado");
+	if (pulse.looking === "sea") bits.push("está en el mar");
+	if (pulse.looking === "other") bits.push("está en otra isla");
+	if (pulse.looking === "stats") bits.push("está mirando Estadísticas → Economía");
+	if (bits.length === 0) return "Todavía no dijo cómo está la partida.";
+	return `En su partida ahora: ${bits.join("; ")}.`;
+}
+function nextMove(pulse, doItems, checked) {
+	if (pulse.coins === "down" || pulse.looking === "stats") return {
+		title: "La producción te está comiendo.",
+		detail: "En Economía, si Edificios de producción cuestan casi tanto como Impuestos, pausá fábricas. Si Instituciones tienen zzz, borralas. Un pueblo chico no mantiene 20 chimeneas ni 3 cuarteles de bomberos."
+	};
+	if (pulse.houses === "empty") return {
+		title: "Las casas vacías no pagan.",
+		detail: "Camino al mercado, y que el almacén alcance. Si no hay calle, no se muda nadie."
+	};
+	if (pulse.houses === "yellow") return {
+		title: "Primero las barras amarillas.",
+		detail: "Una cadena a la vez. No hace falta una ciudad nueva. Cuando se pongan verdes, volvés a la misión."
+	};
+	const next = doItems.findIndex((_, index) => !checked.includes(index));
+	if (next >= 0) return {
+		title: "Esto, ahora.",
+		detail: doItems[next] ?? "Seguí el marcador de la misión."
+	};
+	if (pulse.looking === "quest") return {
+		title: "La ciudad puede esperar.",
+		detail: "Seguí el marcador, entregá, y volvé. Si las barras están verdes, la isla se banca sola."
+	};
+	return {
+		title: "Esta parte está.",
+		detail: "Marcá la misión como lista, o preguntame lo que te traba."
+	};
+}
+//#endregion
+export { defaultPulse as a, lifeByChapter as c, nextMove as d, peopleForChapter as f, chaptersById as i, missions as l, buildingsById as n, getMissionIndex as o, pulseLine as p, chapters as r, lifeAsks as s, brokeSteps as t, missionsById as u };
