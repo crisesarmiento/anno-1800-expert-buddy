@@ -236,3 +236,39 @@ stampBom("watch-harbor-live.ps1");
 stampBom("install-harbor-buddy.ps1");
 console.log("[pack-mod] utf8-bom scripts");
 
+function packWatcherBundle() {
+  let ps = readFileSync(join(outDir, "watch-harbor-live.ps1"), "utf8");
+  if (ps.charCodeAt(0) === 0xfeff) ps = ps.slice(1);
+  ps = ps.replace(/\r\n/g, "\n");
+  const catalog = readFileSync(join(outDir, "harbor-catalog.json"), "utf8").trim();
+  const needle = "$titlesPath = Find-Catalog\n$catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json";
+  if (!ps.includes(needle)) {
+    console.error("[pack-mod] watcher bundle: catalog load block not found");
+    process.exit(1);
+  }
+  const injected = ps.replace(
+    needle,
+    `$titlesPath = "embedded"\n$catalog = @'\n${catalog}\n'@ | ConvertFrom-Json`,
+  );
+  const header = [
+    "@echo off",
+    "setlocal EnableExtensions",
+    "cd /d \"%~dp0\"",
+    "echo Harbor Buddy vigilante 0.4.1 - un solo archivo",
+    "if exist \"watch-harbor-live.ps1\" (",
+    "  echo Encontre un .ps1 viejo en esta carpeta. Lo renombro a .old para no usarlo.",
+    "  move /Y \"watch-harbor-live.ps1\" \"watch-harbor-live.ps1.old\" >nul",
+    ")",
+    "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$p='%~f0'; $b=[IO.File]::ReadAllBytes($p); $t=[Text.Encoding]::UTF8.GetString($b); $m='::'+'HARBOR_WATCHER_SCRIPT_V1'; $i=$t.IndexOf($m); if($i -lt 0){ throw 'archivo incompleto' }; iex $t.Substring($i+$m.Length)\"",
+    "if errorlevel 1 pause",
+    "exit /b 0",
+    "::HARBOR_WATCHER_SCRIPT_V1",
+    "",
+  ].join("\r\n");
+  writeFileSync(join(outDir, "watch-harbor-live.bat"), header + injected.replace(/\n/g, "\r\n"));
+  console.log("[pack-mod] bundled watcher bat");
+}
+
+packWatcherBundle();
+
+

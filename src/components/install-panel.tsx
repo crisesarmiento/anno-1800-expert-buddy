@@ -71,16 +71,6 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
                 {t.install.watchBat}
               </a>
             </Button>
-            <Button asChild variant="secondary">
-              <a href="/watch-harbor-live.ps1" download="watch-harbor-live.ps1">
-                {t.install.ps1}
-              </a>
-            </Button>
-            <Button asChild variant="secondary">
-              <a href="/harbor-catalog.json" download="harbor-catalog.json">
-                {t.install.watchTitles}
-              </a>
-            </Button>
           </div>
         </li>
 
