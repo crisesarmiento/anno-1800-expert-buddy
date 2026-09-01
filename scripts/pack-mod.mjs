@@ -225,3 +225,14 @@ function packCatalog(missions) {
 const packedMissions = packTitles();
 packCatalog(packedMissions);
 
+function stampBom(name) {
+  const dest = join(outDir, name);
+  let text = readFileSync(dest, "utf8");
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  writeFileSync(dest, `\uFEFF${text.replace(/\r?\n/g, "\r\n")}`);
+}
+
+stampBom("watch-harbor-live.ps1");
+stampBom("install-harbor-buddy.ps1");
+console.log("[pack-mod] utf8-bom scripts");
+

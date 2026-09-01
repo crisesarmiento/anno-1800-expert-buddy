@@ -1,4 +1,4 @@
-# Harbor Buddy Telemetry — instalador
+﻿# Harbor Buddy Telemetry — instalador
 # Copia el mod a Documentos\Anno 1800\mods. No pide admin. No toca partidas.
 
 $ErrorActionPreference = "Stop"

@@ -1,6 +1,6 @@
-# Harbor Buddy — vigilante del diario
-# No inyecta Anno. Lee el último .a7s, busca títulos de campaña, escribe harbor-live.json.
-# Dejá esta ventana abierta mientras jugás. Guardá con F5 (o esperá el autoguardado).
+﻿# Harbor Buddy - vigilante del diario
+# No inyecta Anno. Lee el ultimo .a7s, busca titulos, escribe harbor-live.json.
+# Deja esta ventana abierta. Guarda con F5 (o espera el autoguardado).
 
 $ErrorActionPreference = "Stop"
 
@@ -30,7 +30,15 @@ function Find-Catalog {
       if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
   }
-  throw "Falta harbor-catalog.json. Descargalo de Harbor Buddy (junto al vigilante)."
+
+  $dest = Join-Path $PSScriptRoot "harbor-catalog.json"
+  $url = "https://raw.githubusercontent.com/crisesarmiento/anno-1800-expert-buddy/main/public/harbor-catalog.json"
+  Write-Host "Falta harbor-catalog.json. Lo bajo..."
+  Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $dest
+  if (-not (Test-Path -LiteralPath $dest)) {
+    throw "Falta harbor-catalog.json. Descargalo de Harbor Buddy junto a este script."
+  }
+  return $dest
 }
 
 function Test-Blob([string]$blob, $needles) {
@@ -40,6 +48,25 @@ function Test-Blob([string]$blob, $needles) {
     }
   }
   return $false
+}
+
+function Collect-Hits($items, [string]$blob, [bool]$useNeedles) {
+  $hits = @()
+  if (-not $items) { return $hits }
+  foreach ($item in $items) {
+    $needles = @()
+    if ($item.names) { $needles += @($item.names) }
+    if ($useNeedles -and $item.needles) { $needles += @($item.needles) }
+    if (Test-Blob $blob $needles) {
+      $label = [string]$item.id
+      if ($item.names) {
+        $first = @($item.names)[0]
+        if ($first) { $label = [string]$first }
+      }
+      $hits += [ordered]@{ id = [string]$item.id; name = $label }
+    }
+  }
+  return $hits
 }
 
 function Get-NewestSave([string]$anno) {
@@ -76,31 +103,6 @@ function Get-InflatedText([byte[]]$bytes) {
   }
   return ($chunks -join "`n")
 }
-  Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
-  $chunks = New-Object System.Collections.Generic.List[string]
-  $limit = [Math]::Min($bytes.Length - 2, 8MB)
-  $hits = 0
-  for ($i = 0; $i -lt $limit -and $hits -lt 24; $i++) {
-    if ($bytes[$i] -ne 0x78) { continue }
-    $cmf = $bytes[$i + 1]
-    if ($cmf -ne 0x01 -and $cmf -ne 0x9C -and $cmf -ne 0xDA) { continue }
-    try {
-      $ms = New-Object System.IO.MemoryStream($bytes, $i + 2, [Math]::Min(512KB, $bytes.Length - ($i + 2)))
-      $ds = New-Object System.IO.Compression.DeflateStream($ms, [System.IO.Compression.CompressionMode]::Decompress)
-      $out = New-Object System.IO.MemoryStream
-      $ds.CopyTo($out)
-      $ds.Dispose()
-      $ms.Dispose()
-      $raw = $out.ToArray()
-      $out.Dispose()
-      if ($raw.Length -lt 8) { continue }
-      $hits++
-      $chunks.Add([System.Text.Encoding]::UTF8.GetString($raw))
-      $chunks.Add([System.Text.Encoding]::Unicode.GetString($raw))
-    } catch { }
-  }
-  return ($chunks -join "`n")
-}
 
 $utf8 = New-Object System.Text.UTF8Encoding $false
 $anno = Find-AnnoRoot
@@ -112,9 +114,9 @@ $utf16Enc = [System.Text.Encoding]::Unicode
 
 Write-Host "Harbor Buddy vigilante"
 Write-Host "Anno: $anno"
-Write-Host "Títulos: $titlesPath"
+Write-Host "Catalogo: $titlesPath"
 Write-Host "Salida: $outJson"
-Write-Host "Jugá, guardá con F5. Ctrl+C para salir."
+Write-Host "Juga, guarda con F5. Ctrl+C para salir."
 Write-Host ""
 
 $lastStamp = $null
@@ -156,22 +158,7 @@ while ($true) {
         }
       }
     } elseif ($found.Count -gt 10) {
-      Write-Host "$(Get-Date -Format HH:mm:ss) demasiados títulos ($($found.Count)) — parece tabla de textos. Usá el buscador."
-    }
-
-    function Collect-Hits($items, [bool]$useNeedles) {
-      $hits = @()
-      if (-not $items) { return $hits }
-      foreach ($item in $items) {
-        $needles = @()
-        if ($item.names) { $needles += @($item.names) }
-        if ($useNeedles -and $item.needles) { $needles += @($item.needles) }
-        if (Test-Blob $blob $needles) {
-          $label = if ($item.names -and $item.names.Count -gt 0) { [string]$item.names[0] } else { [string]$item.id }
-          $hits += [ordered]@{ id = [string]$item.id; name = $label }
-        }
-      }
-      return $hits
+      Write-Host "$(Get-Date -Format HH:mm:ss) demasiados titulos ($($found.Count)) - usa el buscador."
     }
 
     $hintHits = @()
@@ -182,26 +169,28 @@ while ($true) {
     }
 
     $telemetry = [ordered]@{
-      buildings = @(Collect-Hits $catalog.buildings $false)
-      people    = @(Collect-Hits $catalog.people $false)
-      chains    = @(Collect-Hits $catalog.chains $true)
-      islands   = @(Collect-Hits $catalog.islands $false)
+      buildings = @(Collect-Hits $catalog.buildings $blob $false)
+      people    = @(Collect-Hits $catalog.people $blob $false)
+      chains    = @(Collect-Hits $catalog.chains $blob $true)
+      islands   = @(Collect-Hits $catalog.islands $blob $false)
       hints     = @($hintHits)
     }
 
     $payload = [ordered]@{
-      schema     = "harbor-live-v1"
-      source     = "save"
-      updatedAt  = (Get-Date).ToUniversalTime().ToString("o")
-      game       = "anno-1800"
-      quests     = @($quests)
-      telemetry  = $telemetry
+      schema    = "harbor-live-v1"
+      source    = "save"
+      updatedAt = (Get-Date).ToUniversalTime().ToString("o")
+      game      = "anno-1800"
+      quests    = @($quests)
+      telemetry = $telemetry
     }
     $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
     [System.IO.File]::WriteAllText($outJson, $json + "`n", $utf8)
     $bCount = @($telemetry.buildings).Count
-    $label = if ($quests.Count -gt 0) { $quests[-1].title } else { "(vacío — F5 o buscador)" }
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) → $label · $bCount edificios"
+    $lastQuest = ""
+    if ($quests.Count -gt 0) { $lastQuest = [string]$quests[$quests.Count - 1].title }
+    if (-not $lastQuest) { $lastQuest = "(vacio - F5 o buscador)" }
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $lastQuest / $bCount edificios"
   } catch {
     Write-Host "$(Get-Date -Format HH:mm:ss) error: $($_.Exception.Message)"
   }
