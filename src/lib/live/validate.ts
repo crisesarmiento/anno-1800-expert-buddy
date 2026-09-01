@@ -7,11 +7,13 @@ import {
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
   type LiveIngestResult,
+  type LiveNamedHit,
   type LivePulseHint,
   type LiveQuest,
   type LiveQuestState,
   type LiveSnapshot,
   type LiveSource,
+  type LiveTelemetry,
 } from "./types.ts";
 
 const JSON_MIME = new Set(["application/json", "text/plain"]);
@@ -71,6 +73,45 @@ function normalizeQuest(value: unknown, locale?: string | null): LiveQuest | { e
   return quest;
 }
 
+function clipName(value: unknown, max: number) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+function normalizeHits(value: unknown, maxItems: number): LiveNamedHit[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const hits: LiveNamedHit[] = [];
+  for (const item of value.slice(0, maxItems)) {
+    if (!asRecord(item)) continue;
+    const id = clipName(item.id, 48);
+    const name = clipName(item.name, 80);
+    if (!id || !name) continue;
+    hits.push({ id, name });
+  }
+  return hits.length ? hits : undefined;
+}
+
+function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
+  if (!asRecord(value)) return undefined;
+  const telemetry: LiveTelemetry = {};
+  const buildings = normalizeHits(value.buildings, 80);
+  const people = normalizeHits(value.people, 24);
+  const chains = normalizeHits(value.chains, 20);
+  const islands = normalizeHits(value.islands, 20);
+  if (buildings) telemetry.buildings = buildings;
+  if (people) telemetry.people = people;
+  if (chains) telemetry.chains = chains;
+  if (islands) telemetry.islands = islands;
+  if (Array.isArray(value.hints)) {
+    const hints = value.hints
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim().slice(0, 40))
+      .filter(Boolean)
+      .slice(0, 30);
+    if (hints.length) telemetry.hints = hints;
+  }
+  return Object.keys(telemetry).length ? telemetry : undefined;
+}
+
 function normalizePulse(value: unknown): LivePulseHint | undefined {
   if (value === undefined || value === null) return undefined;
   if (!asRecord(value)) return undefined;
@@ -119,6 +160,8 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   };
   const pulseHint = normalizePulse(raw.pulseHint);
   if (pulseHint) snapshot.pulseHint = pulseHint;
+  const telemetry = normalizeTelemetry(raw.telemetry);
+  if (telemetry) snapshot.telemetry = telemetry;
   return { ok: true, snapshot };
 }
 

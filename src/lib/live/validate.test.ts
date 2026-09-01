@@ -34,6 +34,7 @@ describe("harbor-live ingest", () => {
     assert.deepEqual(progress.checks["pro-blast"], [0, 1, 2]);
     assert.equal(progress.pulse.looking, "quest");
     assert.equal(progress.pulse.coins, "down");
+    assert.equal(result.snapshot.telemetry?.buildings?.[0]?.id, "lumberjack");
   });
 
   it("rejects a bad schema", () => {
@@ -62,7 +63,7 @@ describe("harbor-live ingest", () => {
   });
 
   it("rejects a huge string", () => {
-    const huge = "x".repeat(200 * 1024 + 40);
+    const huge = "x".repeat(400 * 1024 + 40);
     const result = ingestLiveJsonText(huge);
     assert.equal(result.ok, false);
     if (result.ok) return;

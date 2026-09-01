@@ -1,0 +1,776 @@
+{
+  "schema": "harbor-catalog-v1",
+  "missions": [
+    {
+      "id": "pro-blast",
+      "titles": [
+        "A lo grande"
+      ]
+    },
+    {
+      "id": "ch1-spark",
+      "titles": [
+        "Una chispa que vuelve",
+        "A Spark Rekindled"
+      ]
+    },
+    {
+      "id": "ch1-apple",
+      "titles": [
+        "La manzana no cae lejos del árbol",
+        "The Apple Falls Not Far From The Tree"
+      ]
+    },
+    {
+      "id": "ch1-loyalty",
+      "titles": [
+        "Lealtad pagada",
+        "Loyalty Repaid"
+      ]
+    },
+    {
+      "id": "ch1-ditchwater",
+      "titles": [
+        "Aburrido como Ditch Water",
+        "Dull As Ditchwater"
+      ]
+    },
+    {
+      "id": "ch1-earth",
+      "titles": [
+        "Sacar de la tierra",
+        "Take From The Earth"
+      ]
+    },
+    {
+      "id": "ch1-toast",
+      "titles": [
+        "Brindis al futuro",
+        "Toast To The Future"
+      ]
+    },
+    {
+      "id": "ch1-family",
+      "titles": [
+        "Lazos de familia",
+        "Family Bonds"
+      ]
+    },
+    {
+      "id": "ch1-blacksheep",
+      "titles": [
+        "La oveja negra de la familia",
+        "Black Sheep Of The Family"
+      ]
+    },
+    {
+      "id": "ch1-polish",
+      "titles": [
+        "Un último retoque",
+        "One Final Polish"
+      ]
+    },
+    {
+      "id": "ch1-pleas",
+      "titles": [
+        "Los ruegos de un pariente pobre",
+        "Pleas Of A Poor Relation"
+      ]
+    },
+    {
+      "id": "ch1-hardtimes",
+      "titles": [
+        "Tiempos duros",
+        "Hard Times"
+      ]
+    },
+    {
+      "id": "ch1-press",
+      "titles": [
+        "Libertad y prensa libre",
+        "Freedom And The Free Press"
+      ]
+    },
+    {
+      "id": "ch1-debt",
+      "titles": [
+        "La deuda es oficial",
+        "The Debt Is Official"
+      ]
+    },
+    {
+      "id": "ch1-raise",
+      "titles": [
+        "Hora de un aumento",
+        "Time For A Raise"
+      ]
+    },
+    {
+      "id": "ch1-ashes",
+      "titles": [
+        "Construir sobre las cenizas",
+        "Building From The Ashes"
+      ]
+    },
+    {
+      "id": "ch1-heroes",
+      "titles": [
+        "Héroes de la clase obrera",
+        "Working Class Heroes"
+      ]
+    },
+    {
+      "id": "ch1-lackey",
+      "titles": [
+        "El lacayo de Edvard",
+        "Edvard'S Lackey"
+      ]
+    },
+    {
+      "id": "ch1-scapegoats",
+      "titles": [
+        "Chivos expiatorios"
+      ]
+    },
+    {
+      "id": "ch1-business",
+      "titles": [
+        "No es asunto tuyo / Curiosidad",
+        "None Of Your Business"
+      ]
+    },
+    {
+      "id": "ch1-photograph",
+      "titles": [
+        "Recién salido de la imprenta",
+        "Hot Off The Press"
+      ]
+    },
+    {
+      "id": "ch2-bulk",
+      "titles": [
+        "Pedido al por mayor",
+        "Request In Bulk"
+      ]
+    },
+    {
+      "id": "ch2-iron",
+      "titles": [
+        "Cualquier hierro viejo",
+        "Any Old Iron"
+      ]
+    },
+    {
+      "id": "ch2-mountains",
+      "titles": [
+        "Mover montañas",
+        "Moving Mountains"
+      ]
+    },
+    {
+      "id": "ch2-expert",
+      "titles": [
+        "El experto en demolición",
+        "Demolition Expert"
+      ]
+    },
+    {
+      "id": "ch2-industrial",
+      "titles": [
+        "Evolución industrial",
+        "Industrial Evolution"
+      ]
+    },
+    {
+      "id": "ch2-warfare",
+      "titles": [
+        "Guerra"
+      ]
+    },
+    {
+      "id": "ch2-smuggler",
+      "titles": [
+        "Seguir a un contrabandista",
+        "Follow A Smuggler"
+      ]
+    },
+    {
+      "id": "ch2-pyrphorians",
+      "titles": [
+        "Los Pyrphorian",
+        "The Pyrphorians"
+      ]
+    },
+    {
+      "id": "ch2-newworld",
+      "titles": [
+        "Misión al Nuevo Mundo",
+        "Expedition To The New World Nuevo Mundo"
+      ]
+    },
+    {
+      "id": "ch3-hand",
+      "titles": [
+        "Una mano lava la otra",
+        "One Good Turn Una Mano Lava"
+      ]
+    },
+    {
+      "id": "ch3-rebels",
+      "titles": [
+        "Un hogar para los rebeldes",
+        "A Home For The Rebels"
+      ]
+    },
+    {
+      "id": "ch3-rescue",
+      "titles": [
+        "Rescate y refugio",
+        "Rescue And Refuge"
+      ]
+    },
+    {
+      "id": "ch3-bastion",
+      "titles": [
+        "Un bastión para todos"
+      ]
+    },
+    {
+      "id": "ch3-heat",
+      "titles": [
+        "Ola de calor",
+        "Heatwave Ola De"
+      ]
+    },
+    {
+      "id": "ch3-lookout",
+      "titles": [
+        "Un puesto de vigilancia",
+        "A Lookout Post"
+      ]
+    },
+    {
+      "id": "ch3-wolves",
+      "titles": [
+        "Lobos con ropa de alpaca",
+        "Wolves In"
+      ]
+    },
+    {
+      "id": "ch3-release",
+      "titles": [
+        "Soltar y aliviar",
+        "Release And Relief"
+      ]
+    },
+    {
+      "id": "ch3-defense",
+      "titles": [
+        "La mejor defensa es un buen ataque",
+        "Best Defense Good Offense"
+      ]
+    },
+    {
+      "id": "ch3-refugees",
+      "titles": [
+        "Refugiados bienvenidos",
+        "Refugees Welcome"
+      ]
+    },
+    {
+      "id": "ch3-evac",
+      "titles": [
+        "Evacuación de emergencia",
+        "Emergency Evacuation"
+      ]
+    },
+    {
+      "id": "ch3-wildfire",
+      "titles": [
+        "Incendio a pedido",
+        "Wildfire To Order"
+      ]
+    },
+    {
+      "id": "ch3-ransom",
+      "titles": [
+        "No pagues rescate",
+        "Pay No Ransom"
+      ]
+    },
+    {
+      "id": "ch3-lead",
+      "titles": [
+        "Seguir la pista",
+        "Follow The Trail"
+      ]
+    },
+    {
+      "id": "ch4-confrontation",
+      "titles": [
+        "La confrontación",
+        "The Confrontation"
+      ]
+    },
+    {
+      "id": "ch4-justitia",
+      "titles": [
+        "Justitia"
+      ]
+    },
+    {
+      "id": "ch4-come",
+      "titles": [
+        "Pase lo que pase",
+        "Come What May Pase Lo Que Pase"
+      ]
+    },
+    {
+      "id": "ch4-noblesse",
+      "titles": [
+        "Noblesse Oblige"
+      ]
+    },
+    {
+      "id": "ch4-prosecution",
+      "titles": [
+        "Acusación"
+      ]
+    },
+    {
+      "id": "ch4-battle",
+      "titles": [
+        "Batalla final",
+        "Final Battle"
+      ]
+    },
+    {
+      "id": "ch4-flame",
+      "titles": [
+        "La primera llama",
+        "The First Flame Primera"
+      ]
+    },
+    {
+      "id": "end-dream",
+      "titles": [
+        "Un sueño propio",
+        "A Dream Of Our Own"
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "lumberjack",
+      "names": [
+        "Cabaña de leñador",
+        "Lumberjack's Hut"
+      ]
+    },
+    {
+      "id": "sawmill",
+      "names": [
+        "Aserradero",
+        "Sawmill"
+      ]
+    },
+    {
+      "id": "marketplace",
+      "names": [
+        "Mercado",
+        "Marketplace"
+      ]
+    },
+    {
+      "id": "farmer-house",
+      "names": [
+        "Residencia de granjeros",
+        "Farmer Residence"
+      ]
+    },
+    {
+      "id": "fishery",
+      "names": [
+        "Pescadería",
+        "Fishery"
+      ]
+    },
+    {
+      "id": "sheep",
+      "names": [
+        "Granja de ovejas",
+        "Sheep Farm"
+      ]
+    },
+    {
+      "id": "knitters",
+      "names": [
+        "Telares",
+        "Knitter's Hut"
+      ]
+    },
+    {
+      "id": "potato",
+      "names": [
+        "Granja de papas",
+        "Potato Farm"
+      ]
+    },
+    {
+      "id": "distillery",
+      "names": [
+        "Destilería de Schnapps",
+        "Schnapps Distillery"
+      ]
+    },
+    {
+      "id": "pub",
+      "names": [
+        "Taberna",
+        "Pub"
+      ]
+    },
+    {
+      "id": "worker-house",
+      "names": [
+        "Residencia de obreros"
+      ]
+    },
+    {
+      "id": "sausage",
+      "names": [
+        "Granja de cerdos + Matadero",
+        "Slaughterhouse"
+      ]
+    },
+    {
+      "id": "bread",
+      "names": [
+        "Granja de trigo, molino, panadería"
+      ]
+    },
+    {
+      "id": "soap",
+      "names": [
+        "Fábrica de jabón"
+      ]
+    },
+    {
+      "id": "school",
+      "names": [
+        "Escuela",
+        "School"
+      ]
+    },
+    {
+      "id": "church",
+      "names": [
+        "Iglesia"
+      ]
+    },
+    {
+      "id": "warehouse",
+      "names": [
+        "Almacén / Puesto comercial",
+        "Warehouse"
+      ]
+    },
+    {
+      "id": "iron-mine",
+      "names": [
+        "Mina de hierro"
+      ]
+    },
+    {
+      "id": "charcoal",
+      "names": [
+        "Carbonera"
+      ]
+    },
+    {
+      "id": "furnace",
+      "names": [
+        "Fundición",
+        "Furnace"
+      ]
+    },
+    {
+      "id": "steelworks",
+      "names": [
+        "Acería",
+        "Steelworks"
+      ]
+    },
+    {
+      "id": "weapons",
+      "names": [
+        "Fábrica de armas"
+      ]
+    },
+    {
+      "id": "sails",
+      "names": [
+        "Fábrica de velas"
+      ]
+    },
+    {
+      "id": "jornalero",
+      "names": [
+        "Residencia de jornaleros"
+      ]
+    },
+    {
+      "id": "plantain",
+      "names": [
+        "Plantación de plátanos + Cocina"
+      ]
+    },
+    {
+      "id": "police",
+      "names": [
+        "Comisaría"
+      ]
+    },
+    {
+      "id": "hospital",
+      "names": [
+        "Hospital"
+      ]
+    },
+    {
+      "id": "obrero",
+      "names": [
+        "Residencia de obreros"
+      ]
+    },
+    {
+      "id": "defenses",
+      "names": [
+        "Cañones montados, torres de cañón, grúa de reparación"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "id": "kahina",
+      "names": [
+        "Madame Kahina"
+      ]
+    },
+    {
+      "id": "blake",
+      "names": [
+        "Sir Archibald Blake"
+      ]
+    },
+    {
+      "id": "hannah",
+      "names": [
+        "Hannah Goode"
+      ]
+    },
+    {
+      "id": "edvard",
+      "names": [
+        "Edvard Goode"
+      ]
+    },
+    {
+      "id": "eli",
+      "names": [
+        "Eli Bleakworth"
+      ]
+    },
+    {
+      "id": "isabel",
+      "names": [
+        "Isabel Sarmento"
+      ]
+    },
+    {
+      "id": "competitors",
+      "names": [
+        "Otras compañías"
+      ]
+    }
+  ],
+  "chains": [
+    {
+      "id": "wood",
+      "names": [
+        "Madera"
+      ],
+      "needles": [
+        "Leñador",
+        "Aserradero"
+      ]
+    },
+    {
+      "id": "fish",
+      "names": [
+        "Pescado"
+      ],
+      "needles": [
+        "Pescadería"
+      ]
+    },
+    {
+      "id": "clothes",
+      "names": [
+        "Ropa"
+      ],
+      "needles": [
+        "Ovejas",
+        "Telares"
+      ]
+    },
+    {
+      "id": "schnapps",
+      "names": [
+        "Schnapps"
+      ],
+      "needles": [
+        "Papas",
+        "Destilería"
+      ]
+    },
+    {
+      "id": "workers",
+      "names": [
+        "Comida de obreros"
+      ],
+      "needles": [
+        "Cerdos",
+        "Trigo → molino → pan"
+      ]
+    },
+    {
+      "id": "steel",
+      "names": [
+        "Acero"
+      ],
+      "needles": [
+        "Mina",
+        "Carbón",
+        "Fundición",
+        "Acería"
+      ]
+    },
+    {
+      "id": "sails",
+      "names": [
+        "Velas"
+      ],
+      "needles": [
+        "Lana",
+        "Velas"
+      ]
+    }
+  ],
+  "islands": [
+    {
+      "id": "bright-sands",
+      "names": [
+        "Bright Sands"
+      ]
+    },
+    {
+      "id": "ditchwater",
+      "names": [
+        "Ditchwater",
+        "Ditch Water"
+      ]
+    },
+    {
+      "id": "crown-falls",
+      "names": [
+        "Crown Falls"
+      ]
+    },
+    {
+      "id": "la-isla",
+      "names": [
+        "La Isla"
+      ]
+    },
+    {
+      "id": "cape",
+      "names": [
+        "Cape Trelawney"
+      ]
+    },
+    {
+      "id": "old-world",
+      "names": [
+        "Old World",
+        "Viejo Mundo"
+      ]
+    },
+    {
+      "id": "new-world",
+      "names": [
+        "New World",
+        "Nuevo Mundo"
+      ]
+    }
+  ],
+  "hints": [
+    {
+      "id": "farmers",
+      "needles": [
+        "granjeros",
+        "farmers"
+      ]
+    },
+    {
+      "id": "workers",
+      "needles": [
+        "obreros",
+        "workers"
+      ]
+    },
+    {
+      "id": "artisans",
+      "needles": [
+        "artesanos",
+        "artisans"
+      ]
+    },
+    {
+      "id": "engineers",
+      "needles": [
+        "ingenieros",
+        "engineers"
+      ]
+    },
+    {
+      "id": "schnapps",
+      "needles": [
+        "Schnapps"
+      ]
+    },
+    {
+      "id": "steel",
+      "needles": [
+        "acero",
+        "steel"
+      ]
+    },
+    {
+      "id": "war",
+      "needles": [
+        "guerra",
+        "war",
+        "Krieg"
+      ]
+    },
+    {
+      "id": "taxes",
+      "needles": [
+        "impuestos",
+        "taxes",
+        "Steuern"
+      ]
+    }
+  ]
+}

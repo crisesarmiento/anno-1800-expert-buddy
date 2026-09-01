@@ -17,8 +17,8 @@ function Find-AnnoRoot {
   throw "No encuentro Documentos\Anno 1800"
 }
 
-function Find-Titles {
-  $names = @("harbor-titles.json")
+function Find-Catalog {
+  $names = @("harbor-catalog.json", "harbor-titles.json")
   $places = @(
     $PSScriptRoot,
     (Join-Path $env:USERPROFILE "Downloads"),
@@ -30,7 +30,16 @@ function Find-Titles {
       if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
   }
-  throw "Falta harbor-titles.json. Descargalo de Harbor Buddy (junto al vigilante)."
+  throw "Falta harbor-catalog.json. Descargalo de Harbor Buddy (junto al vigilante)."
+}
+
+function Test-Blob([string]$blob, $needles) {
+  foreach ($needle in $needles) {
+    if ($needle -and $blob.IndexOf([string]$needle, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+      return $true
+    }
+  }
+  return $false
 }
 
 function Get-NewestSave([string]$anno) {
@@ -95,7 +104,7 @@ function Get-InflatedText([byte[]]$bytes) {
 
 $utf8 = New-Object System.Text.UTF8Encoding $false
 $anno = Find-AnnoRoot
-$titlesPath = Find-Titles
+$titlesPath = Find-Catalog
 $catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $outJson = Join-Path $anno "harbor-live.json"
 $utf8Enc = [System.Text.Encoding]::UTF8
@@ -150,17 +159,49 @@ while ($true) {
       Write-Host "$(Get-Date -Format HH:mm:ss) demasiados títulos ($($found.Count)) — parece tabla de textos. Usá el buscador."
     }
 
-    $payload = [ordered]@{
-      schema    = "harbor-live-v1"
-      source    = "save"
-      updatedAt = (Get-Date).ToUniversalTime().ToString("o")
-      game      = "anno-1800"
-      quests    = @($quests)
+    function Collect-Hits($items, [bool]$useNeedles) {
+      $hits = @()
+      if (-not $items) { return $hits }
+      foreach ($item in $items) {
+        $needles = @()
+        if ($item.names) { $needles += @($item.names) }
+        if ($useNeedles -and $item.needles) { $needles += @($item.needles) }
+        if (Test-Blob $blob $needles) {
+          $label = if ($item.names -and $item.names.Count -gt 0) { [string]$item.names[0] } else { [string]$item.id }
+          $hits += [ordered]@{ id = [string]$item.id; name = $label }
+        }
+      }
+      return $hits
     }
-    $json = ($payload | ConvertTo-Json -Depth 6 -Compress)
+
+    $hintHits = @()
+    if ($catalog.hints) {
+      foreach ($hint in $catalog.hints) {
+        if (Test-Blob $blob @($hint.needles)) { $hintHits += [string]$hint.id }
+      }
+    }
+
+    $telemetry = [ordered]@{
+      buildings = @(Collect-Hits $catalog.buildings $false)
+      people    = @(Collect-Hits $catalog.people $false)
+      chains    = @(Collect-Hits $catalog.chains $true)
+      islands   = @(Collect-Hits $catalog.islands $false)
+      hints     = @($hintHits)
+    }
+
+    $payload = [ordered]@{
+      schema     = "harbor-live-v1"
+      source     = "save"
+      updatedAt  = (Get-Date).ToUniversalTime().ToString("o")
+      game       = "anno-1800"
+      quests     = @($quests)
+      telemetry  = $telemetry
+    }
+    $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
     [System.IO.File]::WriteAllText($outJson, $json + "`n", $utf8)
+    $bCount = @($telemetry.buildings).Count
     $label = if ($quests.Count -gt 0) { $quests[-1].title } else { "(vacío — F5 o buscador)" }
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) → $label"
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) → $label · $bCount edificios"
   } catch {
     Write-Host "$(Get-Date -Format HH:mm:ss) error: $($_.Exception.Message)"
   }

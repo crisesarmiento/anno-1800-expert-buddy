@@ -137,7 +137,91 @@ function packTitles() {
   const dest = join(outDir, "harbor-titles.json");
   writeFileSync(dest, `${JSON.stringify(payload, null, 2)}\n`);
   console.log("[pack-mod] titles", missions.length, dest);
+  return missions;
 }
 
-packTitles();
+const EN_BUILDING = {
+  lumberjack: "Lumberjack's Hut",
+  sawmill: "Sawmill",
+  marketplace: "Marketplace",
+  "farmer-house": "Farmer Residence",
+  fishery: "Fishery",
+  sheep: "Sheep Farm",
+  knitters: "Knitter's Hut",
+  potato: "Potato Farm",
+  distillery: "Schnapps Distillery",
+  pub: "Pub",
+  warehouse: "Warehouse",
+  fire: "Fire Station",
+  chapel: "Chapel",
+  school: "School",
+  pig: "Pig Farm",
+  sausage: "Slaughterhouse",
+  wheat: "Grain Farm",
+  mill: "Mill",
+  bakery: "Bakery",
+  iron: "Iron Mine",
+  coal: "Charcoal Kiln",
+  furnace: "Furnace",
+  steelworks: "Steelworks",
+  sailmaker: "Sailmaker",
+};
+
+function namedFromTs(file, kind) {
+  const src = readFileSync(file, "utf8");
+  const items = [];
+  for (const match of src.matchAll(/id:\s*"([^"]+)"[\s\S]*?name:\s*"([^"]+)"/g)) {
+    items.push({ id: match[1], names: [match[2]] });
+  }
+  if (kind === "building") {
+    for (const item of items) {
+      const extra = EN_BUILDING[item.id];
+      if (extra && !item.names.includes(extra)) item.names.push(extra);
+    }
+  }
+  return items;
+}
+
+function packCatalog(missions) {
+  const buildings = namedFromTs(join(root, "src/lib/data/buildings.ts"), "building");
+  const people = namedFromTs(join(root, "src/lib/data/harbor-life.ts"), "people");
+  const chainSrc = readFileSync(join(root, "src/lib/data/chains.ts"), "utf8");
+  const chains = [];
+  for (const match of chainSrc.matchAll(/id:\s*"([^"]+)"[\s\S]*?title:\s*"([^"]+)"[\s\S]*?steps:\s*\[([\s\S]*?)\]/g)) {
+    const needles = [...match[3].matchAll(/label:\s*"([^"]+)"/g)].map((item) => item[1]);
+    chains.push({ id: match[1], names: [match[2]], needles });
+  }
+  const catalog = {
+    schema: "harbor-catalog-v1",
+    missions,
+    buildings,
+    people,
+    chains,
+    islands: [
+      { id: "bright-sands", names: ["Bright Sands"] },
+      { id: "ditchwater", names: ["Ditchwater", "Ditch Water"] },
+      { id: "crown-falls", names: ["Crown Falls"] },
+      { id: "la-isla", names: ["La Isla"] },
+      { id: "cape", names: ["Cape Trelawney"] },
+      { id: "old-world", names: ["Old World", "Viejo Mundo"] },
+      { id: "new-world", names: ["New World", "Nuevo Mundo"] },
+    ],
+    hints: [
+      { id: "farmers", needles: ["granjeros", "farmers"] },
+      { id: "workers", needles: ["obreros", "workers"] },
+      { id: "artisans", needles: ["artesanos", "artisans"] },
+      { id: "engineers", needles: ["ingenieros", "engineers"] },
+      { id: "schnapps", needles: ["Schnapps"] },
+      { id: "steel", needles: ["acero", "steel"] },
+      { id: "war", needles: ["guerra", "war", "Krieg"] },
+      { id: "taxes", needles: ["impuestos", "taxes", "Steuern"] },
+    ],
+  };
+  const dest = join(outDir, "harbor-catalog.json");
+  writeFileSync(dest, `${JSON.stringify(catalog, null, 2)}\n`);
+  console.log("[pack-mod] catalog", dest);
+}
+
+const packedMissions = packTitles();
+packCatalog(packedMissions);
 

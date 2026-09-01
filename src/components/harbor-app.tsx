@@ -93,6 +93,12 @@ function TopBar() {
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <LanguageSelect />
         <Link
+          to="/tablero"
+          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          {t.board}
+        </Link>
+        <Link
           to="/instalar"
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >

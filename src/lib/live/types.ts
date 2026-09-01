@@ -1,6 +1,6 @@
 export const LIVE_SCHEMA = "harbor-live-v1" as const;
 export const LIVE_GAME = "anno-1800" as const;
-export const LIVE_MAX_BYTES = 200 * 1024;
+export const LIVE_MAX_BYTES = 400 * 1024;
 export const LIVE_MAX_QUESTS = 40;
 export const LIVE_MAX_TITLE = 200;
 
@@ -20,6 +20,19 @@ export type LivePulseHint = {
   houses: LiveHouses;
 };
 
+export type LiveNamedHit = {
+  id: string;
+  name: string;
+};
+
+export type LiveTelemetry = {
+  buildings?: LiveNamedHit[];
+  people?: LiveNamedHit[];
+  chains?: LiveNamedHit[];
+  islands?: LiveNamedHit[];
+  hints?: string[];
+};
+
 export type LiveSnapshot = {
   schema: typeof LIVE_SCHEMA;
   source: LiveSource;
@@ -27,6 +40,7 @@ export type LiveSnapshot = {
   game: typeof LIVE_GAME;
   quests: LiveQuest[];
   pulseHint?: LivePulseHint;
+  telemetry?: LiveTelemetry;
 };
 
 export type LiveMatch = {

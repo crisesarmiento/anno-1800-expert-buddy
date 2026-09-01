@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { applyLiveToProgress, liveMissLine, liveOkLine, matchLiveQuests, type LiveSnapshot } from "@/lib/live";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
+import type { PulseSample } from "@/lib/dash";
 import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
 import { defaultPulse, type Pulse } from "@/lib/play";
 
@@ -29,6 +30,7 @@ type HarborState = {
   liveBanner: string | null;
   liveBannerFailed: boolean;
   locale: Locale;
+  samples: PulseSample[];
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -72,13 +74,18 @@ export const useHarbor = create<HarborState>()(
       liveBanner: null,
       liveBannerFailed: false,
       locale: DEFAULT_LOCALE,
+      samples: [],
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         set({ missionId: id, calm: "session" });
       },
       setSpoilers: (value) => set({ spoilers: value }),
       setCalm: (value) => set({ calm: value }),
-      setPulse: (patch) => set({ pulse: { ...get().pulse, ...patch } }),
+      setPulse: (patch) => {
+        const pulse = { ...get().pulse, ...patch };
+        const samples = pushSample(get().samples, pulse);
+        set({ pulse, samples });
+      },
       toggleCheck: (missionId, index) => {
         if (isLiveLocked(get())) return;
         const current = get().checks[missionId] ?? [];
@@ -119,6 +126,7 @@ export const useHarbor = create<HarborState>()(
           calm: "session",
           pulse: defaultPulse,
           checks: {},
+          samples: [],
           liveEnabled: false,
           liveSnapshot: null,
           liveMissionId: null,
@@ -157,6 +165,7 @@ export const useHarbor = create<HarborState>()(
           completed: progress.completed,
           checks: { ...get().checks, ...progress.checks },
           pulse: { ...get().pulse, ...progress.pulse },
+          samples: pushSample(get().samples, { ...get().pulse, ...progress.pulse }),
           calm: "session",
           liveBanner: liveOkLine(snapshot.quests.length, title, get().locale),
           liveBannerFailed: false,
@@ -213,7 +222,19 @@ export const useHarbor = create<HarborState>()(
         liveBanner: state.liveBanner,
         liveBannerFailed: state.liveBannerFailed,
         locale: state.locale,
+        samples: state.samples,
       }),
     },
   ),
 );
+
+function pushSample(samples: PulseSample[], pulse: Pulse): PulseSample[] {
+  const next: PulseSample = {
+    at: new Date().toISOString(),
+    coins: pulse.coins,
+    houses: pulse.houses,
+  };
+  const last = samples[samples.length - 1];
+  if (last && last.coins === next.coins && last.houses === next.houses) return samples;
+  return [...samples, next].slice(-16);
+}

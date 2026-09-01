@@ -13,5 +13,23 @@
   "pulseHint": {
     "coins": "down",
     "houses": "empty"
+  },
+  "telemetry": {
+    "buildings": [
+      { "id": "lumberjack", "name": "Cabaña de leñador" },
+      { "id": "sawmill", "name": "Aserradero" },
+      { "id": "marketplace", "name": "Mercado" }
+    ],
+    "people": [
+      { "id": "hannah", "name": "Hannah Goode" },
+      { "id": "kahina", "name": "Madame Kahina" }
+    ],
+    "chains": [
+      { "id": "wood", "name": "Madera" }
+    ],
+    "islands": [
+      { "id": "bright-sands", "name": "Bright Sands" }
+    ],
+    "hints": ["farmers", "taxes"]
   }
 }
