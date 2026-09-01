@@ -108,7 +108,7 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
         }}
       >
         <label className="sr-only" htmlFor="buddy-ask">
-          Preguntale a Harbor Buddy
+          Preguntale a Anno 1800 Buddy
         </label>
         <Input
           id="buddy-ask"

@@ -20,9 +20,9 @@ function InstalarPage() {
           </IconWell>
           <div className="min-w-0">
             <p className="font-display text-lg leading-none font-semibold tracking-tight">
-              Harbor Buddy
+              Anno 1800 Buddy
             </p>
-            <p className="mt-1 text-xs text-mist">Instalar Harbor Buddy en Anno</p>
+            <p className="mt-1 text-xs text-mist">Instalar Anno 1800 Buddy en Anno</p>
           </div>
           <LanguageSelect className="ml-auto" />
           <Link to="/" className="inline-flex h-11 items-center text-sm text-primary">

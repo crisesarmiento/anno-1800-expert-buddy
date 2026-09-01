@@ -43,7 +43,7 @@ const es = {
     expedition: "Expedición",
   },
   welcome: {
-    kicker: "Compañero de campaña",
+    kicker: "Anno 1800 Buddy",
     title: "No necesitás una ciudad perfecta.",
     copy: "Poné esto al lado de Anno. Tocá dónde estás. Yo te digo los próximos diez minutos: un sello 10×10, el edificio nuevo, y cómo no fundirte.",
     start: "Recién empiezo",
@@ -92,7 +92,7 @@ const es = {
   },
   install: {
     kicker: "Instalar el mod",
-    title: "Instalar Harbor Buddy en Anno",
+    title: "Instalar Anno 1800 Buddy en Anno",
     hint: "El sitio no puede meter archivos en Anno. Descargás, ejecutás el instalador, listo. Si Anno se cae, desactivá el mod y borra la carpeta vieja. El zip 0.2.0 no parchea el juego ni corre Lua.",
     dlZip: "1. Descargar mod (.zip)",
     dlZipCopy: "Un clic. Sin cuenta. Dejá el zip en Descargas.",
@@ -123,7 +123,7 @@ const es = {
     s4: "Abrí Anno → Mods → activá Harbor Buddy Telemetry. Entrá a la campaña.",
     s5: "Corré watch-harbor-live.bat (ventana abierta). En Anno, F5. El script escribe Documentos\\Anno 1800\\harbor-live.json. Acá: Partida en vivo → soltá o vigilá ese archivo.",
     s6: "Si el JSON viene vacío, usá “Escribí lo que ves en el diario” una vez. Si el instalador no encuentra Anno, copiá la carpeta a mano.",
-    watcher: "Un watcher de Windows, más adelante, puede escribir el mismo harbor-live.json desde un .a7s. Harbor Buddy no abre el guardado acá.",
+    watcher: "Un watcher de Windows, más adelante, puede escribir el mismo harbor-live.json desde un .a7s. Anno 1800 Buddy no abre el guardado acá.",
     export: "Exportar dónde estoy: baja el JSON de esta sesión para llevarlo a otra PC.",
   },
   pulse: {
@@ -218,7 +218,7 @@ const es = {
     saveFile: "Eso es un guardado de Anno, no el JSON. Exportá o usá el dump harbor-live.json.",
     tooBig: "El archivo es demasiado grande.",
     broken: "El archivo está roto. No es JSON válido.",
-    schema: "Este JSON no es de Harbor Buddy (schema harbor-live-v1).",
+    schema: "Este JSON no es de Anno 1800 Buddy (schema harbor-live-v1).",
     game: "Este archivo no es de Anno 1800.",
     quests: "Falta la lista de misiones (quests).",
     tooMany: "Demasiadas misiones en el archivo.",
@@ -230,7 +230,7 @@ const es = {
     miss: "no matcheó · {0}",
     missEmpty: "no matcheó",
   },
-  footer: "Creado por Cristian Sarmiento · Harbor Buddy, un compañero de campaña para Anno 1800. No afiliado a Ubisoft.",
+  footer: "Creado por Cristian Sarmiento · Anno 1800 Buddy, un compañero de campaña para Anno 1800. No afiliado a Ubisoft.",
   reddit: "Guías en r/anno1800",
   wiki: "Wiki (spoilers)",
   dash: {
@@ -295,7 +295,7 @@ const en: UiDict = {
     expedition: "Expedition",
   },
   welcome: {
-    kicker: "Campaign buddy",
+    kicker: "Anno 1800 Buddy",
     title: "You don't need a perfect city.",
     copy: "Park this next to Anno. Tap where you are. I'll give you the next ten minutes: a 10×10 stamp, the new building, and how not to go broke.",
     start: "Just starting",
@@ -344,7 +344,7 @@ const en: UiDict = {
   },
   install: {
     kicker: "Install the mod",
-    title: "Install Harbor Buddy in Anno",
+    title: "Install Anno 1800 Buddy in Anno",
     hint: "The site cannot put files into Anno. You download, run the installer, done. If Anno crashes, disable the mod and delete the old folder. Zip 0.2.0 does not patch the game or run Lua.",
     dlZip: "1. Download mod (.zip)",
     dlZipCopy: "One click. No account. Leave the zip in Downloads.",
@@ -375,7 +375,7 @@ const en: UiDict = {
     s4: "Open Anno → Mods → enable Harbor Buddy Telemetry. Enter the campaign.",
     s5: "Run watch-harbor-live.bat (leave the window open). In Anno, F5. The script writes Documents\\Anno 1800\\harbor-live.json. Here: Live session → drop or watch that file.",
     s6: "If the JSON is empty, use “Type what you see in the journal” once. If the installer cannot find Anno, copy the folder by hand.",
-    watcher: "A later Windows watcher can write the same harbor-live.json from a .a7s. Harbor Buddy does not open the save here.",
+    watcher: "A later Windows watcher can write the same harbor-live.json from a .a7s. Anno 1800 Buddy does not open the save here.",
     export: "Export where I am: download this session's JSON to take it to another PC.",
   },
   pulse: {
@@ -470,7 +470,7 @@ const en: UiDict = {
     saveFile: "That is an Anno save, not the JSON. Export or use the harbor-live.json dump.",
     tooBig: "The file is too large.",
     broken: "The file is broken. Not valid JSON.",
-    schema: "This JSON is not Harbor Buddy (schema harbor-live-v1).",
+    schema: "This JSON is not Anno 1800 Buddy (schema harbor-live-v1).",
     game: "This file is not from Anno 1800.",
     quests: "The quest list is missing.",
     tooMany: "Too many quests in the file.",
@@ -482,7 +482,7 @@ const en: UiDict = {
     miss: "no match · {0}",
     missEmpty: "no match",
   },
-  footer: "Created by Cristian Sarmiento · Harbor Buddy, a campaign companion for Anno 1800. Not affiliated with Ubisoft.",
+  footer: "Created by Cristian Sarmiento · Anno 1800 Buddy, a campaign companion for Anno 1800. Not affiliated with Ubisoft.",
   reddit: "Guides on r/anno1800",
   wiki: "Wiki (spoilers)",
   dash: {
@@ -545,7 +545,7 @@ const it: UiDict = {
     expedition: "Spedizione",
   },
   welcome: {
-    kicker: "Compagno di campagna",
+    kicker: "Anno 1800 Buddy",
     title: "Non ti serve una città perfetta.",
     copy: "Tienilo accanto ad Anno. Tocca dove sei. Ti dico i prossimi dieci minuti: un timbro 10×10, il nuovo edificio e come non fallire.",
     start: "Sto iniziando",
@@ -594,7 +594,7 @@ const it: UiDict = {
   },
   install: {
     kicker: "Installa la mod",
-    title: "Installa Harbor Buddy in Anno",
+    title: "Installa Anno 1800 Buddy in Anno",
     hint: "Il sito non può mettere file in Anno. Scarichi, esegui l'installer, fatto. Se Anno crasha, disattiva la mod e cancella la cartella vecchia. Lo zip 0.2.0 non patcha il gioco e non esegue Lua.",
     dlZip: "1. Scarica mod (.zip)",
     dlZipCopy: "Un clic. Senza account. Lascia lo zip in Download.",
@@ -625,7 +625,7 @@ const it: UiDict = {
     s4: "Apri Anno → Mod → attiva Harbor Buddy Telemetry. Entra in campagna.",
     s5: "Avvia watch-harbor-live.bat (lascia la finestra aperta). In Anno, F5. Lo script scrive Documenti\\Anno 1800\\harbor-live.json. Qui: Partita in diretta → trascina o osserva quel file.",
     s6: "Se il JSON è vuoto, usa “Scrivi quello che vedi nel diario” una volta. Se l'installer non trova Anno, copia la cartella a mano.",
-    watcher: "Più avanti un watcher Windows può scrivere lo stesso harbor-live.json da un .a7s. Harbor Buddy non apre il salvataggio qui.",
+    watcher: "Più avanti un watcher Windows può scrivere lo stesso harbor-live.json da un .a7s. Anno 1800 Buddy non apre il salvataggio qui.",
     export: "Esporta dove sono: scarica il JSON di questa sessione per portarlo su un altro PC.",
   },
   pulse: {
@@ -720,7 +720,7 @@ const it: UiDict = {
     saveFile: "È un salvataggio di Anno, non il JSON. Esporta o usa il dump harbor-live.json.",
     tooBig: "Il file è troppo grande.",
     broken: "Il file è rotto. JSON non valido.",
-    schema: "Questo JSON non è di Harbor Buddy (schema harbor-live-v1).",
+    schema: "Questo JSON non è di Anno 1800 Buddy (schema harbor-live-v1).",
     game: "Questo file non è di Anno 1800.",
     quests: "Manca l'elenco delle missioni (quests).",
     tooMany: "Troppe missioni nel file.",
@@ -732,7 +732,7 @@ const it: UiDict = {
     miss: "nessun match · {0}",
     missEmpty: "nessun match",
   },
-  footer: "Creato da Cristian Sarmiento · Harbor Buddy, un compagno di campagna per Anno 1800. Non affiliato a Ubisoft.",
+  footer: "Creato da Cristian Sarmiento · Anno 1800 Buddy, un compagno di campagna per Anno 1800. Non affiliato a Ubisoft.",
   reddit: "Guide su r/anno1800",
   wiki: "Wiki (spoiler)",
   dash: {
@@ -795,7 +795,7 @@ const de: UiDict = {
     expedition: "Expedition",
   },
   welcome: {
-    kicker: "Kampagnen-Kumpel",
+    kicker: "Anno 1800 Buddy",
     title: "Du brauchst keine perfekte Stadt.",
     copy: "Leg das neben Anno. Tippe, wo du bist. Ich sage die nächsten zehn Minuten: ein 10×10-Stempel, das neue Gebäude, und wie du nicht pleite gehst.",
     start: "Ich fange gerade an",
@@ -844,7 +844,7 @@ const de: UiDict = {
   },
   install: {
     kicker: "Mod installieren",
-    title: "Harbor Buddy in Anno installieren",
+    title: "Anno 1800 Buddy in Anno installieren",
     hint: "Die Seite kann keine Dateien in Anno legen. Du lädst herunter, startest den Installer, fertig. Wenn Anno abstürzt: Mod aus, alten Ordner löschen. Zip 0.2.0 patched das Spiel nicht und führt kein Lua aus.",
     dlZip: "1. Mod herunterladen (.zip)",
     dlZipCopy: "Ein Klick. Kein Konto. Zip in Downloads lassen.",
@@ -875,7 +875,7 @@ const de: UiDict = {
     s4: "Anno öffnen → Mods → Harbor Buddy Telemetry an. In die Kampagne.",
     s5: "watch-harbor-live.bat starten (Fenster offen lassen). In Anno F5. Das Skript schreibt Dokumente\\Anno 1800\\harbor-live.json. Hier: Live-Partie → Datei ablegen oder beobachten.",
     s6: "Wenn das JSON leer ist, einmal „Schreib, was du im Tagebuch siehst“. Findet der Installer Anno nicht, Ordner von Hand kopieren.",
-    watcher: "Später kann ein Windows-Watcher dieselbe harbor-live.json aus einer .a7s schreiben. Harbor Buddy öffnet den Spielstand hier nicht.",
+    watcher: "Später kann ein Windows-Watcher dieselbe harbor-live.json aus einer .a7s schreiben. Anno 1800 Buddy öffnet den Spielstand hier nicht.",
     export: "Exportieren, wo ich bin: JSON dieser Sitzung für einen anderen PC.",
   },
   pulse: {
@@ -970,7 +970,7 @@ const de: UiDict = {
     saveFile: "Das ist ein Anno-Spielstand, nicht das JSON. Exportiere oder nimm den harbor-live.json-Dump.",
     tooBig: "Die Datei ist zu groß.",
     broken: "Die Datei ist kaputt. Kein gültiges JSON.",
-    schema: "Dieses JSON ist nicht von Harbor Buddy (Schema harbor-live-v1).",
+    schema: "Dieses JSON ist nicht von Anno 1800 Buddy (Schema harbor-live-v1).",
     game: "Diese Datei ist nicht von Anno 1800.",
     quests: "Die Missionsliste fehlt (quests).",
     tooMany: "Zu viele Missionen in der Datei.",
@@ -982,7 +982,7 @@ const de: UiDict = {
     miss: "kein Treffer · {0}",
     missEmpty: "kein Treffer",
   },
-  footer: "Erstellt von Cristian Sarmiento · Harbor Buddy, ein Kampagnen-Kumpel für Anno 1800. Nicht mit Ubisoft verbunden.",
+  footer: "Erstellt von Cristian Sarmiento · Anno 1800 Buddy, ein Kampagnen-Kumpel für Anno 1800. Nicht mit Ubisoft verbunden.",
   reddit: "Guides auf r/anno1800",
   wiki: "Wiki (Spoiler)",
   dash: {

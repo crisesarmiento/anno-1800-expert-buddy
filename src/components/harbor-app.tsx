@@ -85,7 +85,7 @@ function TopBar() {
         </IconWell>
         <div className="min-w-0">
           <p className="font-display text-lg leading-none font-semibold tracking-tight">
-            Harbor Buddy
+            Anno 1800 Buddy
           </p>
           <p className="mt-1 truncate text-xs text-mist">{t.tagline}</p>
         </div>

@@ -63,7 +63,7 @@ export function HarborDash() {
             <Anchor className="size-5" strokeWidth={1.75} />
           </IconWell>
           <div className="min-w-0">
-            <p className="font-display text-lg leading-none font-semibold tracking-tight">Harbor Buddy</p>
+            <p className="font-display text-lg leading-none font-semibold tracking-tight">Anno 1800 Buddy</p>
             <p className="mt-1 truncate text-xs text-mist">{t.dash.kicker}</p>
           </div>
           <LanguageSelect className="ml-auto" />
