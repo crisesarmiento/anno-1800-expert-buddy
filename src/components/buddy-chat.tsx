@@ -5,6 +5,7 @@ import { useHarbor } from "@/lib/store";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
 export function BuddyChat({ suggestions }: { suggestions: string[] }) {
@@ -12,6 +13,8 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
   const spoilers = useHarbor((s) => s.spoilers);
   const chat = useHarbor((s) => s.chat);
   const addChat = useHarbor((s) => s.addChat);
+  const locale = useHarbor((s) => s.locale);
+  const t = useT();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,7 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
           history,
           pulse: snapshot.pulse,
           checked: missionId ? (snapshot.checks[missionId] ?? []) : [],
+          locale: snapshot.locale,
         },
       });
       if (result.ok) {
@@ -49,7 +53,7 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
   }
 
   return (
-    <HarborCard kicker="Preguntale al compañero" title="Acá al lado tuyo" stamp="tankard">
+    <HarborCard kicker={t.chat.kicker} title={t.chat.title} stamp="tankard">
 
       {chat.length > 0 ? (
         <ol className="flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
@@ -69,14 +73,13 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
           {pending ? (
             <li className="flex items-center gap-2 self-start text-sm text-muted-foreground">
               <LoaderCircle className="size-4 animate-spin" />
-              Pensando con la marea…
+              {t.chat.thinking}
             </li>
           ) : null}
         </ol>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Preguntame como a un amigo en el sillón. Dónde va la taberna. Por qué se pusieron
-          rojas las monedas. Si vale pelear con las otras compañías.
+          {t.chat.empty}
         </p>
       )}
 
@@ -111,10 +114,10 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
           id="buddy-ask"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="¿Dónde pongo la taberna?"
+          placeholder={t.chat.placeholder}
           className="min-w-0 flex-1"
         />
-        <Button type="submit" size="icon" disabled={pending || !draft.trim()} aria-label="Enviar">
+        <Button type="submit" size="icon" disabled={pending || !draft.trim()} aria-label={t.chat.send}>
           <Send />
         </Button>
       </form>

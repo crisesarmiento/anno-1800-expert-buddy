@@ -4,40 +4,37 @@ import { HarborCard } from "@/components/harbor-card";
 import { Input } from "@/components/ui/input";
 import { chaptersById, findMissions } from "@/lib/data";
 import { useHarbor } from "@/lib/store";
+import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
 export function MissionFinder() {
   const setMissionId = useHarbor((s) => s.setMissionId);
+  const t = useT();
   const [query, setQuery] = useState("");
   const hits = useMemo(() => findMissions(query), [query]);
 
   return (
-    <HarborCard
-      kicker="¿En qué misión estoy?"
-      title="Escribí lo que ves en el diario"
-      stamp="bell"
-      hint="En Anno, a la derecha o abajo: el pergamino de misiones. El título de la campaña es el que buscás. También sirve un pedazo: acero, schnapps, Ditch Water, Isabel."
-    >
+    <HarborCard kicker={t.finder.kicker} title={t.finder.title} stamp="bell" hint={t.finder.hint}>
       <div className="rounded-md bg-muted p-4">
         <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           <BookOpen className="size-3.5" />
-          Dónde mirar en el juego
+          {t.finder.where}
         </p>
         <ol className="mt-2 flex flex-col gap-1.5 text-sm leading-relaxed">
-          <li>1. Icono de diario / misiones (pergamino).</li>
-          <li>2. La entrada con el sello de historia, no un recado de Kahina.</li>
-          <li>3. Copiá dos palabras del título y pegá acá.</li>
+          <li>{t.finder.step1}</li>
+          <li>{t.finder.step2}</li>
+          <li>{t.finder.step3}</li>
         </ol>
       </div>
 
       <label className="mt-4 flex flex-col gap-2">
-        <span className="sr-only">Buscar misión</span>
+        <span className="sr-only">{t.finder.title}</span>
         <span className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mist" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ej: Evolución industrial, 50 granjeros, mina…"
+            placeholder={t.finder.placeholder}
             className="pl-10"
           />
         </span>
@@ -67,9 +64,7 @@ export function MissionFinder() {
             })}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-muted-foreground">
-            No la encuentro. Probá una palabra sola: acero, mercado, refugiados.
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">{t.finder.empty}</p>
         )
       ) : null}
     </HarborCard>

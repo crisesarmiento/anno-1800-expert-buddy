@@ -2,19 +2,16 @@ import { useState } from "react";
 import { HarborCard } from "@/components/harbor-card";
 import { Stamp } from "@/components/stamps";
 import { chains, chainRule } from "@/lib/data";
+import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
 export function ChainBoard() {
+  const t = useT();
   const [activeId, setActiveId] = useState(chains[0]?.id ?? "wood");
   const active = chains.find((chain) => chain.id === activeId) ?? chains[0];
 
   return (
-    <HarborCard
-      kicker="Materia prima → fábrica"
-      title="Uno y uno alcanza"
-      stamp="mill"
-      hint={chainRule}
-    >
+    <HarborCard kicker={t.chain.kicker} title={t.chain.title} stamp="mill" hint={chainRule}>
       <div className="flex flex-wrap gap-2">
         {chains.map((chain) => (
           <button
@@ -49,7 +46,7 @@ export function ChainBoard() {
           </ol>
           <p className="text-sm leading-relaxed">{active.buddy}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground">Ojo: </span>
+            <span className="font-medium text-foreground">{t.session.watch}</span>
             {active.trap}
           </p>
         </div>

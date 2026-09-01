@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Anchor } from "lucide-react";
 import { IconWell } from "@/components/harbor-card";
+import { LanguageSelect } from "@/components/language-select";
 import { ConnectGuide } from "@/components/connect-guide";
 import { InstallPanel } from "@/components/install-panel";
 import { LivePanel } from "@/components/live-panel";
@@ -23,7 +24,8 @@ function ConectarPage() {
             </p>
             <p className="mt-1 text-xs text-mist">Instalar Harbor Buddy en Anno</p>
           </div>
-          <Link to="/" className="ml-auto inline-flex h-11 items-center text-sm text-primary">
+          <LanguageSelect className="ml-auto" />
+          <Link to="/" className="inline-flex h-11 items-center text-sm text-primary">
             Escritorio
           </Link>
         </div>

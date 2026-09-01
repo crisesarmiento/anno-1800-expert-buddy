@@ -1,3 +1,4 @@
+import { uiFor } from "../i18n.ts";
 import { LIVE_MSG } from "./messages.ts";
 import {
   LIVE_GAME,
@@ -35,6 +36,10 @@ function looksLikeSave(bytes: Uint8Array) {
 
 const decoder = new TextDecoder("utf-8");
 
+function msg(key: keyof typeof LIVE_MSG, locale?: string | null) {
+  return uiFor(locale).liveMsg[key];
+}
+
 function hasCodeOrUrl(raw: string) {
   if (/\beval\s*\(/.test(raw)) return true;
   if (/\bFunction\s*\(/.test(raw)) return true;
@@ -47,15 +52,15 @@ function asRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function normalizeQuest(value: unknown): LiveQuest | { error: string } {
-  if (!asRecord(value)) return { error: LIVE_MSG.quests };
+function normalizeQuest(value: unknown, locale?: string | null): LiveQuest | { error: string } {
+  if (!asRecord(value)) return { error: msg("quests", locale) };
   const title = typeof value.title === "string" ? value.title.trim() : "";
-  if (!title) return { error: LIVE_MSG.emptyTitle };
-  if (title.length > LIVE_MAX_TITLE) return { error: LIVE_MSG.longTitle };
+  if (!title) return { error: msg("emptyTitle", locale) };
+  if (title.length > LIVE_MAX_TITLE) return { error: msg("longTitle", locale) };
   let state: LiveQuestState = "active";
   if (value.state !== undefined) {
     if (typeof value.state !== "string" || !QUEST_STATES.has(value.state as LiveQuestState)) {
-      return { error: LIVE_MSG.badState };
+      return { error: msg("badState", locale) };
     }
     state = value.state as LiveQuestState;
   }
@@ -81,22 +86,22 @@ function parseUpdatedAt(value: unknown) {
   return new Date(value).toISOString();
 }
 
-export function normalizeSnapshot(raw: unknown): LiveIngestResult {
-  if (!asRecord(raw)) return { ok: false, message: LIVE_MSG.schema };
-  if (raw.schema !== LIVE_SCHEMA) return { ok: false, message: LIVE_MSG.schema };
+export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIngestResult {
+  if (!asRecord(raw)) return { ok: false, message: msg("schema", locale) };
+  if (raw.schema !== LIVE_SCHEMA) return { ok: false, message: msg("schema", locale) };
   if (raw.game !== undefined && raw.game !== LIVE_GAME) {
-    return { ok: false, message: LIVE_MSG.game };
+    return { ok: false, message: msg("game", locale) };
   }
   if (raw.quests === undefined || !Array.isArray(raw.quests)) {
-    return { ok: false, message: LIVE_MSG.quests };
+    return { ok: false, message: msg("quests", locale) };
   }
   if (raw.quests.length > LIVE_MAX_QUESTS) {
-    return { ok: false, message: LIVE_MSG.tooMany };
+    return { ok: false, message: msg("tooMany", locale) };
   }
 
   const quests: LiveQuest[] = [];
   for (const item of raw.quests) {
-    const quest = normalizeQuest(item);
+    const quest = normalizeQuest(item, locale);
     if ("error" in quest) return { ok: false, message: quest.error };
     quests.push(quest);
   }
@@ -121,59 +126,62 @@ export function ingestLiveBytes(input: {
   filename?: string;
   mime?: string;
   bytes: Uint8Array;
+  locale?: string | null;
 }): LiveIngestResult {
   const filename = input.filename ?? "";
+  const locale = input.locale;
   if (filename && !hasJsonExtension(filename)) {
-    return { ok: false, message: LIVE_MSG.notJson };
+    return { ok: false, message: msg("notJson", locale) };
   }
   const mime = (input.mime ?? "").trim().toLowerCase();
   if (mime && !JSON_MIME.has(mime.split(";")[0] ?? mime)) {
-    return { ok: false, message: LIVE_MSG.notJson };
+    return { ok: false, message: msg("notJson", locale) };
   }
   if (input.bytes.byteLength > LIVE_MAX_BYTES) {
-    return { ok: false, message: LIVE_MSG.tooBig };
+    return { ok: false, message: msg("tooBig", locale) };
   }
   if (looksLikeSave(input.bytes)) {
-    return { ok: false, message: LIVE_MSG.saveFile };
+    return { ok: false, message: msg("saveFile", locale) };
   }
 
   let text: string;
   try {
     text = decoder.decode(input.bytes);
   } catch {
-    return { ok: false, message: LIVE_MSG.broken };
+    return { ok: false, message: msg("broken", locale) };
   }
-  return ingestLiveJsonText(text);
+  return ingestLiveJsonText(text, locale);
 }
 
-export function ingestLiveJsonText(text: string): LiveIngestResult {
+export function ingestLiveJsonText(text: string, locale?: string | null): LiveIngestResult {
   const bytes = new TextEncoder().encode(text);
   if (bytes.byteLength > LIVE_MAX_BYTES) {
-    return { ok: false, message: LIVE_MSG.tooBig };
+    return { ok: false, message: msg("tooBig", locale) };
   }
   if (looksLikeSave(bytes)) {
-    return { ok: false, message: LIVE_MSG.saveFile };
+    return { ok: false, message: msg("saveFile", locale) };
   }
   if (hasCodeOrUrl(text)) {
-    return { ok: false, message: LIVE_MSG.code };
+    return { ok: false, message: msg("code", locale) };
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return { ok: false, message: LIVE_MSG.broken };
+    return { ok: false, message: msg("broken", locale) };
   }
-  return normalizeSnapshot(parsed);
+  return normalizeSnapshot(parsed, locale);
 }
 
-export async function ingestLiveFile(file: File): Promise<LiveIngestResult> {
+export async function ingestLiveFile(file: File, locale?: string | null): Promise<LiveIngestResult> {
   if (file.size > LIVE_MAX_BYTES) {
-    return { ok: false, message: LIVE_MSG.tooBig };
+    return { ok: false, message: msg("tooBig", locale) };
   }
   const buffer = new Uint8Array(await file.arrayBuffer());
   return ingestLiveBytes({
     filename: file.name,
     mime: file.type,
     bytes: buffer,
+    locale,
   });
 }

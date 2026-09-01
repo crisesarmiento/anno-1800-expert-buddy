@@ -7,6 +7,7 @@ import {
   missionsById,
   peopleForChapter,
 } from "@/lib/data";
+import { uiFor, type Locale } from "@/lib/i18n";
 import { defaultPulse, pulseLine, type Pulse } from "@/lib/play";
 
 export type BuddyInput = {
@@ -16,6 +17,7 @@ export type BuddyInput = {
   history: { role: "user" | "assistant"; content: string }[];
   pulse?: Pulse;
   checked?: number[];
+  locale?: Locale | string | null;
 };
 
 function plainTalk(text: string) {
@@ -33,6 +35,7 @@ function missionContext(
   spoilers: boolean,
   pulse: Pulse,
   checked: number[],
+  locale?: Locale | string | null,
 ): string {
   if (!missionId) {
     return "Todavía no eligió misión. Ayudalo a ubicar dónde está. Si recién funda, Capítulo 1, Una chispa reavivada.";
@@ -56,7 +59,7 @@ function missionContext(
       ? `Spoilers permitidos: ${mission.spoilers}`
       : "Spoilers APAGADOS. No cuentes giros, traiciones ni el final.";
   return [
-    pulseLine(pulse),
+    pulseLine(pulse, locale),
     `Capítulo: ${chapter?.title ?? mission.chapterId} — ${chapter?.subtitle ?? ""}`,
     `Misión: ${mission.title} (${mission.kind})`,
     `Objetivo: ${mission.objective}`,
@@ -95,6 +98,7 @@ export const askBuddy = createServerFn({ method: "POST" })
       })),
       pulse: input.pulse ?? defaultPulse,
       checked: Array.isArray(input.checked) ? input.checked.slice(0, 12) : [],
+      locale: input.locale ?? "es",
     };
   })
   .handler(async ({ data }) => {
@@ -106,7 +110,9 @@ export const askBuddy = createServerFn({ method: "POST" })
       };
     }
 
-    const system = `Sos Harbor Buddy, sentado al lado de un amigo que juega la campaña de Anno 1800 en Windows, segundo monitor. Hablás español rioplatense (vos, tenés, podés). Nunca vosotros. Nunca un tono de España.
+    const system = `${uiFor(data.locale).buddyLang}
+
+Sos Harbor Buddy, sentado al lado de un amigo que juega la campaña de Anno 1800 en Windows, segundo monitor.
 
 Voz: oraciones cortas. Cálido. Como el video de Taka del 10×10: modular, lindo, bastante bien. Sos un compañero de sillón, no una calculadora.
 
@@ -142,7 +148,7 @@ Siempre:
 - Preferí “alcanza para seguir la historia”
 - Prosa simple. Oraciones cortas. Sin markdown.
 
-${missionContext(data.missionId, data.spoilers, data.pulse ?? defaultPulse, data.checked ?? [])}`;
+${missionContext(data.missionId, data.spoilers, data.pulse ?? defaultPulse, data.checked ?? [], data.locale)}`;
 
     const messages = [
       { role: "system" as const, content: system },

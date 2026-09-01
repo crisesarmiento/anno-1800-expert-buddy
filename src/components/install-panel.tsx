@@ -3,17 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { Check, Download } from "lucide-react";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
-const CHECKS = [
-  "Anno cerrado o en menú principal",
-  "Mods → Harbor Buddy Telemetry ON",
-  "Jugar campaña",
-  "Volver acá → Partida en vivo → soltar harbor-live.json (Documentos\\Anno 1800\\harbor-live.json)",
-];
-
 export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
+  const t = useT();
   const [done, setDone] = useState<number[]>([]);
+  const checks = [t.install.check1, t.install.check2, t.install.check3, t.install.check4];
 
   function toggle(index: number) {
     setDone((current) =>
@@ -23,46 +19,41 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <HarborCard
-      kicker="Instalar el mod"
-      title="Instalar Harbor Buddy en Anno"
+      kicker={t.install.kicker}
+      title={t.install.title}
       stamp="crate"
-      hint="El sitio no puede meter archivos en Anno. Descargás, ejecutás el instalador, listo. Si Anno se cae, desactivá el mod y borra la carpeta vieja. El zip 0.2.0 no parchea el juego ni corre Lua."
+      hint={t.install.hint}
     >
       <ol className="flex flex-col gap-4">
         <li className="rounded-md bg-muted p-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            1. Descargar mod (.zip)
+            {t.install.dlZip}
           </p>
-          <p className="mt-2 text-sm leading-relaxed">Un clic. Sin cuenta. Dejá el zip en Descargas.</p>
+          <p className="mt-2 text-sm leading-relaxed">{t.install.dlZipCopy}</p>
           <Button asChild className="mt-3">
             <a href="/harbor-buddy-telemetry.zip" download="harbor-buddy-telemetry.zip">
               <Download className="size-3.5" />
-              Descargar mod.zip
+              {t.install.dlZipBtn}
             </a>
           </Button>
         </li>
 
         <li className="rounded-md bg-muted p-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            2. Descargar instalador Windows
+            {t.install.dlInst}
           </p>
-          <p className="mt-2 text-sm leading-relaxed">
-            Copia el zip a Documentos\Anno 1800\mods. No pide administrador. No toca partidas.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Windows puede avisar. Elegí Más info → Ejecutar de todas formas. Es un copiado de
-            carpeta, no un cheat.
-          </p>
+          <p className="mt-2 text-sm leading-relaxed">{t.install.dlInstCopy}</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.install.smart}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button asChild>
               <a href="/install-harbor-buddy.bat" download="install-harbor-buddy.bat">
                 <Download className="size-3.5" />
-                Instalador (.bat)
+                {t.install.bat}
               </a>
             </Button>
             <Button asChild variant="secondary">
               <a href="/install-harbor-buddy.ps1" download="install-harbor-buddy.ps1">
-                PowerShell (.ps1)
+                {t.install.ps1}
               </a>
             </Button>
           </div>
@@ -70,10 +61,10 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
 
         <li className="rounded-md bg-muted p-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            3. Ya lo instalé
+            {t.install.done}
           </p>
           <ul className="mt-3 flex flex-col gap-2">
-            {CHECKS.map((item, index) => {
+            {checks.map((item, index) => {
               const on = done.includes(index);
               return (
                 <li key={item}>
@@ -99,16 +90,12 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
         </li>
       </ol>
 
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        Si el instalador no encuentra Anno, copiá a mano la carpeta del zip a{" "}
-        <code className="text-foreground">Documentos\Anno 1800\mods\harbor-buddy-telemetry</code>.
-        Tiene que haber un <code className="text-foreground">modinfo.json</code> justo ahí.
-      </p>
+      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{t.install.fallback}</p>
 
       {embedded ? null : (
         <p className="mt-4">
           <Link to="/" className="inline-flex h-11 items-center text-sm text-primary">
-            Volver al escritorio
+            {t.install.back}
           </Link>
         </p>
       )}

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { applyLiveToProgress, liveMissLine, liveOkLine, matchLiveQuests, type LiveSnapshot } from "@/lib/live";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
+import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
 import { defaultPulse, type Pulse } from "@/lib/play";
 
 export type ChatTurn = {
@@ -27,6 +28,7 @@ type HarborState = {
   lastImportedAt: string | null;
   liveBanner: string | null;
   liveBannerFailed: boolean;
+  locale: Locale;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -40,6 +42,7 @@ type HarborState = {
   clearLive: () => void;
   setLiveEnabled: (value: boolean) => void;
   setLiveBanner: (text: string | null, failed?: boolean) => void;
+  setLocale: (value: Locale) => void;
 };
 
 export function isLiveLocked(state: {
@@ -68,6 +71,7 @@ export const useHarbor = create<HarborState>()(
       lastImportedAt: null,
       liveBanner: null,
       liveBannerFailed: false,
+      locale: DEFAULT_LOCALE,
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         set({ missionId: id, calm: "session" });
@@ -136,7 +140,7 @@ export const useHarbor = create<HarborState>()(
             liveConfidence: match.confidence,
             liveFileName: fileName ?? get().liveFileName,
             lastImportedAt: importedAt,
-            liveBanner: liveMissLine(match.rawTitles),
+            liveBanner: liveMissLine(match.rawTitles, get().locale),
             liveBannerFailed: false,
           });
           return;
@@ -154,7 +158,7 @@ export const useHarbor = create<HarborState>()(
           checks: { ...get().checks, ...progress.checks },
           pulse: { ...get().pulse, ...progress.pulse },
           calm: "session",
-          liveBanner: liveOkLine(snapshot.quests.length, title),
+          liveBanner: liveOkLine(snapshot.quests.length, title, get().locale),
           liveBannerFailed: false,
         });
       },
@@ -179,6 +183,17 @@ export const useHarbor = create<HarborState>()(
       },
       setLiveBanner: (text, failed = false) =>
         set({ liveBanner: text, liveBannerFailed: failed }),
+      setLocale: (value) => {
+        const locale = isLocale(value) ? value : DEFAULT_LOCALE;
+        if (typeof document !== "undefined") {
+          document.documentElement.lang = LOCALE_META[locale].html;
+        }
+        set({ locale });
+        const snapshot = get().liveSnapshot;
+        if (snapshot && get().liveEnabled) {
+          get().applyLiveSnapshot(snapshot, get().liveFileName);
+        }
+      },
     }),
     {
       name: "harbor-buddy-es",
@@ -197,6 +212,7 @@ export const useHarbor = create<HarborState>()(
         lastImportedAt: state.lastImportedAt,
         liveBanner: state.liveBanner,
         liveBannerFailed: state.liveBannerFailed,
+        locale: state.locale,
       }),
     },
   ),

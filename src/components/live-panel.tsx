@@ -14,6 +14,7 @@ import {
   type LiveSnapshot,
 } from "@/lib/live";
 import { isLiveLocked, useHarbor } from "@/lib/store";
+import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
 function asSnapshot(value: unknown): LiveSnapshot {
@@ -40,10 +41,12 @@ export function LivePanel() {
   const completed = useHarbor((s) => s.completed);
   const pulse = useHarbor((s) => s.pulse);
   const locked = useHarbor((s) => isLiveLocked(s));
+  const locale = useHarbor((s) => s.locale);
+  const t = useT();
 
   async function onFile(file: File | undefined) {
     if (!file) return;
-    const result = await ingestLiveFile(file);
+    const result = await ingestLiveFile(file, locale);
     if (!result.ok) {
       setLiveBanner(result.message, true);
       return;
@@ -52,7 +55,7 @@ export function LivePanel() {
   }
 
   function onPaste() {
-    const result = ingestLiveJsonText(paste);
+    const result = ingestLiveJsonText(paste, locale);
     if (!result.ok) {
       setLiveBanner(result.message, true);
       return;
@@ -61,7 +64,7 @@ export function LivePanel() {
   }
 
   function onExample() {
-    const result = ingestLiveJsonText(JSON.stringify(asSnapshot(fixture)));
+    const result = ingestLiveJsonText(JSON.stringify(asSnapshot(fixture)), locale);
     if (!result.ok) {
       setLiveBanner(result.message, true);
       return;
@@ -76,10 +79,10 @@ export function LivePanel() {
 
   return (
     <HarborCard
-      kicker="Partida en vivo"
-      title="Soltá el diario. Yo salto."
+      kicker={t.live.kicker}
+      title={t.live.title}
       stamp="crate"
-      hint="El navegador no lee Documentos\Anno 1800 solo. Arrastrá harbor-live.json. Si matchea, no hace falta Completar ni tocar el riel."
+      hint={t.live.hint}
     >
       <div
         onDragEnter={(event) => {
@@ -102,7 +105,7 @@ export function LivePanel() {
         )}
       >
         <Upload className="size-5 text-primary" />
-        <p className="text-sm">Soltá harbor-live.json acá</p>
+        <p className="text-sm">{t.live.drop}</p>
         <input
           id={inputId}
           ref={inputRef}
@@ -116,13 +119,13 @@ export function LivePanel() {
         />
         <Button type="button" variant="secondary" size="sm" onClick={() => inputRef.current?.click()}>
           <FileJson className="size-3.5" />
-          Elegir archivo
+          {t.live.choose}
         </Button>
       </div>
 
       <label className="mt-4 flex flex-col gap-2">
         <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          O pegá el JSON
+          {t.live.paste}
         </span>
         <Textarea
           value={paste}
@@ -136,13 +139,13 @@ export function LivePanel() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button type="button" onClick={onPaste} disabled={!paste.trim()}>
-          Leer este JSON
+          {t.live.read}
         </Button>
         <Button type="button" variant="secondary" onClick={onExample}>
-          Probar con ejemplo
+          {t.live.example}
         </Button>
         <Button type="button" variant="outline" onClick={onExport}>
-          Exportar dónde estoy
+          {t.live.export}
         </Button>
       </div>
 
@@ -161,31 +164,31 @@ export function LivePanel() {
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>
             {liveFileName ?? "harbor-live.json"}
-            {locked ? " · el diario manda" : " · sin match, elegí a mano"}
+            {locked ? t.live.locked : t.live.noMatch}
           </span>
           <button
             type="button"
             className="inline-flex h-11 items-center text-foreground"
             onClick={() => setLiveEnabled(!liveEnabled)}
           >
-            {liveEnabled ? "Pausar vivo" : "Reanudar vivo"}
+            {liveEnabled ? t.live.pause : t.live.resume}
           </button>
           <button type="button" className="inline-flex h-11 items-center" onClick={clearLive}>
-            Sacar archivo
+            {t.live.remove}
           </button>
         </div>
       ) : null}
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
         <Link to="/instalar" className="inline-flex h-11 items-center text-primary">
-          Instalar el mod
+          {t.installMod}
         </Link>
         <button
           type="button"
           className="inline-flex h-11 items-center text-muted-foreground hover:text-foreground"
           onClick={() => setHelp((value) => !value)}
         >
-          {help ? "Ocultar pasos" : "Ver los 6 pasos acá"}
+          {help ? t.live.hideSteps : t.live.showSteps}
         </button>
       </div>
       {help ? (
