@@ -89,3 +89,55 @@ function zipFolder(folder, dest, prefix) {
 
 zipFolder(src, out, "harbor-buddy-telemetry");
 console.log("[pack-mod]", info.Version, out);
+
+const SKIP = new Set(
+  "mercado casas granjeros madera lenador aserradero ruinas escombros hannah almacen warehouse ditch visita isla fertilidad papa schnapps taberna pub destileria edvard cajas granja ovejas telares ropa atractivo pariente periodico prensa deuda esperar obreros workers school sausage bread soap cenizas lacayo chivos curiosity imprenta foto pedido hierro yacimiento montanas experto prision eli fianza acero mina carbonera fundicion aceria steel guerra armas contrabandista expedicion rebeldes jornaleros rescate bastion calor vigilancia lobos alpaca soltar defensa ataque refugiados evacuacion incendio pista confrontacion acusacion batalla llama ingenieros engineers prologue dynamite fish faro cardumen".split(
+    " ",
+  ),
+);
+
+function foldKey(value) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function englishLead(extra) {
+  const words = extra.split(/\s+/);
+  const lead = [];
+  for (const word of words) {
+    const folded = foldKey(word);
+    if (!/^[a-z']+$/i.test(word)) break;
+    if (SKIP.has(folded) || /^\d+$/.test(word)) break;
+    lead.push(word);
+    if (lead.length >= 8) break;
+  }
+  return lead.length >= 2 ? lead.join(" ") : "";
+}
+
+function packTitles() {
+  const campaign = readFileSync(join(root, "src/lib/data/campaign.ts"), "utf8");
+  const findSrc = readFileSync(join(root, "src/lib/data/find.ts"), "utf8");
+  const extra = {};
+  for (const match of findSrc.matchAll(/"([^"]+)":\s*"([^"]+)"/g)) {
+    extra[match[1]] = match[2];
+  }
+  const part = campaign.split("export const missions")[1] ?? "";
+  const missions = [];
+  for (const match of part.matchAll(/id:\s*"([^"]+)"[\s\S]*?title:\s*"([^"]+)"/g)) {
+    const id = match[1];
+    const title = match[2];
+    const titles = [title];
+    const lead = extra[id] ? englishLead(extra[id]) : "";
+    if (lead && foldKey(lead) !== foldKey(title)) titles.push(lead.replace(/\b\w/g, (ch) => ch.toUpperCase()));
+    missions.push({ id, titles });
+  }
+  const payload = { schema: "harbor-titles-v1", missions };
+  const dest = join(outDir, "harbor-titles.json");
+  writeFileSync(dest, `${JSON.stringify(payload, null, 2)}\n`);
+  console.log("[pack-mod] titles", missions.length, dest);
+}
+
+packTitles();
+

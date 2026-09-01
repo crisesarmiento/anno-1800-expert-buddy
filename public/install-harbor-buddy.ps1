@@ -101,3 +101,24 @@ Write-Host "Listo. Mod $version en $dest"
 Write-Host "Abrí Anno → Mods → activá Harbor Buddy Telemetry."
 Write-Host "Si Anno se cae, desactivá el mod. Harbor Buddy anda igual sin él."
 
+function Copy-Helper([string]$name) {
+  $places = @(
+    $PSScriptRoot,
+    (Join-Path $env:USERPROFILE "Downloads")
+  )
+  foreach ($place in $places) {
+    if (-not $place) { continue }
+    $from = Join-Path $place $name
+    if (Test-Path -LiteralPath $from) {
+      Copy-Item -LiteralPath $from -Destination (Join-Path $anno $name) -Force
+      Write-Host "Copié $name a $anno"
+      return
+    }
+  }
+}
+
+Copy-Helper "watch-harbor-live.ps1"
+Copy-Helper "watch-harbor-live.bat"
+Copy-Helper "harbor-titles.json"
+Write-Host "Para el diario: ejecutá watch-harbor-live.bat y guardá la partida (F5)."
+

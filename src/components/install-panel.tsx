@@ -61,6 +61,31 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
 
         <li className="rounded-md bg-muted p-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            {t.live.watcherDl}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed">{t.install.watchCopy}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild>
+              <a href="/watch-harbor-live.bat" download="watch-harbor-live.bat">
+                <Download className="size-3.5" />
+                {t.install.watchBat}
+              </a>
+            </Button>
+            <Button asChild variant="secondary">
+              <a href="/watch-harbor-live.ps1" download="watch-harbor-live.ps1">
+                {t.install.ps1}
+              </a>
+            </Button>
+            <Button asChild variant="secondary">
+              <a href="/harbor-titles.json" download="harbor-titles.json">
+                {t.install.watchTitles}
+              </a>
+            </Button>
+          </div>
+        </li>
+
+        <li className="rounded-md bg-muted p-4">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {t.install.done}
           </p>
           <ul className="mt-3 flex flex-col gap-2">

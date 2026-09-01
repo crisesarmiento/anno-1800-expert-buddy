@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { FileJson, Upload } from "lucide-react";
 import { ConnectGuide } from "@/components/connect-guide";
@@ -27,6 +27,8 @@ export function LivePanel() {
   const [dragging, setDragging] = useState(false);
   const [paste, setPaste] = useState("");
   const [help, setHelp] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const watchTimer = useRef<number | null>(null);
 
   const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
   const clearLive = useHarbor((s) => s.clearLive);
@@ -43,6 +45,12 @@ export function LivePanel() {
   const locked = useHarbor((s) => isLiveLocked(s));
   const locale = useHarbor((s) => s.locale);
   const t = useT();
+
+  useEffect(() => {
+    return () => {
+      if (watchTimer.current) window.clearInterval(watchTimer.current);
+    };
+  }, []);
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -77,12 +85,50 @@ export function LivePanel() {
     downloadLiveSnapshot(snapshot);
   }
 
+  async function onPin() {
+    const picker = (
+      window as Window & {
+        showOpenFilePicker?: (options: {
+          types: { description: string; accept: Record<string, string[]> }[];
+        }) => Promise<FileSystemFileHandle[]>;
+      }
+    ).showOpenFilePicker;
+    if (!picker) {
+      inputRef.current?.click();
+      return;
+    }
+    try {
+      const [handle] = await picker({
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+      });
+      if (watchTimer.current) window.clearInterval(watchTimer.current);
+      setWatching(true);
+      let last = 0;
+      const tick = async () => {
+        try {
+          const file = await handle.getFile();
+          if (file.lastModified === last) return;
+          last = file.lastModified;
+          await onFile(file);
+        } catch {
+          /* ignore */
+        }
+      };
+      await tick();
+      watchTimer.current = window.setInterval(() => {
+        void tick();
+      }, 2500);
+    } catch {
+      /* cancelled */
+    }
+  }
+
   return (
     <HarborCard
       kicker={t.live.kicker}
       title={t.live.title}
       stamp="crate"
-      hint={t.live.hint}
+      hint={t.live.whyEmpty}
     >
       <div
         onDragEnter={(event) => {
@@ -121,6 +167,9 @@ export function LivePanel() {
           <FileJson className="size-3.5" />
           {t.live.choose}
         </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => void onPin()}>
+          {watching ? t.live.watching : t.live.watchBtn}
+        </Button>
       </div>
 
       <label className="mt-4 flex flex-col gap-2">
@@ -146,6 +195,11 @@ export function LivePanel() {
         </Button>
         <Button type="button" variant="outline" onClick={onExport}>
           {t.live.export}
+        </Button>
+        <Button type="button" variant="outline" asChild>
+          <a href="/watch-harbor-live.bat" download="watch-harbor-live.bat">
+            {t.live.watcherDl}
+          </a>
         </Button>
       </div>
 
