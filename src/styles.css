@@ -11,7 +11,7 @@
   --color-card-foreground: #f3e6cf;
   --color-muted: #2a241c;
   --color-muted-foreground: #b7a78e;
-  --color-primary: #d4a054;
+  --color-primary: #c9a36a;
   --color-primary-foreground: #1a140c;
   --color-secondary: #2a241c;
   --color-secondary-foreground: #f3e6cf;
@@ -19,7 +19,7 @@
   --color-accent-foreground: #f3e6cf;
   --color-border: #3c3428;
   --color-input: #3c3428;
-  --color-ring: #d4a054;
+  --color-ring: #c9a36a;
   --color-destructive: #c45c4a;
   --color-destructive-foreground: #f3e6cf;
   --color-ok: #7ea37c;
@@ -32,14 +32,14 @@
   --color-cell-road: #6b5d4a;
   --color-cell-house: #c9ae86;
   --color-cell-gap: #5d7a58;
-  --color-cell-public: #d4a054;
+  --color-cell-public: #c9a36a;
   --color-cell-water: #3d6e74;
   --color-cell-farm: #7a9458;
   --color-cell-industry: #5c4a3d;
   --color-cell-tree: #3f5c3c;
   --color-cell-empty: #241f18;
 
-  --radius-xs: 4px;
+  --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -47,11 +47,11 @@
   --radius: 12px;
 
   --shadow-border:
-    0 0 0 1px rgb(212 160 84 / 0.16),
-    0 10px 24px -16px rgb(0 0 0 / 0.55);
+    0 0 0 1px rgb(201 163 106 / 0.12),
+    0 8px 20px -18px rgb(0 0 0 / 0.7);
   --shadow-border-hover:
-    0 0 0 1px rgb(212 160 84 / 0.32),
-    0 12px 28px -14px rgb(0 0 0 / 0.6);
+    0 0 0 1px rgb(201 163 106 / 0.28),
+    0 10px 24px -16px rgb(0 0 0 / 0.75);
 }
 
 @layer base {
@@ -71,8 +71,7 @@
   #app {
     min-height: 100%;
     background:
-      radial-gradient(900px 420px at 12% -8%, rgb(212 160 84 / 0.09), transparent 55%),
-      radial-gradient(700px 480px at 110% 110%, rgb(47 86 88 / 0.22), transparent 50%),
+      linear-gradient(180deg, rgb(243 230 207 / 0.03), transparent 28%),
       var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -92,10 +91,6 @@
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 3px;
-  }
-
-  a {
-    color: var(--color-primary);
   }
 }
 

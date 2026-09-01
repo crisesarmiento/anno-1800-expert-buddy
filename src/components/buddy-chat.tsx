@@ -2,7 +2,9 @@ import { useState } from "react";
 import { LoaderCircle, Send } from "lucide-react";
 import { askBuddy } from "@/lib/buddy";
 import { useHarbor } from "@/lib/store";
+import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export function BuddyChat({ suggestions }: { suggestions: string[] }) {
@@ -47,15 +49,7 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-card p-4 shadow-border sm:p-5">
-      <header className="flex items-baseline justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Preguntale al compañero
-          </p>
-          <h2 className="font-display text-xl font-medium tracking-tight">Acá al lado tuyo</h2>
-        </div>
-      </header>
+    <HarborCard kicker="Preguntale al compañero" title="Acá al lado tuyo" stamp="tankard">
 
       {chat.length > 0 ? (
         <ol className="flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
@@ -113,17 +107,17 @@ export function BuddyChat({ suggestions }: { suggestions: string[] }) {
         <label className="sr-only" htmlFor="buddy-ask">
           Preguntale a Harbor Buddy
         </label>
-        <input
+        <Input
           id="buddy-ask"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder="¿Dónde pongo la taberna?"
-          className="h-11 min-w-0 flex-1 rounded-md border-0 bg-muted px-3 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-w-0 flex-1"
         />
         <Button type="submit" size="icon" disabled={pending || !draft.trim()} aria-label="Enviar">
           <Send />
         </Button>
       </form>
-    </section>
+    </HarborCard>
   );
 }

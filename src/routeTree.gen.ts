@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConectarRouteImport } from './routes/conectar'
+import { Route as InstalarRouteImport } from './routes/instalar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConectarRoute = ConectarRouteImport.update({
+  id: '/conectar',
+  path: '/conectar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstalarRoute = InstalarRouteImport.update({
+  id: '/instalar',
+  path: '/instalar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/conectar': typeof ConectarRoute
+  '/instalar': typeof InstalarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/conectar': typeof ConectarRoute
+  '/instalar': typeof InstalarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/conectar': typeof ConectarRoute
+  '/instalar': typeof InstalarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/conectar' | '/instalar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/conectar' | '/instalar'
+  id: '__root__' | '/' | '/conectar' | '/instalar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConectarRoute: typeof ConectarRoute
+  InstalarRoute: typeof InstalarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conectar': {
+      id: '/conectar'
+      path: '/conectar'
+      fullPath: '/conectar'
+      preLoaderRoute: typeof ConectarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instalar': {
+      id: '/instalar'
+      path: '/instalar'
+      fullPath: '/instalar'
+      preLoaderRoute: typeof InstalarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConectarRoute: ConectarRoute,
+  InstalarRoute: InstalarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

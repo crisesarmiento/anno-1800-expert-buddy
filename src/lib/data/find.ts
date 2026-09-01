@@ -1,5 +1,5 @@
-import { chaptersById, missions, missionsById } from "./campaign";
-import type { Mission } from "./types";
+import { chaptersById, missions, missionsById } from "./campaign.ts";
+import type { Mission } from "./types.ts";
 
 const EXTRA: Record<string, string> = {
   "pro-blast": "prologue dynamite fish a new world a lo grande faro cardumen",
@@ -63,12 +63,13 @@ function fold(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-export function findMissions(query: string): { mission: Mission; why: string }[] {
+export function findMissions(query: string): { mission: Mission; why: string; score: number }[] {
   const q = fold(query.trim());
   if (q.length < 2) return [];
   const scored = missions
     .map((mission) => {
       const chapter = chaptersById[mission.chapterId];
+      const title = fold(mission.title);
       const hay = fold(
         [
           mission.title,
@@ -79,7 +80,8 @@ export function findMissions(query: string): { mission: Mission; why: string }[]
         ].join(" "),
       );
       let score = 0;
-      if (fold(mission.title).includes(q)) score += 8;
+      if (title === q) score += 12;
+      else if (title.includes(q) || q.includes(title)) score += 8;
       if (hay.includes(q)) score += 3;
       q.split(/\s+/).forEach((word) => {
         if (word.length > 2 && hay.includes(word)) score += 1;
@@ -89,9 +91,10 @@ export function findMissions(query: string): { mission: Mission; why: string }[]
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
-  return scored.map(({ mission }) => ({
+  return scored.map(({ mission, score }) => ({
     mission,
     why: mission.objective,
+    score,
   }));
 }
 

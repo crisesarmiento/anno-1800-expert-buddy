@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { HarborCard } from "@/components/harbor-card";
 import { Stamp } from "@/components/stamps";
 import { chains, chainRule } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -8,12 +9,13 @@ export function ChainBoard() {
   const active = chains.find((chain) => chain.id === activeId) ?? chains[0];
 
   return (
-    <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-      <p className="text-xs font-medium tracking-wide text-mist uppercase">Materia prima → fábrica</p>
-      <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">Uno y uno alcanza</h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{chainRule}</p>
-
-      <div className="mt-4 flex flex-wrap gap-2">
+    <HarborCard
+      kicker="Materia prima → fábrica"
+      title="Uno y uno alcanza"
+      stamp="mill"
+      hint={chainRule}
+    >
+      <div className="flex flex-wrap gap-2">
         {chains.map((chain) => (
           <button
             key={chain.id}
@@ -52,6 +54,6 @@ export function ChainBoard() {
           </p>
         </div>
       ) : null}
-    </section>
+    </HarborCard>
   );
 }

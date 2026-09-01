@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Anchor,
   Check,
@@ -13,8 +14,11 @@ import {
 import { BlockGrid, HarborRoute } from "@/components/block-grid";
 import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
+import { HarborCard, IconWell } from "@/components/harbor-card";
+import { LivePanel } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
 import { Stamp, buildingStamp } from "@/components/stamps";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   brokeSteps,
@@ -27,7 +31,7 @@ import {
   type MissionKind,
 } from "@/lib/data";
 import { nextMove, type CoinsPulse, type HousesPulse, type LookingPulse } from "@/lib/play";
-import { useHarbor } from "@/lib/store";
+import { isLiveLocked, useHarbor } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const KIND_LABEL: Record<MissionKind, string> = {
@@ -76,7 +80,9 @@ function TopBar() {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
-        <Anchor className="size-5 shrink-0 text-primary" strokeWidth={1.75} />
+        <IconWell>
+          <Anchor className="size-5" strokeWidth={1.75} />
+        </IconWell>
         <div className="min-w-0">
           <p className="font-display text-lg leading-none font-semibold tracking-tight">
             Harbor Buddy
@@ -87,6 +93,12 @@ function TopBar() {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <Link
+          to="/instalar"
+          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          Instalar el mod
+        </Link>
         <button
           type="button"
           onClick={() => setSpoilers(!spoilers)}
@@ -136,6 +148,7 @@ function CampaignRail() {
   const missionId = useHarbor((s) => s.missionId);
   const setMissionId = useHarbor((s) => s.setMissionId);
   const completed = useHarbor((s) => s.completed);
+  const locked = useHarbor((s) => isLiveLocked(s));
   const [openId, setOpenId] = useState<string | null>(null);
 
   const currentChapterId = missionId ? missionsById[missionId]?.chapterId : null;
@@ -155,6 +168,7 @@ function CampaignRail() {
             key={chapter.id}
             type="button"
             onClick={() => {
+              if (locked) return;
               setOpenId(chapter.id);
               const first = chapter.missionIds[0];
               if (first) setMissionId(first);
@@ -204,12 +218,16 @@ function CampaignRail() {
                       <li key={id}>
                         <button
                           type="button"
-                          onClick={() => setMissionId(id)}
+                          onClick={() => {
+                            if (!locked) setMissionId(id);
+                          }}
+                          disabled={locked}
                           className={cn(
                             "flex min-h-11 w-full items-start gap-2 rounded-md px-2 py-2 text-left text-sm leading-snug",
                             active
                               ? "bg-primary text-primary-foreground"
                               : "text-foreground hover:bg-muted",
+                            locked && !active && "opacity-70",
                           )}
                         >
                           <span
@@ -260,11 +278,12 @@ function Welcome() {
           No necesitás una ciudad perfecta.
         </h1>
         <p className="mt-4 max-w-prose text-base leading-relaxed text-muted-foreground">
-          Poné esto al lado de Anno en Windows. Tocá dónde estás. Yo te digo los próximos diez
-          minutos: un sello 10×10, dónde va el edificio nuevo, cómo no fundirte, y con quién no
-          pelear. Tocá lo que ves en tu isla y te contesto como si estuviera al lado.
+          Poné esto al lado de Anno. Tocá dónde estás. Yo te digo los próximos diez minutos: un
+          sello 10×10, el edificio nuevo, y cómo no fundirte.
         </p>
       </div>
+
+      <LivePanel />
 
       <MissionFinder />
 
@@ -272,22 +291,26 @@ function Welcome() {
         <WelcomeCard
           title="Recién empiezo"
           copy="El prólogo, y después el primer mercado."
+          stamp="fish"
           onClick={() => setMissionId("pro-blast")}
         />
         <WelcomeCard
           title="Fundando la primera ciudad"
           copy="Capítulo 1. Madera, mercado, diez casas."
+          stamp="cottage"
           onClick={() => setMissionId(firstPlayableMissionId)}
           featured
         />
         <WelcomeCard
           title="Acero y mar"
           copy="Capítulo 2. Hierro en la montaña."
+          stamp="anvil"
           onClick={() => setMissionId("ch2-bulk")}
         />
         <WelcomeCard
           title="Del otro lado del océano"
           copy="Capítulo 3. El mismo 10×10, isla nueva."
+          stamp="leaf"
           onClick={() => setMissionId("ch3-hand")}
         />
       </div>
@@ -303,11 +326,13 @@ function Welcome() {
 function WelcomeCard({
   title,
   copy,
+  stamp,
   onClick,
   featured,
 }: {
   title: string;
   copy: string;
+  stamp: string;
   onClick: () => void;
   featured?: boolean;
 }) {
@@ -316,15 +341,18 @@ function WelcomeCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex min-h-28 flex-col items-start rounded-xl p-4 text-left transition-shadow duration-150",
+        "flex min-h-28 items-start gap-3 rounded-xl p-4 text-left transition-shadow duration-150",
         featured
-          ? "bg-primary text-primary-foreground shadow-border"
+          ? "bg-card text-foreground shadow-border-hover"
           : "bg-card text-foreground shadow-border hover:shadow-border-hover",
       )}
     >
-      <span className="font-display text-lg font-medium">{title}</span>
-      <span className={cn("mt-1 text-sm", featured ? "text-primary-foreground/75" : "text-muted-foreground")}>
-        {copy}
+      <span className="grid size-11 shrink-0 place-items-center rounded-md bg-muted text-primary">
+        <Stamp name={stamp} className="size-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="font-display text-lg font-medium">{title}</span>
+        <span className="mt-1 block text-sm text-muted-foreground">{copy}</span>
       </span>
     </button>
   );
@@ -401,6 +429,8 @@ function SessionDesk() {
   const pulse = useHarbor((s) => s.pulse);
   const checks = useHarbor((s) => s.checks);
   const toggleCheck = useHarbor((s) => s.toggleCheck);
+  const locked = useHarbor((s) => isLiveLocked(s));
+  const liveFileLoaded = useHarbor((s) => Boolean(s.liveEnabled && s.liveSnapshot));
   const resolved = resolveMission(missionId);
   const nav = missionId ? getMissionIndex(missionId) : null;
   const [buildingId, setBuildingId] = useState<string | null>(null);
@@ -429,21 +459,34 @@ function SessionDesk() {
   return (
     <div className="stagger-in mx-auto flex max-w-3xl flex-col gap-6">
       <MobileMissionPicker />
-      <MissionFinder />
+      <LivePanel />
+      {locked ? null : <MissionFinder />}
       <IslandPulse />
 
-      <section className="rounded-xl bg-primary p-4 text-primary-foreground sm:p-6">
-        <p className="text-xs font-medium tracking-wide text-primary-foreground/70 uppercase">
-          Tu próximo paso
+      <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
+        <div className="flex items-start gap-3">
+          <IconWell>
+            <Compass className="size-5" />
+          </IconWell>
+          <div className="min-w-0">
+            <p className="text-xs font-medium tracking-wide text-mist uppercase">Tu próximo paso</p>
+            <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">{move.title}</h2>
+          </div>
+        </div>
+        <p className="mt-3 border-l-2 border-primary pl-3 text-sm leading-relaxed text-muted-foreground">
+          {move.detail}
         </p>
-        <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">{move.title}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-primary-foreground/85">{move.detail}</p>
       </section>
 
       <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-        <p className="text-xs font-medium tracking-wide text-mist uppercase">
-          {chapter.roman === "0" ? "Prólogo" : `Capítulo ${chapter.roman}`} · {KIND_LABEL[mission.kind]} ·{" "}
-          {nav.index + 1}/{nav.total}
+        <p className="flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide text-mist uppercase">
+          <Badge variant="outline">
+            {chapter.roman === "0" ? "Prólogo" : `Capítulo ${chapter.roman}`}
+          </Badge>
+          <Badge>{KIND_LABEL[mission.kind]}</Badge>
+          <span>
+            {nav.index + 1}/{nav.total}
+          </span>
         </p>
         <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight">
           {mission.title}
@@ -467,9 +510,11 @@ function SessionDesk() {
                     <button
                       type="button"
                       onClick={() => missionId && toggleCheck(missionId, index)}
+                      disabled={locked}
                       className={cn(
                         "flex min-h-11 w-full items-start gap-3 rounded-md px-2 py-2 text-left text-sm leading-relaxed",
                         on ? "bg-accent text-accent-foreground" : "hover:bg-muted",
+                        locked && "cursor-default",
                       )}
                     >
                       <span
@@ -501,10 +546,16 @@ function SessionDesk() {
         </p>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <Button onClick={() => markComplete(mission.id)} disabled={done}>
-            {done ? "Anotada" : "Esto ya está"}
-          </Button>
-          {nav.nextId ? (
+          {liveFileLoaded ? (
+            <p className="text-sm text-muted-foreground">
+              El diario va solo. No hace falta Completar.
+            </p>
+          ) : (
+            <Button onClick={() => markComplete(mission.id)} disabled={done}>
+              {done ? "Anotada" : "Esto ya está"}
+            </Button>
+          )}
+          {locked ? null : nav.nextId ? (
             <Button variant="secondary" onClick={() => setMissionId(nav.nextId!)}>
               Siguiente misión
             </Button>
@@ -518,10 +569,17 @@ function SessionDesk() {
 
       {shownLayout ? (
         <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Sello de ciudad
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">{shownLayout.title}</h2>
+          <div className="flex items-start gap-3">
+            <IconWell>
+              <Stamp name="cottage" className="size-5" />
+            </IconWell>
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Sello de ciudad
+              </p>
+              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">{shownLayout.title}</h2>
+            </div>
+          </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{shownLayout.hint}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Sellos del cuaderno. No son el arte del juego.
@@ -545,10 +603,17 @@ function SessionDesk() {
 
       {buildings.length > 0 ? (
         <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Edificios nuevos
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">Dónde va de verdad</h2>
+          <div className="flex items-start gap-3">
+            <IconWell>
+              <Stamp name="stall" className="size-5" />
+            </IconWell>
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Edificios nuevos
+              </p>
+              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">Dónde va de verdad</h2>
+            </div>
+          </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {buildings.map((building) => (
               <button
@@ -612,13 +677,19 @@ function SessionDesk() {
             pulse.coins === "down" && "ring-2 ring-primary",
           )}
         >
-          <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            <Coins className="size-3.5" />
-            Que las monedas suban
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">
-            Bastante bien le gana a eficiente
-          </h2>
+          <div className="flex items-start gap-3">
+            <IconWell>
+              <Coins className="size-5" />
+            </IconWell>
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Que las monedas suban
+              </p>
+              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">
+                Bastante bien le gana a eficiente
+              </h2>
+            </div>
+          </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{life.money.pulse}</p>
           <ol className="mt-4 flex flex-col gap-2">
             {life.money.keepGreen.map((item, index) => (
@@ -647,11 +718,19 @@ function SessionDesk() {
 
       {life ? (
         <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            <Handshake className="size-3.5" />
-            Modales del puerto
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">Quedate en paz. Terminá la historia.</h2>
+          <div className="flex items-start gap-3">
+            <IconWell>
+              <Handshake className="size-5" />
+            </IconWell>
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Modales del puerto
+              </p>
+              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">
+                Quedate en paz. Terminá la historia.
+              </h2>
+            </div>
+          </div>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{life.diplomacy.pulse}</p>
           <ol className="mt-4 flex flex-col gap-2">
             {life.diplomacy.keepPeace.map((item, index) => (
@@ -752,15 +831,13 @@ function IslandPulse() {
   const setPulse = useHarbor((s) => s.setPulse);
 
   return (
-    <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        En tu partida ahora
-      </p>
-      <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">Contame qué ves</h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Tocá lo que está pasando en la pantalla. Yo cambio el próximo paso y el consejo.
-      </p>
-      <div className="mt-4 flex flex-col gap-4">
+    <HarborCard
+      kicker="En tu partida ahora"
+      title="Contame qué ves"
+      stamp="cottage"
+      hint="Tocá lo que está pasando en la pantalla. Yo cambio el próximo paso y el consejo."
+    >
+      <div className="flex flex-col gap-4">
         <ChipRow<CoinsPulse>
           label="Monedas"
           value={pulse.coins}
@@ -795,13 +872,14 @@ function IslandPulse() {
           ]}
         />
       </div>
-    </section>
+    </HarborCard>
   );
 }
 
 function MobileMissionPicker() {
   const missionId = useHarbor((s) => s.missionId);
   const setMissionId = useHarbor((s) => s.setMissionId);
+  const locked = useHarbor((s) => isLiveLocked(s));
   const mission = missionId ? missionsById[missionId] : null;
   if (!mission) return null;
   const chapter = chapters.find((item) => item.id === mission.chapterId);
@@ -815,6 +893,7 @@ function MobileMissionPicker() {
       <select
         className="h-11 rounded-md bg-card px-3 text-sm shadow-border"
         value={mission.id}
+        disabled={locked}
         onChange={(event) => setMissionId(event.target.value)}
       >
         {chapter.missionIds.map((id) => {

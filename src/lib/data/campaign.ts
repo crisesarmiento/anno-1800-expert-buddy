@@ -1,4 +1,4 @@
-import type { Chapter, Mission } from "./types";
+import type { Chapter, Mission } from "./types.ts";
 
 export const chapters: Chapter[] = [
   {

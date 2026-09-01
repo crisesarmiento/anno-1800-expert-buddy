@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { BookOpen, Search } from "lucide-react";
+import { HarborCard } from "@/components/harbor-card";
+import { Input } from "@/components/ui/input";
 import { chaptersById, findMissions } from "@/lib/data";
 import { useHarbor } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -10,16 +12,13 @@ export function MissionFinder() {
   const hits = useMemo(() => findMissions(query), [query]);
 
   return (
-    <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-      <p className="text-xs font-medium tracking-wide text-mist uppercase">¿En qué misión estoy?</p>
-      <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">Escribí lo que ves en el diario</h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        En Anno, a la derecha o abajo: el pergamino de misiones. El título de la
-        campaña es el que buscás. También sirve un pedazo: “acero”, “schnapps”,
-        “Ditch Water”, “Isabel”.
-      </p>
-
-      <div className="mt-4 rounded-lg bg-muted p-4">
+    <HarborCard
+      kicker="¿En qué misión estoy?"
+      title="Escribí lo que ves en el diario"
+      stamp="bell"
+      hint="En Anno, a la derecha o abajo: el pergamino de misiones. El título de la campaña es el que buscás. También sirve un pedazo: acero, schnapps, Ditch Water, Isabel."
+    >
+      <div className="rounded-md bg-muted p-4">
         <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           <BookOpen className="size-3.5" />
           Dónde mirar en el juego
@@ -35,11 +34,11 @@ export function MissionFinder() {
         <span className="sr-only">Buscar misión</span>
         <span className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mist" />
-          <input
+          <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Ej: Evolución industrial, 50 granjeros, mina…"
-            className="h-11 w-full rounded-md border-0 bg-muted pr-3 pl-10 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="pl-10"
           />
         </span>
       </label>
@@ -73,6 +72,6 @@ export function MissionFinder() {
           </p>
         )
       ) : null}
-    </section>
+    </HarborCard>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "schema": "harbor-live-v1",
+  "source": "file",
+  "updatedAt": "2026-09-01T00:00:00.000Z",
+  "game": "anno-1800",
+  "quests": [
+    {
+      "title": "Una chispa que vuelve",
+      "state": "active",
+      "objective": "Construí 1 mercado, 10 casas de granjeros y atraé 50 granjeros."
+    }
+  ],
+  "pulseHint": {
+    "coins": "down",
+    "houses": "empty"
+  }
+}

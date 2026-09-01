@@ -11,6 +11,7 @@ import {
   parseAppEnv,
   projectRoot,
   readAppEnv,
+  resolveSpawn,
 } from "./with-app-env.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -126,3 +127,12 @@ test("the CLI still runs when invoked through a symlinked path", async () => {
   ]);
   assert.equal(stdout, "false");
 });
+
+test("vite is launched via this Node, not a PATH binary", () => {
+  const resolved = resolveSpawn("vite", ["dev", "--host", "0.0.0.0"]);
+  assert.equal(resolved.file, process.execPath);
+  assert.equal(resolved.shell, false);
+  assert.match(resolved.args[0], /vite\.js$/);
+  assert.deepEqual(resolved.args.slice(1), ["dev", "--host", "0.0.0.0"]);
+});
+

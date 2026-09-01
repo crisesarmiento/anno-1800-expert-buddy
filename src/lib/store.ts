@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { applyLiveToProgress, liveMissLine, liveOkLine, matchLiveQuests, type LiveSnapshot } from "@/lib/live";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
 import { defaultPulse, type Pulse } from "@/lib/play";
 
@@ -18,6 +19,14 @@ type HarborState = {
   chat: ChatTurn[];
   pulse: Pulse;
   checks: Record<string, number[]>;
+  liveEnabled: boolean;
+  liveSnapshot: LiveSnapshot | null;
+  liveMissionId: string | null;
+  liveConfidence: number;
+  liveFileName: string | null;
+  lastImportedAt: string | null;
+  liveBanner: string | null;
+  liveBannerFailed: boolean;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -27,7 +36,19 @@ type HarborState = {
   addChat: (turn: ChatTurn) => void;
   clearChat: () => void;
   resetProgress: () => void;
+  applyLiveSnapshot: (snapshot: LiveSnapshot, fileName?: string | null) => void;
+  clearLive: () => void;
+  setLiveEnabled: (value: boolean) => void;
+  setLiveBanner: (text: string | null, failed?: boolean) => void;
 };
+
+export function isLiveLocked(state: {
+  liveEnabled: boolean;
+  liveSnapshot: LiveSnapshot | null;
+  liveMissionId: string | null;
+}) {
+  return Boolean(state.liveEnabled && state.liveSnapshot && state.liveMissionId);
+}
 
 export const useHarbor = create<HarborState>()(
   persist(
@@ -39,11 +60,23 @@ export const useHarbor = create<HarborState>()(
       chat: [],
       pulse: defaultPulse,
       checks: {},
-      setMissionId: (id) => set({ missionId: id, calm: "session" }),
+      liveEnabled: false,
+      liveSnapshot: null,
+      liveMissionId: null,
+      liveConfidence: 0,
+      liveFileName: null,
+      lastImportedAt: null,
+      liveBanner: null,
+      liveBannerFailed: false,
+      setMissionId: (id) => {
+        if (isLiveLocked(get())) return;
+        set({ missionId: id, calm: "session" });
+      },
       setSpoilers: (value) => set({ spoilers: value }),
       setCalm: (value) => set({ calm: value }),
       setPulse: (patch) => set({ pulse: { ...get().pulse, ...patch } }),
       toggleCheck: (missionId, index) => {
+        if (isLiveLocked(get())) return;
         const current = get().checks[missionId] ?? [];
         const next = current.includes(index)
           ? current.filter((item) => item !== index)
@@ -51,6 +84,7 @@ export const useHarbor = create<HarborState>()(
         set({ checks: { ...get().checks, [missionId]: next } });
       },
       markComplete: (id) => {
+        if (get().liveEnabled && get().liveSnapshot) return;
         const completed = get().completed.includes(id)
           ? get().completed
           : [...get().completed, id];
@@ -81,7 +115,70 @@ export const useHarbor = create<HarborState>()(
           calm: "session",
           pulse: defaultPulse,
           checks: {},
+          liveEnabled: false,
+          liveSnapshot: null,
+          liveMissionId: null,
+          liveConfidence: 0,
+          liveFileName: null,
+          lastImportedAt: null,
+          liveBanner: null,
+          liveBannerFailed: false,
         }),
+      applyLiveSnapshot: (snapshot, fileName) => {
+        const match = matchLiveQuests(snapshot.quests);
+        const progress = applyLiveToProgress(snapshot, match);
+        const importedAt = new Date().toISOString();
+        if (!progress.matched || !progress.missionId) {
+          set({
+            liveEnabled: true,
+            liveSnapshot: snapshot,
+            liveMissionId: null,
+            liveConfidence: match.confidence,
+            liveFileName: fileName ?? get().liveFileName,
+            lastImportedAt: importedAt,
+            liveBanner: liveMissLine(match.rawTitles),
+            liveBannerFailed: false,
+          });
+          return;
+        }
+        const title = missionsById[progress.missionId]?.title ?? progress.missionId;
+        set({
+          liveEnabled: true,
+          liveSnapshot: snapshot,
+          liveMissionId: progress.missionId,
+          liveConfidence: match.confidence,
+          liveFileName: fileName ?? get().liveFileName,
+          lastImportedAt: importedAt,
+          missionId: progress.missionId,
+          completed: progress.completed,
+          checks: { ...get().checks, ...progress.checks },
+          pulse: { ...get().pulse, ...progress.pulse },
+          calm: "session",
+          liveBanner: liveOkLine(snapshot.quests.length, title),
+          liveBannerFailed: false,
+        });
+      },
+      clearLive: () =>
+        set({
+          liveEnabled: false,
+          liveSnapshot: null,
+          liveMissionId: null,
+          liveConfidence: 0,
+          liveFileName: null,
+          lastImportedAt: null,
+          liveBanner: null,
+          liveBannerFailed: false,
+        }),
+      setLiveEnabled: (value) => {
+        const snapshot = get().liveSnapshot;
+        if (value && snapshot) {
+          get().applyLiveSnapshot(snapshot, get().liveFileName);
+          return;
+        }
+        set({ liveEnabled: value });
+      },
+      setLiveBanner: (text, failed = false) =>
+        set({ liveBanner: text, liveBannerFailed: failed }),
     }),
     {
       name: "harbor-buddy-es",
@@ -92,6 +189,14 @@ export const useHarbor = create<HarborState>()(
         chat: state.chat,
         pulse: state.pulse,
         checks: state.checks,
+        liveEnabled: state.liveEnabled,
+        liveSnapshot: state.liveSnapshot,
+        liveMissionId: state.liveMissionId,
+        liveConfidence: state.liveConfidence,
+        liveFileName: state.liveFileName,
+        lastImportedAt: state.lastImportedAt,
+        liveBanner: state.liveBanner,
+        liveBannerFailed: state.liveBannerFailed,
       }),
     },
   ),

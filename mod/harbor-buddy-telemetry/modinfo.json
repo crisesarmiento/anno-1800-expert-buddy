@@ -1,0 +1,17 @@
+{
+  "Version": "0.1.1",
+  "ModID": "harbor-buddy-telemetry",
+  "IncompatibleIds": [],
+  "ModDependencies": [],
+  "LoadAfterIds": [],
+  "Category": "Misc",
+  "CreatorName": "Cristian Sarmiento",
+  "ModName": {
+    "English": "Harbor Buddy Telemetry",
+    "Spanish": "Harbor Buddy Telemetry"
+  },
+  "Description": {
+    "English": "Helper pack for Harbor Buddy. Does not change the save. No cheats.",
+    "Spanish": "Paquete auxiliar para Harbor Buddy. No cambia la partida. Sin trucos."
+  }
+}
