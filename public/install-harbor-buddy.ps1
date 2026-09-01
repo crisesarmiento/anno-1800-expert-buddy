@@ -73,6 +73,11 @@ try {
     Remove-Item -LiteralPath $dest -Recurse -Force
   }
   Copy-Item -LiteralPath $src -Destination $dest -Recurse
+  $legacyLua = Join-Path $dest "scripts"
+  if (Test-Path -LiteralPath $legacyLua) {
+    Remove-Item -LiteralPath $legacyLua -Recurse -Force
+  }
+
 }
 finally {
   if (Test-Path -LiteralPath $tmp) {
@@ -86,4 +91,13 @@ if (-not (Test-Path -LiteralPath $check)) {
   exit 1
 }
 
-Write-Host "Listo. Abrí Anno → Mods → activá Harbor Buddy Telemetry."
+$version = "0.2.0"
+try {
+  $raw = Get-Content -LiteralPath $check -Raw
+  if ($raw -match '"Version"\s*:\s*"([^"]+)"') { $version = $Matches[1] }
+} catch {}
+
+Write-Host "Listo. Mod $version en $dest"
+Write-Host "Abrí Anno → Mods → activá Harbor Buddy Telemetry."
+Write-Host "Si Anno se cae, desactivá el mod. Harbor Buddy anda igual sin él."
+

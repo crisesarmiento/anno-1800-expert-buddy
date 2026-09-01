@@ -26,7 +26,7 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
       kicker="Instalar el mod"
       title="Instalar Harbor Buddy en Anno"
       stamp="crate"
-      hint="El sitio no puede meter archivos en Anno. Descargás, ejecutás el instalador, listo. Si el juego crasheó con la 0.1.0: desactivá el mod, borra esa carpeta, y descargá de nuevo (0.1.1)."
+      hint="El sitio no puede meter archivos en Anno. Descargás, ejecutás el instalador, listo. Si Anno se cae, desactivá el mod y borra la carpeta vieja. El zip 0.2.0 no parchea el juego ni corre Lua."
     >
       <ol className="flex flex-col gap-4">
         <li className="rounded-md bg-muted p-4">

@@ -14,14 +14,30 @@ if (!existsSync(src)) {
   process.exit(1);
 }
 
+const infoPath = join(src, "modinfo.json");
+const info = JSON.parse(readFileSync(infoPath, "utf8"));
+if (!info.ModID || !info.Version || typeof info.ModName !== "object" || typeof info.Category !== "object") {
+  console.error("[pack-mod] modinfo.json must use localized objects for Category and ModName (Anno 1800 crashes on a string Category).");
+  process.exit(1);
+}
+if (typeof info.Category.English !== "string") {
+  console.error("[pack-mod] Category.English is required");
+  process.exit(1);
+}
+
 mkdirSync(outDir, { recursive: true });
 
 function walk(dir, files = []) {
   for (const name of readdirSync(dir)) {
     if (name.startsWith(".")) continue;
+    if (name.endsWith(".lua")) continue;
     const full = join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, files);
-    else files.push(full);
+    if (statSync(full).isDirectory()) {
+      if (name === "scripts") continue;
+      walk(full, files);
+    } else {
+      files.push(full);
+    }
   }
   return files;
 }
@@ -72,4 +88,4 @@ function zipFolder(folder, dest, prefix) {
 }
 
 zipFolder(src, out, "harbor-buddy-telemetry");
-console.log("[pack-mod]", out);
+console.log("[pack-mod]", info.Version, out);
