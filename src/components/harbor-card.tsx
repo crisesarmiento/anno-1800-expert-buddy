@@ -23,9 +23,11 @@ export function HarborCard({
   return (
     <Card className={className}>
       <CardHeader>
-        <span className="grid size-11 shrink-0 place-items-center rounded-md bg-muted text-primary">
-          {stamp ? <Stamp name={stamp} className="size-5" /> : icon}
-        </span>
+        {stamp ? (
+          <Stamp name={stamp} className="size-11 text-ink" />
+        ) : (
+          <span className="stamp-seal grid size-11 shrink-0 place-items-center text-ink">{icon}</span>
+        )}
         <div className="min-w-0">
           <CardKicker>{kicker}</CardKicker>
           <CardTitle className="mt-0.5">{title}</CardTitle>
@@ -47,7 +49,7 @@ export function IconWell({
   return (
     <span
       className={cn(
-        "grid size-11 shrink-0 place-items-center rounded-md bg-muted text-primary",
+        "stamp-seal grid size-11 shrink-0 place-items-center text-ink",
         className,
       )}
     >

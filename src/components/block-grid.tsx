@@ -15,27 +15,16 @@ const CELL_CLASS: Record<string, string> = {
   ".": "cell-empty",
 };
 
-const LEGEND: { key: string; label: string; className: string; stamp: string; ink: string }[] = [
-  { key: "R", label: "Calle", className: "cell-road", stamp: "road", ink: "text-background/80" },
-  { key: "H", label: "Casa", className: "cell-house", stamp: "cottage", ink: "text-background/80" },
-  { key: "G", label: "Jardín", className: "cell-gap", stamp: "garden", ink: "text-ok" },
-  { key: "P", label: "Público", className: "cell-public", stamp: "chapel", ink: "text-primary-foreground" },
-  { key: "W", label: "Agua", className: "cell-water", stamp: "water", ink: "text-foreground" },
-  { key: "F", label: "Granja", className: "cell-farm", stamp: "farm", ink: "text-background/80" },
-  { key: "I", label: "Industria", className: "cell-industry", stamp: "industry", ink: "text-foreground" },
-  { key: "T", label: "Árboles", className: "cell-tree", stamp: "tree", ink: "text-foreground" },
+const LEGEND: { key: string; label: string; className: string; stamp: string }[] = [
+  { key: "R", label: "Calle", className: "cell-road", stamp: "road" },
+  { key: "H", label: "Casa", className: "cell-house", stamp: "cottage" },
+  { key: "G", label: "Jardín", className: "cell-gap", stamp: "garden" },
+  { key: "P", label: "Público", className: "cell-public", stamp: "chapel" },
+  { key: "W", label: "Agua", className: "cell-water", stamp: "water" },
+  { key: "F", label: "Granja", className: "cell-farm", stamp: "farm" },
+  { key: "I", label: "Industria", className: "cell-industry", stamp: "industry" },
+  { key: "T", label: "Árboles", className: "cell-tree", stamp: "tree" },
 ];
-
-const CELL_INK: Record<string, string> = {
-  H: "text-background/75",
-  G: "text-ok",
-  P: "text-primary-foreground",
-  M: "text-primary-foreground",
-  W: "text-foreground/85",
-  F: "text-background/80",
-  I: "text-foreground/85",
-  T: "text-foreground/85",
-};
 
 export function BlockGrid({ layout }: { layout: Layout }) {
   const cols = Math.max(...layout.grid.map((row) => row.length), 1);
@@ -45,11 +34,11 @@ export function BlockGrid({ layout }: { layout: Layout }) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="mx-auto w-full max-w-md rounded-xl bg-muted p-3"
+        className="stamp-paper mx-auto w-full max-w-md p-3"
         style={{ maxWidth: "min(100%, 28rem)" }}
       >
         <div
-          className="grid aspect-square w-full gap-[2px] overflow-hidden rounded-md"
+          className="grid aspect-square w-full overflow-hidden"
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
           role="img"
           aria-label={layout.title}
@@ -65,9 +54,7 @@ export function BlockGrid({ layout }: { layout: Layout }) {
                     CELL_CLASS[cell] ?? "cell-empty",
                   )}
                 >
-                  {tile ? (
-                    <TileMark name={tile} className={cn("size-[70%]", CELL_INK[cell])} />
-                  ) : null}
+                  {tile ? <TileMark name={tile} className="size-[70%]" /> : null}
                 </span>
               );
             }),
@@ -77,9 +64,7 @@ export function BlockGrid({ layout }: { layout: Layout }) {
       <ul className="flex flex-wrap gap-x-3 gap-y-2 text-xs text-muted-foreground">
         {legend.map((item) => (
           <li key={item.key} className="flex items-center gap-1.5">
-            <span className={cn("grid size-6 place-items-center rounded-xs", item.className)}>
-              <Stamp name={item.stamp} className={cn("size-4", item.ink)} />
-            </span>
+            <Stamp name={item.stamp} className={cn("size-6", item.className)} />
             {item.label}
           </li>
         ))}
@@ -106,8 +91,8 @@ export function HarborRoute() {
               →
             </span>
           ) : null}
-          <span className="inline-flex h-11 items-center gap-2 rounded-md bg-muted px-3 text-sm">
-            <Stamp name={stop.stamp} className="size-4 text-primary" />
+          <span className="stamp-paper inline-flex h-11 items-center gap-2 px-3 text-sm">
+            <Stamp name={stop.stamp} className="size-8 text-ink" />
             {stop.label}
           </span>
         </li>

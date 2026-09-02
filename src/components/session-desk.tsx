@@ -1,6 +1,7 @@
 import { EstoAhoraItem } from "@/components/esto-ahora";
 import { IslandPulse } from "@/components/island-pulse";
 import { PowerUpSection } from "@/components/live-panel";
+import { Stamp } from "@/components/stamps";
 import { deskCalmUmbral } from "@/lib/session-desk";
 import { resolveMission } from "@/lib/data";
 import { commitDeskMutation } from "@/lib/desk-offline";
@@ -31,10 +32,10 @@ export function SessionDesk() {
           data-umbral={umbral}
           aria-label="Esto, ahora"
           className={cn(
-            "rounded-xl p-5 sm:p-7",
+            "hero-orla p-5 sm:p-7",
             alarm
-              ? "bg-destructive text-destructive-foreground shadow-border"
-              : "bg-card text-card-foreground shadow-border",
+              ? "bg-destructive text-destructive-foreground"
+              : "bg-card text-card-foreground",
           )}
         >
           <p
@@ -44,6 +45,7 @@ export function SessionDesk() {
           >
             <StatusChip
               label="Saturado"
+              stamp="hourglass"
               on={saturado}
               alarm={alarm}
               onClick={() =>
@@ -52,6 +54,7 @@ export function SessionDesk() {
             />
             <StatusChip
               label="Rojo"
+              stamp="coins-down"
               on={rojo}
               alarm={alarm}
               onClick={() =>
@@ -83,11 +86,13 @@ export function SessionDesk() {
 
 function StatusChip({
   label,
+  stamp,
   on,
   alarm,
   onClick,
 }: {
   label: string;
+  stamp: string;
   on: boolean;
   alarm: boolean;
   onClick: () => void;
@@ -99,16 +104,17 @@ function StatusChip({
       aria-pressed={on}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-md px-3",
+        "inline-flex min-h-11 items-center gap-2 px-1",
         on
-          ? alarm
-            ? "bg-destructive-foreground text-destructive"
-            : "bg-destructive text-destructive-foreground"
+          ? stamp === "hourglass"
+            ? "text-saturado"
+            : "text-destructive"
           : alarm
             ? "text-destructive-foreground/55"
             : "text-muted-foreground",
       )}
     >
+      <Stamp name={stamp} className="size-11" title={label} />
       {label}
     </button>
   );

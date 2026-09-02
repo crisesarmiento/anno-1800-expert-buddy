@@ -259,6 +259,64 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M12.5 6.5 18 4l1.5 5.5-5.2 2.2z" />
     </>
   ),
+  book: (
+    <>
+      <path d="M5 7v13h14V7" />
+      <path d="M5 7c2-2 4-3 7-3s5 1 7 3" />
+      <path d="M12 7v13" />
+    </>
+  ),
+  anchor: (
+    <>
+      <path d="M12 3v14" />
+      <path d="M8 7h8" />
+      <path d="M9 21h6l-3-4z" />
+    </>
+  ),
+  blot: (
+    <>
+      <circle cx="10" cy="12" r="5" />
+      <circle cx="15" cy="10" r="3" />
+      <circle cx="14" cy="16" r="2" />
+    </>
+  ),
+  warn: (
+    <>
+      <path d="M12 4 21 19H3z" />
+      <path d="M12 10v5M12 17.5v.5" />
+    </>
+  ),
+  coins: (
+    <>
+      <ellipse cx="12" cy="8" rx="6" ry="2.4" />
+      <path d="M6 8v3c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4V8M6 11v3c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4v-3" />
+    </>
+  ),
+  "check-seal": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8 12.5 11 16l5-7" />
+    </>
+  ),
+  chain: (
+    <>
+      <path d="M9 10a3 3 0 1 1 0-4h2M15 14a3 3 0 1 1 0 4h-2" />
+      <path d="M10 8h4M10 16h4" />
+    </>
+  ),
+  plug: (
+    <>
+      <path d="M8 14h8v5H8z" />
+      <path d="M10 14V9h4v5M9 9V6M15 9V6" />
+    </>
+  ),
+  hourglass: <path d="M7 5h10M7 19h10M8 5c0 4 8 4 8 7s-8 3-8 7M16 5c0 4-8 4-8 7s8 3 8 7" />,
+  "coins-down": (
+    <>
+      <ellipse cx="12" cy="9" rx="6" ry="3" />
+      <path d="M6 9v4c0 1.7 2.7 3 6 3s6-1.3 6-3V9M12 14v5M9.5 17.5 12 20l2.5-2.5" />
+    </>
+  ),
 };
 
 export function Stamp({
@@ -271,20 +329,20 @@ export function Stamp({
   title?: string;
 }) {
   return (
-    <svg
-      viewBox={svg.viewBox}
-      fill={svg.fill}
-      stroke={svg.stroke}
-      strokeWidth={svg.strokeWidth}
-      strokeLinecap={svg.strokeLinecap}
-      strokeLinejoin={svg.strokeLinejoin}
-      className={cn("shrink-0", className)}
-      role={title ? "img" : "presentation"}
-      aria-hidden={title ? undefined : true}
-    >
-      {title ? <title>{title}</title> : null}
-      {ICONS[name] ?? ICONS.cottage}
-    </svg>
+    <span className={cn("stamp-seal", className)} role={title ? "img" : undefined} aria-hidden={title ? undefined : true}>
+      <svg
+        viewBox={svg.viewBox}
+        fill={svg.fill}
+        stroke={svg.stroke}
+        strokeWidth={svg.strokeWidth}
+        strokeLinecap={svg.strokeLinecap}
+        strokeLinejoin={svg.strokeLinejoin}
+        aria-hidden
+      >
+        {title ? <title>{title}</title> : null}
+        {ICONS[name] ?? ICONS.cottage}
+      </svg>
+    </span>
   );
 }
 
@@ -336,60 +394,18 @@ export function buildingStamp(id: string) {
   return BUILDING_STAMP[id] ?? "cottage";
 }
 
-const TILE: Record<string, ReactNode> = {
-  cottage: <path fill="currentColor" stroke="none" d="M3.5 11.5 12 4.2 20.5 11.5V20.5H14v-6h-4v6H3.5z" />,
-  garden: (
-    <>
-      <circle fill="currentColor" stroke="none" cx="12" cy="9.5" r="4.2" />
-      <path fill="currentColor" stroke="none" d="M11 13h2v8h-2z" />
-    </>
-  ),
-  chapel: (
-    <>
-      <path fill="currentColor" stroke="none" d="M5 20.5V11l7-6 7 6v9.5h-5v-5H10v5z" />
-      <path fill="currentColor" stroke="none" d="M11 3h2v3h-2zM10 3.8h4v1.4h-4z" />
-    </>
-  ),
-  stall: (
-    <>
-      <path fill="currentColor" stroke="none" d="M3.5 8.5h17l-2 4.2H5.5z" />
-      <path fill="currentColor" stroke="none" d="M6.2 12.7h2.2v8.3H6.2zM15.6 12.7h2.2v8.3h-2.2zM9 18.5h6v2.5H9z" />
-    </>
-  ),
-  farm: (
-    <>
-      <path fill="currentColor" stroke="none" d="M5 8h2.4v13H5zM10.8 5.5h2.4V21h-2.4zM16.6 9h2.4v12h-2.4z" />
-    </>
-  ),
-  industry: (
-    <>
-      <path fill="currentColor" stroke="none" d="M3.5 20.5V12l5 2.2V11.5l5 2.3V9.5l6.5-2.2v13z" />
-      <path fill="currentColor" stroke="none" d="M16.2 4h2.3v4h-2.3z" />
-    </>
-  ),
-  tree: (
-    <>
-      <path fill="currentColor" stroke="none" d="M12 3.5 6 12h12z" />
-      <path fill="currentColor" stroke="none" d="M12 8 5.2 17h13.6z" />
-      <path fill="currentColor" stroke="none" d="M11 16h2v5h-2z" />
-    </>
-  ),
-  water: (
-    <>
-      <path fill="currentColor" stroke="none" d="M3 9.2c2.2 2.4 4.4 2.4 6.5 0 2.2-2.4 4.3-2.4 6.5 0 2.1 2.4 4.3 2.4 5 1.2v3.2c-2 .8-3.6-.4-5-1.8-2.2-2.2-4.3-2.2-6.5 0-2.1 2.2-4.3 2.2-6.5 0z" />
-      <path fill="currentColor" stroke="none" d="M3 15.4c2.2 2.4 4.4 2.4 6.5 0 2.2-2.4 4.3-2.4 6.5 0 2.1 2.4 4.3 2.4 5 1.2v3.2c-2 .8-3.6-.4-5-1.8-2.2-2.2-4.3-2.2-6.5 0-2.1 2.2-4.3 2.2-6.5 0z" />
-    </>
-  ),
-  crate: <path fill="currentColor" stroke="none" d="M4 8.2 12 4.2 20 8.2V20H4zM4 12h16M12 8.2V20" />,
-};
-
 export function TileMark({ name, className }: { name: string; className?: string }) {
-  const glyph = TILE[name];
+  const glyph = ICONS[name];
   if (!glyph) return null;
   return (
     <svg
-      viewBox="0 0 24 24"
-      className={cn("pointer-events-none", className)}
+      viewBox={svg.viewBox}
+      fill={svg.fill}
+      stroke={svg.stroke}
+      strokeWidth={1.85}
+      strokeLinecap={svg.strokeLinecap}
+      strokeLinejoin={svg.strokeLinejoin}
+      className={cn("pointer-events-none tile-mark", className)}
       aria-hidden
     >
       {glyph}

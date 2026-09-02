@@ -5,39 +5,41 @@
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: #14110e;
-  --color-foreground: #f3e6cf;
-  --color-card: #1e1a14;
-  --color-card-foreground: #f3e6cf;
-  --color-muted: #2a241c;
-  --color-muted-foreground: #b7a78e;
-  --color-primary: #c9a36a;
-  --color-primary-foreground: #1a140c;
-  --color-secondary: #2a241c;
-  --color-secondary-foreground: #f3e6cf;
-  --color-accent: #2f5658;
-  --color-accent-foreground: #f3e6cf;
-  --color-border: #3c3428;
-  --color-input: #3c3428;
-  --color-ring: #c9a36a;
-  --color-destructive: #c45c4a;
-  --color-destructive-foreground: #f3e6cf;
-  --color-ok: #7ea37c;
-  --color-ok-foreground: #14110e;
+  --color-background: #f3e6d0;
+  --color-foreground: #2a2118;
+  --color-card: #f3e6d0;
+  --color-card-foreground: #2a2118;
+  --color-muted: #e8d7bb;
+  --color-muted-foreground: #5c5348;
+  --color-primary: #b8956a;
+  --color-primary-foreground: #2a2118;
+  --color-secondary: #e8d7bb;
+  --color-secondary-foreground: #2a2118;
+  --color-accent: #e8d7bb;
+  --color-accent-foreground: #2a2118;
+  --color-border: #d7c7a8;
+  --color-input: #d7c7a8;
+  --color-ring: #b8956a;
+  --color-destructive: #a6453a;
+  --color-destructive-foreground: #f3e6d0;
+  --color-ok: #3f5c3c;
+  --color-ok-foreground: #f3e6d0;
   --color-sea: #2f5658;
-  --color-mist: #b7a78e;
-  --color-paper: #1e1a14;
-  --color-ink: #f3e6cf;
+  --color-mist: #5c5348;
+  --color-paper: #f3e6d0;
+  --color-ink: #2a2118;
+  --color-brass: #b8956a;
+  --color-saturado: #c4923a;
 
-  --color-cell-road: #6b5d4a;
-  --color-cell-house: #c9ae86;
-  --color-cell-gap: #5d7a58;
-  --color-cell-public: #c9a36a;
-  --color-cell-water: #3d6e74;
-  --color-cell-farm: #7a9458;
-  --color-cell-industry: #5c4a3d;
+  --color-cell-road: #4a4338;
+  --color-cell-house: #5c3d2e;
+  --color-cell-gap: #3f5c3c;
+  --color-cell-public: #8b3a2a;
+  --color-cell-water: #2f5658;
+  --color-cell-farm: #7a5c28;
+  --color-cell-industry: #3c3428;
   --color-cell-tree: #3f5c3c;
-  --color-cell-empty: #241f18;
+  --color-cell-empty: #2a2118;
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -47,11 +49,11 @@
   --radius: 12px;
 
   --shadow-border:
-    0 0 0 1px rgb(201 163 106 / 0.12),
-    0 8px 20px -18px rgb(0 0 0 / 0.7);
+    0 0 0 1px rgb(42 33 24 / 0.12),
+    0 8px 20px -18px #00000022;
   --shadow-border-hover:
-    0 0 0 1px rgb(201 163 106 / 0.28),
-    0 10px 24px -16px rgb(0 0 0 / 0.75);
+    0 0 0 1px rgb(184 149 106 / 0.45),
+    0 10px 24px -16px #00000022;
 }
 
 @layer base {
@@ -63,7 +65,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   html,
@@ -71,7 +73,20 @@
   #app {
     min-height: 100%;
     background:
-      linear-gradient(180deg, rgb(243 230 207 / 0.03), transparent 28%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 31px,
+        rgb(42 33 24 / 0.035) 31px,
+        rgb(42 33 24 / 0.035) 32px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 31px,
+        rgb(42 33 24 / 0.02) 31px,
+        rgb(42 33 24 / 0.02) 32px
+      ),
       var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -101,6 +116,11 @@
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
+  }
+
+  .stamp-seal,
+  .tile-mark {
+    transform: none !important;
   }
 }
 
@@ -139,30 +159,117 @@
   animation-delay: 200ms;
 }
 
+.cell-road,
+.cell-house,
+.cell-gap,
+.cell-public,
+.cell-water,
+.cell-farm,
+.cell-industry,
+.cell-tree,
+.cell-empty {
+  background: transparent;
+}
 .cell-road {
-  background: var(--color-cell-road);
+  color: var(--color-cell-road);
 }
 .cell-house {
-  background: var(--color-cell-house);
+  color: var(--color-cell-house);
 }
 .cell-gap {
-  background: var(--color-cell-gap);
+  color: var(--color-cell-gap);
 }
 .cell-public {
-  background: var(--color-cell-public);
+  color: var(--color-cell-public);
 }
 .cell-water {
-  background: var(--color-cell-water);
+  color: var(--color-cell-water);
 }
 .cell-farm {
-  background: var(--color-cell-farm);
+  color: var(--color-cell-farm);
 }
 .cell-industry {
-  background: var(--color-cell-industry);
+  color: var(--color-cell-industry);
 }
 .cell-tree {
-  background: var(--color-cell-tree);
+  color: var(--color-cell-tree);
 }
 .cell-empty {
-  background: var(--color-cell-empty);
+  color: transparent;
+}
+
+.stamp-paper {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      rgb(201 184 154 / 0.28) 27px,
+      rgb(201 184 154 / 0.28) 28px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 27px,
+      rgb(201 184 154 / 0.16) 27px,
+      rgb(201 184 154 / 0.16) 28px
+    ),
+    var(--color-paper);
+  border: 1px solid #d7c7a8;
+  border-radius: 2px;
+  color: var(--color-ink);
+}
+
+.stamp-seal {
+  display: inline-grid;
+  place-items: center;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 #00000022;
+}
+.stamp-seal > svg {
+  width: 62%;
+  height: 62%;
+}
+.stamp-seal:nth-child(3n) {
+  transform: rotate(-1.6deg);
+}
+.stamp-seal:nth-child(4n) {
+  transform: rotate(2.1deg);
+}
+.stamp-seal:nth-child(5n) {
+  transform: rotate(-2.4deg);
+}
+
+.hero-orla {
+  position: relative;
+  background: var(--color-paper);
+  box-shadow: 0 18px 40px -28px #00000022;
+}
+.hero-orla::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1.5px solid currentColor;
+  pointer-events: none;
+}
+.hero-orla::after {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border: 1px solid rgb(42 33 24 / 0.22);
+  pointer-events: none;
+}
+
+.power-up-strip {
+  border-radius: 0;
+  border-top: 1px dashed rgb(42 33 24 / 0.35);
+  border-bottom: 1px dashed rgb(42 33 24 / 0.35);
+  background: var(--color-paper);
+  box-shadow: none;
 }
