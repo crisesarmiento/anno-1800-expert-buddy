@@ -14,19 +14,19 @@ function sliceFn(src: string, name: string) {
 }
 
 describe("welcome/desk zero-setup onboarding", () => {
-  it("leads Welcome with chips + example, not live JSON", () => {
+  it("leads Welcome with one Esto ahora + diary chips, live behind Power up", () => {
     const welcome = sliceFn(app, "Welcome");
     const chips = welcome.indexOf('data-welcome-primary="chips"');
-    const example = welcome.indexOf('data-welcome-primary="example"');
     const power = welcome.indexOf("<PowerUpSection");
     const live = welcome.indexOf("<LivePanel");
+    const hero = welcome.indexOf('data-hero="esto-ahora"');
+    assert.ok(hero >= 0);
     assert.ok(chips >= 0);
-    assert.ok(example >= 0);
     assert.ok(power >= 0);
     assert.equal(live, -1);
-    assert.ok(welcome.includes("<EstoAhoraItem"));
-    assert.ok(chips < example);
-    assert.ok(example < power);
+    assert.ok(hero < chips);
+    assert.ok(chips < power);
+    assert.equal(welcome.indexOf("<IslandPulse"), -1);
   });
 
   it("keeps live JSON / watcher / mod behind Power up on the desk", () => {
