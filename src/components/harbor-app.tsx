@@ -16,8 +16,10 @@ import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
-import { LivePanel } from "@/components/live-panel";
+import { PowerUpSection, TryLiveExample } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
+import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
+import { SessionDeskSurface } from "@/components/session-desk-surface";
 import { Stamp, buildingStamp } from "@/components/stamps";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,7 @@ export function HarborApp() {
 
   return (
     <div className="min-h-dvh bg-background">
+      <OverbuildBrakeNotice />
       <div className="mx-auto flex min-h-dvh max-w-6xl flex-col lg:flex-row">
         {quiet ? null : <CampaignRail />}
         <div className="flex min-w-0 flex-1 flex-col">
@@ -60,7 +63,7 @@ export function HarborApp() {
             ) : calm === "broke" ? (
               <BrokePanel />
             ) : (
-              <SessionDesk />
+              <SessionDeskSurface />
             )}
           </main>
         </div>
@@ -277,7 +280,7 @@ function Welcome() {
   const t = useT();
 
   return (
-    <div className="stagger-in mx-auto flex max-w-2xl flex-col gap-8">
+    <div data-welcome="" className="stagger-in mx-auto flex max-w-2xl flex-col gap-8">
       <div>
         <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.welcome.kicker}</p>
         <h1 className="mt-2 font-display text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
@@ -286,10 +289,16 @@ function Welcome() {
         <p className="mt-4 max-w-prose text-base leading-relaxed text-muted-foreground">
           {t.welcome.copy}
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">{t.welcome.journalNote}</p>
       </div>
 
-      <LivePanel />
+      <div data-welcome-primary="chips">
+        <IslandPulse />
+      </div>
+
+      <div data-welcome-primary="example" className="flex flex-col gap-2">
+        <TryLiveExample featured />
+        <p className="text-sm text-muted-foreground">{t.welcome.tryHint}</p>
+      </div>
 
       <MissionFinder />
 
@@ -320,7 +329,7 @@ function Welcome() {
           onClick={() => setMissionId("ch3-hand")}
         />
       </div>
-      <p className="text-sm text-muted-foreground">{t.welcome.windows}</p>
+      <PowerUpSection />
       <HarborFooter />
     </div>
   );
@@ -465,9 +474,9 @@ function SessionDesk() {
   return (
     <div className="stagger-in mx-auto flex max-w-3xl flex-col gap-6">
       <MobileMissionPicker />
-      <LivePanel />
-      {locked ? null : <MissionFinder />}
       <IslandPulse />
+      {locked ? null : <MissionFinder />}
+      <PowerUpSection />
 
       <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
         <div className="flex items-start gap-3">

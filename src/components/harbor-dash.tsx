@@ -80,11 +80,9 @@ export function HarborDash() {
           <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">{t.dash.hint}</p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2">
           <StatCard icon={<Coins className="size-4" />} label={t.dash.coins} value={labelCoins(model.coins, t)} />
           <StatCard icon={<Home className="size-4" />} label={t.dash.houses} value={labelHouses(model.houses, t)} />
-          <StatCard icon={<Building2 className="size-4" />} label={t.dash.seen} value={String(model.seenBuildings)} />
-          <StatCard icon={<Handshake className="size-4" />} label={t.dash.people} value={String(model.seenPeople)} />
         </div>
 
         <p className="text-sm text-muted-foreground">
@@ -92,34 +90,6 @@ export function HarborDash() {
           {model.chapterTitle ? `${model.chapterTitle} · ` : ""}
           {model.missionTitle}
         </p>
-
-        <HarborCard kicker={t.dash.alerts} title={t.dash.fixes} stamp="bell">
-          <ul className="flex flex-col gap-2">
-            {model.alerts.map((alert) => (
-              <li
-                key={alert.text}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm leading-relaxed",
-                  alert.tone === "bad" && "bg-destructive/15 text-destructive",
-                  alert.tone === "warn" && "bg-muted",
-                  alert.tone === "ok" && "bg-ok/15 text-ok",
-                )}
-              >
-                {alert.text}
-              </li>
-            ))}
-          </ul>
-          {model.fixes.length ? (
-            <ol className="mt-4 flex flex-col gap-2 text-sm leading-relaxed">
-              {model.fixes.map((fix, index) => (
-                <li key={fix} className="flex gap-2">
-                  <span className="font-display w-4 text-mist tabular-nums">{index + 1}</span>
-                  <span>{fix}</span>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-        </HarborCard>
 
         {ready && buildingChart.length > 0 ? (
           <HarborCard kicker={t.dash.buildings} title={t.dash.presence} stamp="cottage">

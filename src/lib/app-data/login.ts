@@ -17,6 +17,7 @@ export function redirectToLoginIfRequired(result: CallToolResult): boolean {
   const url = result.loginUrl;
   if (!url) return false;
   if (typeof window === "undefined") return false;
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return false;
   if (isFramed()) {
     const opened = window.open(url, "_blank");
     if (opened) {

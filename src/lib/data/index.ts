@@ -5,6 +5,7 @@ export * from "./campaign";
 export * from "./harbor-life";
 export * from "./find";
 export * from "./chains";
+export * from "./yellow-bar";
 
 import { buildingsById } from "./buildings";
 import { chapters, chaptersById, missionsById } from "./campaign";

@@ -23,9 +23,9 @@ export type ChapterLife = {
 
 export const brokeSteps = [
   "Pará de construir. Nada nuevo hasta que el Balance deje de ser rojo.",
-  "Estadísticas → Economía. Si Edificios de producción cuestan casi tanto como Impuestos, tenés demasiadas fábricas para la gente que vive.",
-  "Instituciones con zzz están cobrando y no laburan. Bomberos: una estación. Las otras, borralas.",
-  "Pausá o tirá fábricas dormidas. Vendé el sobrante a Kahina. El impuesto sube con casas llenas, no con más chimeneas.",
+  "Estadísticas → Economía. Si Edificios de producción cuestan casi tanto como Impuestos, tenés demasiadas fábricas para la gente que vive. En una corrida: impuestos ~870 con 61 residentes vs gastos ~1053 (saldo ~−183); la producción (~−658) pesaba más que las instituciones.",
+  "Instituciones con zzz están cobrando y no laburan. Bomberos: una estación al centro del barrio de granjeros. Tres dormidas te comen el ticker — unos −75 — y no apagan más fuego. Las demás, pausalas o tiralas.",
+  "Pausá o tirá fábricas dormidas. Vendé el sobrante a Kahina. El impuesto sube con casas llenas, no con más chimeneas. El verde vuelve cuando baja el gasto, no cuando plantás más.",
 ];
 
 export const people: HarborPerson[] = [
@@ -112,7 +112,8 @@ const life: ChapterLife[] = [
       keepGreen: [
         "Mercado + pescado + ropa hacen que se muden granjeros. La gente en las casas es el impuesto.",
         "Schnapps y la taberna son lujo — opcionales para sobrevivir, excelentes para las monedas. Ese es tu primer aumento.",
-        "Si el saldo se pone rojo: Estadísticas → Economía. Producción más cara que impuestos = demasiadas fábricas. Instituciones con zzz = cobrando al pedo.",
+        "Si el saldo se pone rojo: Estadísticas → Economía. Producción más cara que impuestos = demasiadas fábricas. Instituciones con zzz = cobrando al pedo. Pausá lo que duerme. Dejá de construir. Llená casas. Vendé el sobrante.",
+        "Una estación de bomberos al centro cubre el pueblo. Colección de techos rojos = zzz que restan.",
         "No subas a todos los granjeros. Se traban las granjas, baja el ingreso, y igual pagás las casas de ladrillo.",
       ],
       trap: "Diez casas más ‘para después’ mientras pescado y ropa ya están amarillos. Así arranca la primera quiebra.",
@@ -122,7 +123,8 @@ const life: ChapterLife[] = [
       keepPeace: [
         "Hacé los laburos de Hannah. Entregá las listas de cuatro toneladas de Edvard.",
         "Kahina te compra el sobrante. Usala antes de fundar una segunda isla de producción.",
-        "Ignorá a las compañías rivales que reclaman otras islas. Agarrá una libre.",
+        "Mandá el barco a mirar y a cumplir mandados. Scoutear islas ≠ colonizarlas. Fundar otra colonia ahora es un segundo ticker; primero el pueblo de La Inapetente.",
+        "Ignorá a las compañías rivales que reclaman otras islas. Un solo barco no es flota de regalos ni de diplomacia.",
         "No declares guerra, no compres acciones ni insultes a nadie en una primera partida.",
       ],
       trap: "Hundir a un comerciante porque pasó cerca. Le acabás de pegar a tu banco.",
@@ -227,7 +229,15 @@ export const lifeByChapter: Record<string, ChapterLife> = Object.fromEntries(
 
 export const lifeAsks: Record<string, string[]> = {
   prologue: ["¿Qué importa después del prólogo?"],
-  ch1: ["Se me pusieron rojas las monedas", "¿Le vendo a Kahina?", "¿Peleo con las otras compañías?"],
+  ch1: [
+    "Se me pusieron rojas las monedas",
+    "¿Le vendo a Kahina?",
+    "¿Peleo con las otras compañías?",
+    "¿Sigo sumando casas o producción?",
+    "¿Cuántas estaciones de bomberos?",
+    "¿Fundó otra isla?",
+    "El saldo está en rojo, ¿qué hago?",
+  ],
   ch2: ["El acero me está drenando", "¿Ya vale la pena la guerra?", "¿Qué llevo a la expedición?"],
   ch3: ["El Viejo Mundo se está fundiendo", "¿Puedo ignorar a las otras compañías?", "Isabel pide demasiado"],
   ch4: ["Reemplazar barcos me sale carísimo", "¿Contra quién tengo que pelear de verdad?"],

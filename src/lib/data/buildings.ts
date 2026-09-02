@@ -6,7 +6,7 @@ export const buildings: Building[] = [
     name: "Cabaña de leñador",
     unlock: "Desde el arranque",
     where: "En un bosque, afuera de los 10×10 de casas. Precisa árboles en pie dentro del círculo.",
-    buddy: "Este es el edificio número uno. Tiralo en los árboles, calle al aserradero. Si se seca la madera, pausá todo lo demás y plantá otra cabaña. Las ciudades lindas se arman con tablones.",
+    buddy: "Este es el edificio número uno. Tiralo en los árboles, calle al aserradero. Si se seca la madera, pausá todo lo demás y plantá otra cabaña. Tres cadenas se justifican cuando llegan blueprints: stockeá tablas ANTES de stampiar. En calma, pausá los extra.",
     trap: "No tires todo el bosque para hacer casas. Dejá un lote de madera.",
   },
   {
@@ -14,7 +14,7 @@ export const buildings: Building[] = [
     name: "Aserradero",
     unlock: "Desde el arranque",
     where: "Al lado del leñador o en la calle hacia el almacén.",
-    buddy: "Convierte troncos en tablones. Uno al lado de tu primera cabaña alcanza para el pueblo de arranque. Armá otro cuando construir se sienta trabado.",
+    buddy: "Convierte troncos en tablones. Uno al lado de tu primera cabaña alcanza para el pueblo de arranque. Armá otro cuando construir se sienta trabado. Tres aserraderos son para la ola de planos, no para siempre; si el almacén está lleno y no hay plano, esas chimeneas solo restan.",
     trap: "Un aserradero sin calle al almacén se queda ahí, como si laburara.",
   },
   {
@@ -30,7 +30,7 @@ export const buildings: Building[] = [
     name: "Residencia de granjeros",
     unlock: "Desde el arranque",
     where: "Adentro de los 10×10. 3×3. Dejá un casillero de jardín entre casas.",
-    buddy: "Plantá, no te armes un plano. Diez casas ya es un pueblo. Seguí el mismo patrón así después tirás una taberna o una escuela en un hueco, sin desarmar la ciudad.",
+    buddy: "Plantá, no te armes un plano. Diez casas ya es un pueblo. Casas y laburo al mismo ritmo: no plantes más chimeneas que gente. Seguí el mismo patrón así después tirás una taberna o una escuela en un hueco, sin desarmar la ciudad.",
     trap: "Una tira larga de casas parece eficiente y se siente fea. El 10×10 ya mete gente de sobra.",
   },
   {

@@ -18,6 +18,7 @@ export type BuddyInput = {
   pulse?: Pulse;
   checked?: number[];
   locale?: Locale | string | null;
+  overbuildBrakeActive?: boolean;
 };
 
 function plainTalk(text: string) {
@@ -99,6 +100,7 @@ export const askBuddy = createServerFn({ method: "POST" })
       pulse: input.pulse ?? defaultPulse,
       checked: Array.isArray(input.checked) ? input.checked.slice(0, 12) : [],
       locale: input.locale ?? "es",
+      overbuildBrakeActive: Boolean(input.overbuildBrakeActive),
     };
   })
   .handler(async ({ data }) => {
@@ -147,7 +149,9 @@ Siempre:
 - Atá el consejo a la misión Y a lo que él marcó que ve en su partida
 - Preferí “alcanza para seguir la historia”
 - Prosa simple. Oraciones cortas. Sin markdown.
-
+${data.overbuildBrakeActive ? `
+Freno de overbuild ACTIVO. No sugieras arrancar otra cadena de construcción, ni ahora ni “después” / “más tarde”. Las casas vacías no pagan. Esperá que se muden.
+` : ""}
 ${missionContext(data.missionId, data.spoilers, data.pulse ?? defaultPulse, data.checked ?? [], data.locale)}`;
 
     const messages = [

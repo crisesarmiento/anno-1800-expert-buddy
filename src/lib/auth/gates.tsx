@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
+import { shouldRedirectToLogin } from "@/lib/offline-desk";
 import { authEnabled, signOut } from "./client";
 import { useCurrentUser, useCurrentUserState } from "./use-current-user";
 
@@ -41,6 +42,11 @@ export function SignedOut({ children }: { children: ReactNode }) {
  * render this.
  */
 export function RedirectToSignIn({ to = SIGN_IN_PATH }: { to?: string }) {
+  const online = typeof navigator === "undefined" || navigator.onLine;
+  // Desk/chat never use this. Offline account chrome must not bounce to /login.
+  if (!shouldRedirectToLogin({ online, surface: "account" })) {
+    return null;
+  }
   return <Navigate to={to} />;
 }
 
