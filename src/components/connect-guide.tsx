@@ -10,9 +10,8 @@ export function ConnectGuide({ embedded = false }: { embedded?: boolean }) {
     <HarborCard kicker={t.connect.kicker} title={t.connect.title} stamp="sail" hint={t.connect.hint}>
       <ol className="flex flex-col gap-3 text-sm leading-relaxed">
         {steps.map((step, index) => (
-          <li key={step}>
-            <span className="font-medium text-foreground">{index + 1}. </span>
-            {step}
+          <li key={index}>
+            <span className="font-medium text-foreground">{`${index + 1}. ${step}`}</span>
           </li>
         ))}
       </ol>
