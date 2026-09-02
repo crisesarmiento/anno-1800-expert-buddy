@@ -24,6 +24,7 @@ describe("welcome/desk zero-setup onboarding", () => {
     assert.ok(example >= 0);
     assert.ok(power >= 0);
     assert.equal(live, -1);
+    assert.ok(welcome.includes("<EstoAhoraItem"));
     assert.ok(chips < example);
     assert.ok(example < power);
   });
