@@ -27,6 +27,11 @@ export function sessionNowItem(doItems: string[], checked: number[] = []): strin
   return doItems[0] ?? NOW_FALLBACK;
 }
 
+/** Visual A Home: one next step, never a 3-item checklist. */
+export function sessionEstoAhora(doItems: string[]): string {
+  return doItems[0] ?? "Tocá el título que ves en el diario.";
+}
+
 /**
  * Desk calm umbral.
  * - enough: no crisis — card stays calm, no taller

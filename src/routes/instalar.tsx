@@ -2,9 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Anchor } from "lucide-react";
 import { IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
-import { ConnectGuide } from "@/components/connect-guide";
 import { InstallPanel } from "@/components/install-panel";
-import { LivePanel } from "@/components/live-panel";
+import { PowerUpSection } from "@/components/live-panel";
 
 export const Route = createFileRoute("/instalar")({
   component: InstalarPage,
@@ -12,7 +11,7 @@ export const Route = createFileRoute("/instalar")({
 
 function InstalarPage() {
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background" data-visual="diario">
       <header className="border-b border-border bg-card px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <IconWell>
@@ -32,8 +31,7 @@ function InstalarPage() {
       </header>
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
         <InstallPanel />
-        <ConnectGuide />
-        <LivePanel />
+        <PowerUpSection />
       </main>
     </div>
   );

@@ -5,6 +5,7 @@ import {
   TALLER_LINK,
   deskCalmUmbral,
   saturadoRojo,
+  sessionEstoAhora,
   sessionNowItem,
 } from "./session-desk.ts";
 
@@ -21,6 +22,16 @@ describe("sessionNowItem", () => {
   it("does not pad filler checklist rows", () => {
     assert.equal(sessionNowItem(["A"]), "A");
     assert.equal(sessionNowItem([]), "Seguí el marcador de la misión.");
+  });
+});
+
+describe("sessionEstoAhora", () => {
+  it("returns only the first do-item", () => {
+    assert.equal(sessionEstoAhora(["A", "B", "C"]), "A");
+  });
+
+  it("falls back to the diary prompt when the beat is empty", () => {
+    assert.equal(sessionEstoAhora([]), "Tocá el título que ves en el diario.");
   });
 });
 
