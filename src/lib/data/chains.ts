@@ -16,7 +16,7 @@ export const chains: Chain[] = [
       { stamp: "cabin", label: "Leñador" },
       { stamp: "mill", label: "Aserradero" },
     ],
-    buddy: "Uno y uno. Si faltan tablones, otro leñador. Si el aserradero bosteza, plantá árboles o tirale calle al almacén.",
+    buddy: "Uno y uno. Si faltan tablones, otro leñador. Si el aserradero bosteza, plantá árboles o tirale calle al almacén. Tres cadenas son para stampiar ahora; en calma, pausá los extra.",
     trap: "Cinco aserraderos y un bosque pelado.",
   },
   {

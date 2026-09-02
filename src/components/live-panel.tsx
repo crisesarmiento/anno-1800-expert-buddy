@@ -21,6 +21,64 @@ function asSnapshot(value: unknown): LiveSnapshot {
   return value as LiveSnapshot;
 }
 
+export function applyLiveExample(
+  locale: string,
+  applyLiveSnapshot: (snapshot: LiveSnapshot, fileName?: string | null) => void,
+  setLiveBanner: (text: string | null, failed?: boolean) => void,
+) {
+  const result = ingestLiveJsonText(JSON.stringify(asSnapshot(fixture)), locale);
+  if (!result.ok) {
+    setLiveBanner(result.message, true);
+    return;
+  }
+  applyLiveSnapshot(result.snapshot, "fixture.json");
+}
+
+export function TryLiveExample({ featured = false }: { featured?: boolean }) {
+  const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
+  const setLiveBanner = useHarbor((s) => s.setLiveBanner);
+  const locale = useHarbor((s) => s.locale);
+  const t = useT();
+
+  return (
+    <Button
+      type="button"
+      data-welcome-example=""
+      variant={featured ? "default" : "secondary"}
+      size={featured ? "lg" : "sm"}
+      className={featured ? "h-12 min-h-12 w-full text-base sm:w-auto" : undefined}
+      onClick={() => applyLiveExample(locale, applyLiveSnapshot, setLiveBanner)}
+    >
+      {t.live.example}
+    </Button>
+  );
+}
+
+export function PowerUpSection() {
+  const liveSnapshot = useHarbor((s) => s.liveSnapshot);
+  const t = useT();
+  const [open, setOpen] = useState(() => Boolean(liveSnapshot));
+
+  return (
+    <details
+      data-power-up="conectar"
+      className="rounded-xl bg-card p-4 shadow-border sm:p-6"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="cursor-pointer">
+        <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.power.kicker}</p>
+        <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">{t.power.title}</h2>
+      </summary>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.power.hint}</p>
+      <div className="mt-4">
+        <LivePanel />
+      </div>
+      <p className="mt-4 text-sm text-muted-foreground">{t.welcome.windows}</p>
+    </details>
+  );
+}
+
 export function LivePanel() {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,12 +130,7 @@ export function LivePanel() {
   }
 
   function onExample() {
-    const result = ingestLiveJsonText(JSON.stringify(asSnapshot(fixture)), locale);
-    if (!result.ok) {
-      setLiveBanner(result.message, true);
-      return;
-    }
-    applyLiveSnapshot(result.snapshot, "fixture.json");
+    applyLiveExample(locale, applyLiveSnapshot, setLiveBanner);
   }
 
   function onExport() {
@@ -128,7 +181,7 @@ export function LivePanel() {
       kicker={t.live.kicker}
       title={t.live.title}
       stamp="crate"
-      hint={t.live.whyEmpty}
+      hint={t.live.hint}
     >
       <div
         onDragEnter={(event) => {
@@ -250,6 +303,7 @@ export function LivePanel() {
           <ConnectGuide embedded />
         </div>
       ) : null}
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.live.whyEmpty}</p>
     </HarborCard>
   );
 }

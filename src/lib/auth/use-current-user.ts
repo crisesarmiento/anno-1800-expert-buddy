@@ -1,3 +1,4 @@
+import { bootAuthIsPending } from "@/lib/offline-desk";
 import { authClient, authEnabled } from "./client";
 
 /** Normalized user shape used across the app, auth on or off. */
@@ -59,6 +60,7 @@ export function useCurrentUserState(): CurrentUserState {
   // eslint-disable-next-line react-hooks/rules-of-hooks -- authEnabled is constant for the app's lifetime
   const { data, isPending } = authClient.useSession();
   const user = data?.user;
+  const online = typeof navigator === "undefined" || navigator.onLine;
   return {
     user: user
       ? {
@@ -69,7 +71,7 @@ export function useCurrentUserState(): CurrentUserState {
           isDevFallback: false,
         }
       : null,
-    isPending,
+    isPending: bootAuthIsPending({ online, sessionPending: isPending }),
   };
 }
 

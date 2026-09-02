@@ -4,7 +4,14 @@ import { applyLiveToProgress, liveMissLine, liveOkLine, matchLiveQuests, type Li
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
 import type { PulseSample } from "@/lib/dash";
 import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
+import {
+  initialOverbuildBrake,
+  reduceOverbuildBrake,
+  type HudPulse,
+  type OverbuildBrakeState,
+} from "@/lib/overbuild-brake";
 import { defaultPulse, type Pulse } from "@/lib/play";
+import type { SessionCheckItem } from "@/lib/session-store";
 
 export type ChatTurn = {
   role: "user" | "assistant";
@@ -21,6 +28,9 @@ type HarborState = {
   chat: ChatTurn[];
   pulse: Pulse;
   checks: Record<string, number[]>;
+  checkItems: SessionCheckItem[];
+  stamps: string[];
+  overbuildBrake: OverbuildBrakeState;
   liveEnabled: boolean;
   liveSnapshot: LiveSnapshot | null;
   liveMissionId: string | null;
@@ -35,6 +45,8 @@ type HarborState = {
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
   setPulse: (patch: Partial<Pulse>) => void;
+  noteHudPulse: (pulse: HudPulse) => void;
+  acknowledgeMovedIn: () => void;
   toggleCheck: (missionId: string, index: number) => void;
   markComplete: (id: string) => void;
   addChat: (turn: ChatTurn) => void;
@@ -65,6 +77,9 @@ export const useHarbor = create<HarborState>()(
       chat: [],
       pulse: defaultPulse,
       checks: {},
+      checkItems: [],
+      stamps: [],
+      overbuildBrake: initialOverbuildBrake,
       liveEnabled: false,
       liveSnapshot: null,
       liveMissionId: null,
@@ -77,22 +92,62 @@ export const useHarbor = create<HarborState>()(
       samples: [],
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
-        set({ missionId: id, calm: "session" });
+        const prev = get().missionId;
+        const mission = id ? missionsById[id] : undefined;
+        const checkItems =
+          id && id === prev && get().checkItems.length > 0
+            ? get().checkItems
+            : (mission?.do ?? []).map((text) => ({ text, done: false }));
+        set({
+          missionId: id,
+          calm: "session",
+          checkItems,
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "navigated" }),
+        });
       },
       setSpoilers: (value) => set({ spoilers: value }),
       setCalm: (value) => set({ calm: value }),
       setPulse: (patch) => {
         const pulse = { ...get().pulse, ...patch };
         const samples = pushSample(get().samples, pulse);
-        set({ pulse, samples });
+        const hud: HudPulse | null =
+          pulse.coins === "down" ? "rojo" : pulse.houses === "yellow" ? "amarillo" : null;
+        set({
+          pulse,
+          samples,
+          overbuildBrake: hud
+            ? reduceOverbuildBrake(get().overbuildBrake, { type: "pulse", pulse: hud })
+            : get().overbuildBrake,
+        });
       },
+      noteHudPulse: (pulse) =>
+        set({
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "pulse", pulse }),
+        }),
+      acknowledgeMovedIn: () =>
+        set({
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "acknowledgeMovedIn" }),
+        }),
       toggleCheck: (missionId, index) => {
         if (isLiveLocked(get())) return;
         const current = get().checks[missionId] ?? [];
         const next = current.includes(index)
           ? current.filter((item) => item !== index)
           : [...current, index];
-        set({ checks: { ...get().checks, [missionId]: next } });
+        const mission = missionsById[missionId];
+        const checkItems = get().checkItems.map((item, i) =>
+          i === index ? { ...item, done: !item.done } : item,
+        );
+        set({
+          checks: { ...get().checks, [missionId]: next },
+          checkItems,
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, {
+            type: "checklistChanged",
+            missionKind: mission?.kind,
+            itemCount: mission?.do.length,
+            checkedCount: next.length,
+          }),
+        });
       },
       markComplete: (id) => {
         if (get().liveEnabled && get().liveSnapshot) return;
@@ -126,6 +181,8 @@ export const useHarbor = create<HarborState>()(
           calm: "session",
           pulse: defaultPulse,
           checks: {},
+          checkItems: [],
+          stamps: [],
           samples: [],
           liveEnabled: false,
           liveSnapshot: null,
@@ -135,6 +192,7 @@ export const useHarbor = create<HarborState>()(
           lastImportedAt: null,
           liveBanner: null,
           liveBannerFailed: false,
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "sessionLifecycle" }),
         }),
       applyLiveSnapshot: (snapshot, fileName) => {
         const match = matchLiveQuests(snapshot.quests);
@@ -154,6 +212,7 @@ export const useHarbor = create<HarborState>()(
           return;
         }
         const title = missionsById[progress.missionId]?.title ?? progress.missionId;
+        const pulse = { ...get().pulse, ...progress.pulse };
         set({
           liveEnabled: true,
           liveSnapshot: snapshot,
@@ -164,8 +223,8 @@ export const useHarbor = create<HarborState>()(
           missionId: progress.missionId,
           completed: progress.completed,
           checks: { ...get().checks, ...progress.checks },
-          pulse: { ...get().pulse, ...progress.pulse },
-          samples: pushSample(get().samples, { ...get().pulse, ...progress.pulse }),
+          pulse,
+          samples: pushSample(get().samples, pulse),
           calm: "session",
           liveBanner: liveOkLine(snapshot.quests.length, title, get().locale),
           liveBannerFailed: false,
@@ -206,13 +265,18 @@ export const useHarbor = create<HarborState>()(
     }),
     {
       name: "harbor-buddy-es",
+      skipHydration: true,
       partialize: (state) => ({
         missionId: state.missionId,
         spoilers: state.spoilers,
+        calm: state.calm,
         completed: state.completed,
         chat: state.chat,
         pulse: state.pulse,
         checks: state.checks,
+        checkItems: state.checkItems,
+        stamps: state.stamps,
+        overbuildBrake: state.overbuildBrake,
         liveEnabled: state.liveEnabled,
         liveSnapshot: state.liveSnapshot,
         liveMissionId: state.liveMissionId,
