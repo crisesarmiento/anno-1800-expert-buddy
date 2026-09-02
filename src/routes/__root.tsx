@@ -16,7 +16,7 @@ export const Route = createRootRoute({
         content:
           "Un compañero tranquilo para la campaña de Anno 1800. Ciudades 10×10, monedas en verde, sin planillas.",
       },
-      { name: "theme-color", content: "#14110e" },
+      { name: "theme-color", content: "#F3E6D0" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

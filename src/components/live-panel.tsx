@@ -63,7 +63,7 @@ export function PowerUpSection() {
     <details
       data-power-up="conectar"
       data-power-up-strip=""
-      className="rounded-xl bg-card p-4 shadow-border sm:p-6"
+      className="power-up-strip rounded-xl bg-card p-4 shadow-border sm:p-6"
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >

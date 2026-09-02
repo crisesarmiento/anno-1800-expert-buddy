@@ -288,6 +288,75 @@ export function Stamp({
   );
 }
 
+export type SealKind = "book" | "anchor" | "hourglass" | "coin-down" | "check";
+export type SealTone = "ink" | "saturado" | "rojo";
+
+const SEALS: Record<SealKind, ReactNode> = {
+  book: (
+    <>
+      <path d="M7 6.5h10v11H7z" />
+      <path d="M12 6.5v11" />
+      <path d="M8.5 9h2M8.5 12h2M13.5 9h2" />
+    </>
+  ),
+  anchor: (
+    <>
+      <circle cx="12" cy="7" r="1.6" />
+      <path d="M12 8.6v9" />
+      <path d="M8 13h8" />
+      <path d="M7 16.5c1.4 2 3.2 2.8 5 2.8s3.6-.8 5-2.8" />
+    </>
+  ),
+  hourglass: (
+    <>
+      <path d="M8 6h8v2c0 2-1.6 3.2-4 4 2.4.8 4 2 4 4v2H8v-2c0-2 1.6-3.2 4-4-2.4-.8-4-2-4-4z" />
+    </>
+  ),
+  "coin-down": (
+    <>
+      <circle cx="12" cy="10" r="4.2" />
+      <path d="M12 14.5v4" />
+      <path d="M9.5 16.5 12 19l2.5-2.5" />
+    </>
+  ),
+  check: (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M8.5 12.2 11 14.6 15.6 9.6" />
+    </>
+  ),
+};
+
+export function InkSeal({
+  kind,
+  tone = "ink",
+  className,
+  title,
+}: {
+  kind: SealKind;
+  tone?: SealTone;
+  className?: string;
+  title?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("ink-seal shrink-0", className)}
+      data-tone={tone}
+      role={title ? "img" : "presentation"}
+      aria-hidden={title ? undefined : true}
+    >
+      {title ? <title>{title}</title> : null}
+      {SEALS[kind]}
+    </svg>
+  );
+}
+
 export const BUILDING_STAMP: Record<string, string> = {
   lumberjack: "cabin",
   sawmill: "mill",

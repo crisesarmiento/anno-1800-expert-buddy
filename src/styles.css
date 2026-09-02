@@ -5,39 +5,42 @@
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
 
-  --color-background: #14110e;
-  --color-foreground: #f3e6cf;
-  --color-card: #1e1a14;
-  --color-card-foreground: #f3e6cf;
-  --color-muted: #2a241c;
-  --color-muted-foreground: #b7a78e;
-  --color-primary: #c9a36a;
-  --color-primary-foreground: #1a140c;
-  --color-secondary: #2a241c;
-  --color-secondary-foreground: #f3e6cf;
-  --color-accent: #2f5658;
-  --color-accent-foreground: #f3e6cf;
-  --color-border: #3c3428;
-  --color-input: #3c3428;
-  --color-ring: #c9a36a;
-  --color-destructive: #c45c4a;
-  --color-destructive-foreground: #f3e6cf;
-  --color-ok: #7ea37c;
-  --color-ok-foreground: #14110e;
-  --color-sea: #2f5658;
-  --color-mist: #b7a78e;
-  --color-paper: #1e1a14;
-  --color-ink: #f3e6cf;
+  --color-background: #f3e6d0;
+  --color-foreground: #2a2118;
+  --color-card: #f7ecda;
+  --color-card-foreground: #2a2118;
+  --color-muted: #ead9c0;
+  --color-muted-foreground: #6b5a48;
+  --color-primary: #b8956a;
+  --color-primary-foreground: #2a2118;
+  --color-secondary: #ead9c0;
+  --color-secondary-foreground: #2a2118;
+  --color-accent: #ead9c0;
+  --color-accent-foreground: #2a2118;
+  --color-border: #2a211833;
+  --color-input: #2a211833;
+  --color-ring: #b8956a;
+  --color-destructive: #a6453a;
+  --color-destructive-foreground: #f3e6d0;
+  --color-ok: #5f6e4e;
+  --color-ok-foreground: #f3e6d0;
+  --color-sea: #5a6a5c;
+  --color-mist: #6b5a48;
+  --color-paper: #f3e6d0;
+  --color-ink: #2a2118;
+  --color-brass: #b8956a;
+  --color-saturado: #c4923a;
+  --color-monedas: #a6453a;
 
-  --color-cell-road: #6b5d4a;
-  --color-cell-house: #c9ae86;
-  --color-cell-gap: #5d7a58;
-  --color-cell-public: #c9a36a;
-  --color-cell-water: #3d6e74;
-  --color-cell-farm: #7a9458;
-  --color-cell-industry: #5c4a3d;
-  --color-cell-tree: #3f5c3c;
-  --color-cell-empty: #241f18;
+  --color-cell-road: #c4b49a;
+  --color-cell-house: #d9c4a4;
+  --color-cell-gap: #c5d0b4;
+  --color-cell-public: #b8956a;
+  --color-cell-water: #9bb0b0;
+  --color-cell-farm: #c5d0a0;
+  --color-cell-industry: #c4b49a;
+  --color-cell-tree: #a8b896;
+  --color-cell-empty: #ead9c0;
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -47,11 +50,11 @@
   --radius: 12px;
 
   --shadow-border:
-    0 0 0 1px rgb(201 163 106 / 0.12),
-    0 8px 20px -18px rgb(0 0 0 / 0.7);
+    0 0 0 1px rgb(42 33 24 / 0.14),
+    0 8px 20px -18px rgb(0 0 0 / 0.22);
   --shadow-border-hover:
-    0 0 0 1px rgb(201 163 106 / 0.28),
-    0 10px 24px -16px rgb(0 0 0 / 0.75);
+    0 0 0 1px rgb(184 149 106 / 0.55),
+    0 10px 24px -16px rgb(0 0 0 / 0.28);
 }
 
 @layer base {
@@ -63,17 +66,23 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   html,
   body,
   #app {
     min-height: 100%;
-    background:
-      linear-gradient(180deg, rgb(243 230 207 / 0.03), transparent 28%),
-      var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--color-paper);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgb(42 33 24 / 0.035), transparent 32%),
+      radial-gradient(circle at 88% 92%, rgb(42 33 24 / 0.03), transparent 36%),
+      repeating-linear-gradient(
+        0deg,
+        rgb(42 33 24 / 0.018) 0 1px,
+        transparent 1px 4px
+      );
+    color: var(--color-ink);
     font-family: var(--font-sans);
   }
 
@@ -92,6 +101,67 @@
     outline: 2px solid var(--color-ring);
     outline-offset: 3px;
   }
+}
+
+.hero-orla {
+  position: relative;
+  background: var(--color-card);
+  border: 1.5px solid var(--color-ink);
+  box-shadow:
+    inset 0 0 0 5px var(--color-paper),
+    inset 0 0 0 6px rgb(42 33 24 / 0.28),
+    0 10px 24px -18px rgb(0 0 0 / 0.22);
+}
+
+.hero-orla::before,
+.hero-orla::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--color-ink);
+  pointer-events: none;
+}
+
+.hero-orla::before {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.hero-orla::after {
+  right: 8px;
+  bottom: 8px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.power-up-strip {
+  border: 1px dashed rgb(42 33 24 / 0.35);
+  background: rgb(247 236 218 / 0.72);
+  box-shadow: none;
+  padding-block: 0.65rem;
+}
+
+.ink-seal {
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  transform: rotate(-1.8deg);
+}
+
+.ink-seal[data-tone="saturado"] {
+  color: var(--color-saturado);
+}
+
+.ink-seal[data-tone="rojo"] {
+  color: var(--color-monedas);
+}
+
+.ink-seal[data-tone="ink"] {
+  color: var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

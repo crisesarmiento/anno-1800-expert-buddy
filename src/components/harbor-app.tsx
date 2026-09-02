@@ -16,11 +16,13 @@ import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
-import { PowerUpSection, TryLiveExample } from "@/components/live-panel";
+import { DiaryTitleChips } from "@/components/diary-chips";
+import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
 import { SessionDeskSurface } from "@/components/session-desk-surface";
 import { Stamp, buildingStamp } from "@/components/stamps";
+import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,17 +44,15 @@ export function HarborApp() {
   const missionId = useHarbor((s) => s.missionId);
   const calm = useHarbor((s) => s.calm);
   const locale = useHarbor((s) => s.locale);
-  const quiet = calm !== "session";
 
   useEffect(() => {
     document.documentElement.lang = LOCALE_META[locale].html;
   }, [locale]);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background" data-visual="diario">
       <OverbuildBrakeNotice />
-      <div className="mx-auto flex min-h-dvh max-w-6xl flex-col lg:flex-row">
-        {quiet ? null : <CampaignRail />}
+      <div className="mx-auto flex min-h-dvh max-w-3xl flex-col">
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
           <main className="flex-1 px-4 py-5 sm:px-6 sm:py-7">
@@ -281,54 +281,25 @@ function Welcome() {
 
   return (
     <div data-welcome="" className="stagger-in mx-auto flex max-w-2xl flex-col gap-8">
-      <div>
+      <article
+        data-hero="esto-ahora"
+        aria-label="Esto, ahora"
+        className="hero-orla rounded-xl p-5 sm:p-7"
+      >
         <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.welcome.kicker}</p>
-        <h1 className="mt-2 font-display text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
-          {t.welcome.title}
+        <h1 className="mt-3 font-display text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
+          Esto, ahora
         </h1>
-        <p className="mt-4 max-w-prose text-base leading-relaxed text-muted-foreground">
-          {t.welcome.copy}
+        <p data-esto-ahora-item="" className="mt-4 max-w-prose text-lg leading-relaxed">
+          {ESTO_AHORA_IDLE}
         </p>
-      </div>
+      </article>
 
       <div data-welcome-primary="chips">
-        <IslandPulse />
-      </div>
-
-      <div data-welcome-primary="example" className="flex flex-col gap-2">
-        <TryLiveExample featured />
-        <p className="text-sm text-muted-foreground">{t.welcome.tryHint}</p>
+        <DiaryTitleChips onPick={setMissionId} />
       </div>
 
       <MissionFinder />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <WelcomeCard
-          title={t.welcome.start}
-          copy={t.welcome.startCopy}
-          stamp="fish"
-          onClick={() => setMissionId("pro-blast")}
-        />
-        <WelcomeCard
-          title={t.welcome.city}
-          copy={t.welcome.cityCopy}
-          stamp="cottage"
-          onClick={() => setMissionId(firstPlayableMissionId)}
-          featured
-        />
-        <WelcomeCard
-          title={t.welcome.steel}
-          copy={t.welcome.steelCopy}
-          stamp="anvil"
-          onClick={() => setMissionId("ch2-bulk")}
-        />
-        <WelcomeCard
-          title={t.welcome.ocean}
-          copy={t.welcome.oceanCopy}
-          stamp="leaf"
-          onClick={() => setMissionId("ch3-hand")}
-        />
-      </div>
       <PowerUpSection />
       <HarborFooter />
     </div>

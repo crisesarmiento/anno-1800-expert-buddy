@@ -6,6 +6,7 @@ import {
   deskCalmUmbral,
   saturadoRojo,
   sessionChecklist,
+  sessionEstoAhora,
 } from "./session-desk.ts";
 
 const defaultPulse = {
@@ -13,6 +14,16 @@ const defaultPulse = {
   houses: "unknown",
   looking: "unknown",
 } as const;
+
+describe("sessionEstoAhora", () => {
+  it("returns only the first do-item", () => {
+    assert.equal(sessionEstoAhora(["A", "B", "C"]), "A");
+  });
+
+  it("falls back to the diary prompt when the beat is empty", () => {
+    assert.equal(sessionEstoAhora([]), "Tocá el título que ves en el diario.");
+  });
+});
 
 describe("sessionChecklist", () => {
   it("returns the first three do-items of the beat", () => {
