@@ -243,6 +243,14 @@ const es = {
   footer: "Creado por Cristian Sarmiento · Anno 1800 Buddy, un compañero de campaña para Anno 1800. No afiliado a Ubisoft.",
   reddit: "Guías en r/anno1800",
   wiki: "Wiki (spoilers)",
+  wikiCatalog: {
+    kicker: "Catálogo",
+    title: "Wiki, sin arte",
+    hint: "Nombres y enlaces a la wiki de fans. No hay arte de Ubisoft acá: si querés el dibujo, abrís la wiki.",
+    hubs: "Índice",
+    buildings: "Edificios del cuaderno",
+    also: "También:",
+  },
   dash: {
     kicker: "Estado de la isla",
     title: "Qué está pasando, en una mirada",
@@ -505,6 +513,14 @@ const en: UiDict = {
   footer: "Created by Cristian Sarmiento · Anno 1800 Buddy, a campaign companion for Anno 1800. Not affiliated with Ubisoft.",
   reddit: "Guides on r/anno1800",
   wiki: "Wiki (spoilers)",
+  wikiCatalog: {
+    kicker: "Catalog",
+    title: "Wiki, no art",
+    hint: "Names and fan-wiki links only. No Ubisoft art here — open the wiki if you want the picture.",
+    hubs: "Index",
+    buildings: "Notebook buildings",
+    also: "Also:",
+  },
   dash: {
     kicker: "Island status",
     title: "What's going on, at a glance",
@@ -765,6 +781,14 @@ const it: UiDict = {
   footer: "Creato da Cristian Sarmiento · Anno 1800 Buddy, un compagno di campagna per Anno 1800. Non affiliato a Ubisoft.",
   reddit: "Guide su r/anno1800",
   wiki: "Wiki (spoiler)",
+  wikiCatalog: {
+    kicker: "Catalogo",
+    title: "Wiki, senza arte",
+    hint: "Solo nomi e link alla wiki dei fan. Niente arte Ubisoft qui: se vuoi il disegno, apri la wiki.",
+    hubs: "Indice",
+    buildings: "Edifici del taccuino",
+    also: "Anche:",
+  },
   dash: {
     kicker: "Stato dell'isola",
     title: "Cosa succede, in un colpo d'occhio",
@@ -1025,6 +1049,14 @@ const de: UiDict = {
   footer: "Erstellt von Cristian Sarmiento · Anno 1800 Buddy, ein Kampagnen-Kumpel für Anno 1800. Nicht mit Ubisoft verbunden.",
   reddit: "Guides auf r/anno1800",
   wiki: "Wiki (Spoiler)",
+  wikiCatalog: {
+    kicker: "Katalog",
+    title: "Wiki, ohne Grafik",
+    hint: "Nur Namen und Fan-Wiki-Links. Keine Ubisoft-Grafik hier — für das Bild die Wiki öffnen.",
+    hubs: "Index",
+    buildings: "Gebäude im Heft",
+    also: "Auch:",
+  },
   dash: {
     kicker: "Inselstatus",
     title: "Was los ist, auf einen Blick",

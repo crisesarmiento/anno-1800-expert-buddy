@@ -948,14 +948,9 @@ function HarborFooter({ reset = false }: { reset?: boolean }) {
         >
           r/anno
         </a>
-        <a
-          href="https://anno1800.fandom.com/wiki/Campaign"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-11 items-center"
-        >
+        <Link to="/catalogo" className="inline-flex h-11 items-center">
           {t.wiki}
-        </a>
+        </Link>
       </p>
       <div className="flex items-center justify-between gap-3">
         <span className="flex items-center gap-1.5">

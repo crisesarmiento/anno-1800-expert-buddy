@@ -6,6 +6,7 @@ export * from "./harbor-life";
 export * from "./find";
 export * from "./chains";
 export * from "./yellow-bar";
+export * from "./wiki-catalog";
 
 import { buildingsById } from "./buildings";
 import { chapters, chaptersById, missionsById } from "./campaign";

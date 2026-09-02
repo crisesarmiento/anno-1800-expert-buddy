@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as ConectarRouteImport } from './routes/conectar'
 import { Route as InstalarRouteImport } from './routes/instalar'
 import { Route as TableroRouteImport } from './routes/tablero'
@@ -17,6 +18,11 @@ import { Route as TableroRouteImport } from './routes/tablero'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogoRoute = CatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConectarRoute = ConectarRouteImport.update({
@@ -37,12 +43,14 @@ const TableroRoute = TableroRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/tablero': typeof TableroRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/tablero': typeof TableroRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/tablero': typeof TableroRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/conectar' | '/instalar' | '/tablero'
+  fullPaths: '/' | '/catalogo' | '/conectar' | '/instalar' | '/tablero'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/conectar' | '/instalar' | '/tablero'
-  id: '__root__' | '/' | '/conectar' | '/instalar' | '/tablero'
+  to: '/' | '/catalogo' | '/conectar' | '/instalar' | '/tablero'
+  id: '__root__' | '/' | '/catalogo' | '/conectar' | '/instalar' | '/tablero'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CatalogoRoute: typeof CatalogoRoute
   ConectarRoute: typeof ConectarRoute
   InstalarRoute: typeof InstalarRoute
   TableroRoute: typeof TableroRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogo': {
+      id: '/catalogo'
+      path: '/catalogo'
+      fullPath: '/catalogo'
+      preLoaderRoute: typeof CatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conectar': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CatalogoRoute: CatalogoRoute,
   ConectarRoute: ConectarRoute,
   InstalarRoute: InstalarRoute,
   TableroRoute: TableroRoute,
