@@ -32,15 +32,15 @@
   --color-saturado: #c4923a;
   --color-monedas: #a6453a;
 
-  --color-cell-road: #c4b49a;
-  --color-cell-house: #d9c4a4;
-  --color-cell-gap: #c5d0b4;
-  --color-cell-public: #b8956a;
-  --color-cell-water: #9bb0b0;
-  --color-cell-farm: #c5d0a0;
-  --color-cell-industry: #c4b49a;
-  --color-cell-tree: #a8b896;
-  --color-cell-empty: #ead9c0;
+  --color-cell-road: #4a4338;
+  --color-cell-house: #5c3d2e;
+  --color-cell-gap: #3f5c3c;
+  --color-cell-public: #8b3a2a;
+  --color-cell-water: #2f5658;
+  --color-cell-farm: #7a5c28;
+  --color-cell-industry: #3c3428;
+  --color-cell-tree: #3f5c3c;
+  --color-cell-empty: #2a2118;
 
   --radius-xs: 6px;
   --radius-sm: 8px;
@@ -172,6 +172,12 @@
     transform: none !important;
     filter: none !important;
   }
+
+  .stamp-seal,
+  .tile-mark,
+  .ink-seal {
+    transform: none !important;
+  }
 }
 
 @keyframes rise-in {
@@ -209,30 +215,89 @@
   animation-delay: 200ms;
 }
 
+.cell-road,
+.cell-house,
+.cell-gap,
+.cell-public,
+.cell-water,
+.cell-farm,
+.cell-industry,
+.cell-tree,
+.cell-empty {
+  background: transparent;
+}
 .cell-road {
-  background: var(--color-cell-road);
+  color: var(--color-cell-road);
 }
 .cell-house {
-  background: var(--color-cell-house);
+  color: var(--color-cell-house);
 }
 .cell-gap {
-  background: var(--color-cell-gap);
+  color: var(--color-cell-gap);
 }
 .cell-public {
-  background: var(--color-cell-public);
+  color: var(--color-cell-public);
 }
 .cell-water {
-  background: var(--color-cell-water);
+  color: var(--color-cell-water);
 }
 .cell-farm {
-  background: var(--color-cell-farm);
+  color: var(--color-cell-farm);
 }
 .cell-industry {
-  background: var(--color-cell-industry);
+  color: var(--color-cell-industry);
 }
 .cell-tree {
-  background: var(--color-cell-tree);
+  color: var(--color-cell-tree);
 }
 .cell-empty {
-  background: var(--color-cell-empty);
+  color: transparent;
+}
+
+.stamp-paper {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      rgb(201 184 154 / 0.28) 27px,
+      rgb(201 184 154 / 0.28) 28px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 27px,
+      rgb(201 184 154 / 0.16) 27px,
+      rgb(201 184 154 / 0.16) 28px
+    ),
+    var(--color-paper);
+  border: 1px solid #d7c7a8;
+  border-radius: 2px;
+  color: var(--color-ink);
+}
+
+.stamp-seal {
+  display: inline-grid;
+  place-items: center;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 #00000022;
+}
+.stamp-seal > svg {
+  width: 62%;
+  height: 62%;
+}
+.stamp-seal:nth-child(3n) {
+  transform: rotate(-1.6deg);
+}
+.stamp-seal:nth-child(4n) {
+  transform: rotate(2.1deg);
+}
+.stamp-seal:nth-child(5n) {
+  transform: rotate(-2.4deg);
 }
