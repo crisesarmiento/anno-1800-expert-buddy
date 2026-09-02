@@ -55,13 +55,13 @@ export function TryLiveExample({ featured = false }: { featured?: boolean }) {
 }
 
 export function PowerUpSection() {
-  const liveSnapshot = useHarbor((s) => s.liveSnapshot);
   const t = useT();
-  const [open, setOpen] = useState(() => Boolean(liveSnapshot));
+  const [open, setOpen] = useState(false);
 
   return (
     <details
       data-power-up="conectar"
+      data-live-section=""
       className="rounded-xl bg-card p-4 shadow-border sm:p-6"
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
