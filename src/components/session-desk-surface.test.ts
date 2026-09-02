@@ -41,6 +41,15 @@ describe("session desk compose — taps, no extra tabs, second-screen", () => {
     assert.doesNotMatch(desk, /min-h-\[calc\(100dvh/);
   });
 
+  it("gates the card alarm on deskCalmUmbral and link-outs to a static taller", () => {
+    assert.match(desk, /deskCalmUmbral/);
+    assert.match(desk, /data-umbral/);
+    assert.match(desk, /data-taller-link/);
+    assert.match(desk, /Ver taller/);
+    assert.doesNotMatch(desk, /<img\b/);
+    assert.doesNotMatch(desk, /const alarm = saturado \|\| rojo/);
+  });
+
   it("adds zero nav tabs — harbor-app swaps in the composer only", () => {
     assert.match(app, /SessionDeskSurface/);
     assert.doesNotMatch(app, /TabsList|TabsTrigger/);

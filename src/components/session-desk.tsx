@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { saturadoRojo, sessionChecklist } from "@/lib/session-desk";
+import { deskCalmUmbral, sessionChecklist } from "@/lib/session-desk";
 import { resolveMission } from "@/lib/data";
 import { commitDeskMutation } from "@/lib/desk-offline";
 import { CHECK_HIGHLIGHT_ID } from "@/lib/radio-down";
@@ -27,8 +27,7 @@ export function SessionDesk() {
           done: false,
           pad: index >= mission.do.length,
         }));
-  const { saturado, rojo } = saturadoRojo(pulse, calm);
-  const alarm = saturado || rojo;
+  const { saturado, rojo, umbral, alarm, taller } = deskCalmUmbral(pulse, calm);
 
   function commit(kind: Parameters<typeof commitDeskMutation>[1]) {
     commitDeskMutation(getDeskHost(), kind);
@@ -38,6 +37,7 @@ export function SessionDesk() {
     <div className="stagger-in mx-auto flex max-w-lg flex-col">
       <article
         data-session-desk="one-card"
+        data-umbral={umbral}
         aria-label="Esto, ahora"
         className={cn(
           "rounded-xl p-5 sm:p-7",
@@ -69,6 +69,20 @@ export function SessionDesk() {
         <h1 className="mt-4 font-display text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
           Esto, ahora
         </h1>
+        {taller ? (
+          <a
+            data-taller-link=""
+            href={taller.href}
+            target="_blank"
+            rel="noreferrer noopener"
+            className={cn(
+              "mt-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4",
+              alarm ? "text-destructive-foreground" : "text-foreground",
+            )}
+          >
+            Ver taller
+          </a>
+        ) : null}
         <ol className="mt-6 flex flex-col gap-2">
           {items.map((item, index) => {
             const pad = "pad" in item && item.pad;
