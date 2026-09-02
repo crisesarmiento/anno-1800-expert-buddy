@@ -1,11 +1,7 @@
 import type { CalmMode } from "@/lib/store";
 import type { Pulse } from "@/lib/play";
 
-const PADS = [
-  "Seguí el marcador de la misión.",
-  "Una cosa a la vez.",
-  "Cuando esté, tachá y seguí.",
-] as const;
+const NOW_FALLBACK = "Seguí el marcador de la misión.";
 
 export const DESK_UMBRALES = ["enough", "not-enough", "saturado", "rojo"] as const;
 export type DeskUmbral = (typeof DESK_UMBRALES)[number];
@@ -24,14 +20,11 @@ export type DeskCalm = {
   taller: { href: string; label: string } | null;
 };
 
-export function sessionChecklist(doItems: string[]): string[] {
-  const items = doItems.slice(0, 3);
-  let pad = 0;
-  while (items.length < 3) {
-    items.push(PADS[pad] ?? PADS[0]);
-    pad += 1;
-  }
-  return items;
+/** Exactly one next action. Never pads to a three-item checklist. */
+export function sessionNowItem(doItems: string[], checked: number[] = []): string {
+  const next = doItems.findIndex((_, index) => !checked.includes(index));
+  if (next >= 0) return doItems[next] ?? NOW_FALLBACK;
+  return doItems[0] ?? NOW_FALLBACK;
 }
 
 /**

@@ -157,7 +157,7 @@ describe("desk UI stays local and calm", () => {
       assert.doesNotMatch(src, /RedirectToSignIn|\/login/);
     }
     assert.match(desk, /commitDeskMutation/);
-    assert.match(desk, /addCheck|reorderChecks/);
+    assert.match(desk, /setCalm|setPulse/);
     assert.match(stamp, /commitDeskMutation/);
     assert.match(stamp, /applyStamp|removeStamp/);
     assert.doesNotMatch(mut, /\bfetch\s*\(/);

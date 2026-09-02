@@ -14,8 +14,10 @@ import {
 import { BlockGrid, HarborRoute } from "@/components/block-grid";
 import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
-import { HarborCard, IconWell } from "@/components/harbor-card";
+import { IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
+import { EstoAhoraItem } from "@/components/esto-ahora";
+import { IslandPulse } from "@/components/island-pulse";
 import { PowerUpSection, TryLiveExample } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
@@ -32,7 +34,7 @@ import {
   missionsById,
   resolveMission,
 } from "@/lib/data";
-import { nextMove, type CoinsPulse, type HousesPulse, type LookingPulse } from "@/lib/play";
+import { nextMove } from "@/lib/play";
 import { isLiveLocked, useHarbor } from "@/lib/store";
 import { fill, LOCALE_META } from "@/lib/i18n";
 import { useT } from "@/lib/use-t";
@@ -291,8 +293,9 @@ function Welcome() {
         </p>
       </div>
 
-      <div data-welcome-primary="chips">
+      <div data-welcome-primary="chips" className="flex flex-col gap-4">
         <IslandPulse />
+        <EstoAhoraItem />
       </div>
 
       <div data-welcome-primary="example" className="flex flex-col gap-2">
@@ -802,92 +805,6 @@ function SessionDesk() {
 
       <HarborFooter reset />
     </div>
-  );
-}
-
-function ChipRow<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { id: T; text: string }[];
-  onChange: (id: T) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => onChange(option.id)}
-            className={cn(
-              "h-11 rounded-md px-3 text-sm",
-              value === option.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground hover:bg-secondary",
-            )}
-          >
-            {option.text}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function IslandPulse() {
-  const pulse = useHarbor((s) => s.pulse);
-  const setPulse = useHarbor((s) => s.setPulse);
-  const t = useT();
-
-  return (
-    <HarborCard
-      kicker={t.pulse.kicker}
-      title={t.pulse.title}
-      stamp="cottage"
-      hint={t.pulse.hint}
-    >
-      <div className="flex flex-col gap-4">
-        <ChipRow<CoinsPulse>
-          label={t.pulse.coins}
-          value={pulse.coins}
-          onChange={(coins) => setPulse({ coins })}
-          options={[
-            { id: "up", text: t.pulse.up },
-            { id: "down", text: t.pulse.down },
-            { id: "unknown", text: t.pulse.unknown },
-          ]}
-        />
-        <ChipRow<HousesPulse>
-          label={t.pulse.houses}
-          value={pulse.houses}
-          onChange={(houses) => setPulse({ houses })}
-          options={[
-            { id: "ok", text: t.pulse.ok },
-            { id: "yellow", text: t.pulse.yellow },
-            { id: "empty", text: t.pulse.empty },
-            { id: "unknown", text: t.pulse.unknown },
-          ]}
-        />
-        <ChipRow<LookingPulse>
-          label={t.pulse.looking}
-          value={pulse.looking}
-          onChange={(looking) => setPulse({ looking })}
-          options={[
-            { id: "city", text: t.pulse.city },
-            { id: "stats", text: t.pulse.stats },
-            { id: "quest", text: t.pulse.quest },
-            { id: "sea", text: t.pulse.sea },
-            { id: "other", text: t.pulse.other },
-          ]}
-        />
-      </div>
-    </HarborCard>
   );
 }
 
