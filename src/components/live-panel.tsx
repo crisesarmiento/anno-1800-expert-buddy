@@ -55,22 +55,53 @@ export function TryLiveExample({ featured = false }: { featured?: boolean }) {
 }
 
 export function PowerUpSection() {
-  const liveSnapshot = useHarbor((s) => s.liveSnapshot);
   const t = useT();
-  const [open, setOpen] = useState(() => Boolean(liveSnapshot));
+  const [open, setOpen] = useState(false);
+  const steps = [t.power.s1, t.power.s2, t.power.s3];
 
   return (
     <details
       data-power-up="conectar"
+      data-power-up-strip=""
       className="rounded-xl bg-card p-4 shadow-border sm:p-6"
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
-      <summary className="cursor-pointer">
-        <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.power.kicker}</p>
-        <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">{t.power.title}</h2>
+      <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.power.kicker}</p>
+          <h2 className="mt-1 font-display text-xl font-medium tracking-tight sm:text-2xl">{t.power.title}</h2>
+        </span>
+        <span className="text-sm text-primary">{open ? t.power.collapse : t.power.expand}</span>
       </summary>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.power.hint}</p>
+      <ol className="mt-4 flex flex-col gap-2 text-sm leading-relaxed">
+        {steps.map((step, index) => (
+          <li key={index}>
+            <span className="font-medium text-foreground">{`${index + 1}. ${step}`}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button asChild>
+          <a href="/harbor-buddy-telemetry.zip" download="harbor-buddy-telemetry.zip">
+            {t.install.dlZipBtn}
+          </a>
+        </Button>
+        <Button asChild variant="secondary">
+          <a href="/install-harbor-buddy.bat" download="install-harbor-buddy.bat">
+            {t.install.bat}
+          </a>
+        </Button>
+        <Button asChild variant="outline">
+          <a href="/watch-harbor-live.bat" download="watch-harbor-live.bat">
+            {t.install.watchBat}
+          </a>
+        </Button>
+        <Button asChild variant="ghost">
+          <Link to="/instalar">{t.installMod}</Link>
+        </Button>
+      </div>
       <div className="mt-4">
         <LivePanel />
       </div>
