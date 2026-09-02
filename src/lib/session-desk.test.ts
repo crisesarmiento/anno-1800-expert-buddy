@@ -5,49 +5,45 @@ import {
   TALLER_LINK,
   deskCalmUmbral,
   saturadoRojo,
-  sessionChecklist,
+  sessionNowItem,
 } from "./session-desk.ts";
 
-const defaultPulse = {
-  coins: "unknown",
-  houses: "unknown",
-  looking: "unknown",
-} as const;
+const pulse = { coins: "unknown", houses: "unknown", looking: "unknown" } as const;
 
-describe("sessionChecklist", () => {
-  it("returns the first three do-items of the beat", () => {
-    assert.deepEqual(sessionChecklist(["A", "B", "C", "D"]), ["A", "B", "C"]);
+describe("sessionNowItem", () => {
+  it("returns exactly one next action, never a three-item list", () => {
+    assert.equal(sessionNowItem(["A", "B", "C", "D"]), "A");
+    assert.equal(sessionNowItem(["A", "B", "C"], [0]), "B");
+    assert.equal(typeof sessionNowItem(["A"]), "string");
+    assert.notEqual(Array.isArray(sessionNowItem(["A", "B", "C"])), true);
   });
 
-  it("pads to exactly three actionable items", () => {
-    const items = sessionChecklist(["A"]);
-    assert.equal(items.length, 3);
-    assert.equal(items[0], "A");
-    assert.equal(items[1], "Seguí el marcador de la misión.");
-    assert.equal(items[2], "Una cosa a la vez.");
+  it("does not pad filler checklist rows", () => {
+    assert.equal(sessionNowItem(["A"]), "A");
+    assert.equal(sessionNowItem([]), "Seguí el marcador de la misión.");
   });
 });
 
 describe("saturadoRojo", () => {
   it("is Rojo when coins are down", () => {
-    assert.deepEqual(saturadoRojo({ ...defaultPulse, coins: "down" }, "session"), {
+    assert.deepEqual(saturadoRojo({ ...pulse, coins: "down" }, "session"), {
       saturado: false,
       rojo: true,
     });
   });
 
   it("is Saturado when houses are yellow", () => {
-    assert.deepEqual(saturadoRojo({ ...defaultPulse, houses: "yellow" }, "session"), {
+    assert.deepEqual(saturadoRojo({ ...pulse, houses: "yellow" }, "session"), {
       saturado: true,
       rojo: false,
     });
   });
 
   it("combines Saturado and Rojo", () => {
-    assert.deepEqual(
-      saturadoRojo({ ...defaultPulse, coins: "down", houses: "empty" }, "overwhelmed"),
-      { saturado: true, rojo: true },
-    );
+    assert.deepEqual(saturadoRojo({ ...pulse, coins: "down", houses: "empty" }, "overwhelmed"), {
+      saturado: true,
+      rojo: true,
+    });
   });
 });
 
@@ -57,7 +53,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("is enough when pulse and calm are quiet", () => {
-    assert.deepEqual(deskCalmUmbral(defaultPulse, "session"), {
+    assert.deepEqual(deskCalmUmbral(pulse, "session"), {
       saturado: false,
       rojo: false,
       umbral: "enough",
@@ -67,7 +63,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("treats yellow houses as not-enough: Saturado chip, no card alarm, taller link-out", () => {
-    assert.deepEqual(deskCalmUmbral({ ...defaultPulse, houses: "yellow" }, "session"), {
+    assert.deepEqual(deskCalmUmbral({ ...pulse, houses: "yellow" }, "session"), {
       saturado: true,
       rojo: false,
       umbral: "not-enough",
@@ -77,7 +73,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("treats empty houses as not-enough, not a full Saturado alarm", () => {
-    const calm = deskCalmUmbral({ ...defaultPulse, houses: "empty" }, "session");
+    const calm = deskCalmUmbral({ ...pulse, houses: "empty" }, "session");
     assert.equal(calm.umbral, "not-enough");
     assert.equal(calm.saturado, true);
     assert.equal(calm.alarm, false);
@@ -85,7 +81,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("alarms Saturado only when the player said overwhelmed", () => {
-    assert.deepEqual(deskCalmUmbral(defaultPulse, "overwhelmed"), {
+    assert.deepEqual(deskCalmUmbral(pulse, "overwhelmed"), {
       saturado: true,
       rojo: false,
       umbral: "saturado",
@@ -95,7 +91,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("alarms Rojo without a taller (stop building)", () => {
-    assert.deepEqual(deskCalmUmbral({ ...defaultPulse, coins: "down" }, "session"), {
+    assert.deepEqual(deskCalmUmbral({ ...pulse, coins: "down" }, "session"), {
       saturado: false,
       rojo: true,
       umbral: "rojo",
@@ -105,10 +101,7 @@ describe("deskCalmUmbral", () => {
   });
 
   it("lets Rojo win the umbral when Saturado and Rojo are both on", () => {
-    const calm = deskCalmUmbral(
-      { ...defaultPulse, coins: "down", houses: "empty" },
-      "overwhelmed",
-    );
+    const calm = deskCalmUmbral({ ...pulse, coins: "down", houses: "empty" }, "overwhelmed");
     assert.equal(calm.umbral, "rojo");
     assert.equal(calm.alarm, true);
     assert.equal(calm.saturado, true);
