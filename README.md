@@ -1,61 +1,81 @@
 # Anno 1800 Buddy
 
-A Spanish campaign companion for **Anno 1800**. Sit it next to the game, tap where you are in the story, and it gives you the next ten minutes: a 10×10 city stamp, where the new building actually goes, how not to go broke, and who not to fight.
+A Vite + TanStack Start companion for **Anno 1800**. Keep it next to the game, tap where you are in the campaign, and get the next ten minutes: a 10×10 city stamp, where the new building goes, how not to go broke, and who not to fight.
 
-Not a min-max spreadsheet. Default is **spoilers off**. Progress stays in the browser.
-
-Built overnight with Grok App Builder, then exported here. Product name in the UI: **Anno 1800 Buddy**. Tagline: *bastante bien, lindo, terminá la historia.*
+Not a min-max spreadsheet. Default is **spoilers off**. Tagline: *bastante bien, lindo, terminá la historia.*
 
 [github.com/crisesarmiento/anno-1800-expert-buddy](https://github.com/crisesarmiento/anno-1800-expert-buddy)
 
-## What it does
+## Why it exists
 
-- Campaign rail from prologue through later chapters, one mission at a time
-- Session desk: next step, do/don't, common trap, check off what you already did
-- City stamps (notebook grids, not game art) and building placement notes
-- Island pulse: coins / houses / what you are looking at, so the advice changes with the screen
-- Calm modes: *Estoy saturado* (one thing) and *Monedas en rojo* (stop building, fix the ticker)
-- Buddy chat, in Spanish, as if someone is on the sofa next to you
+The game's campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. This app is that voice: Spanish-first (UI also in English, Italian, and German), one mission at a time, calm modes when the ticker is red or you are overloaded.
 
-## Screens
+## Local-first data and privacy
 
-![Welcome](screenshots/welcome.png)
+Campaign progress, desk checks, stamps, pulse, and last session live in **this browser only** (`localStorage` under `hb-session:` / `harbor-buddy-es`). No accounts. Auth and a remote database are **off** (`VITE_AUTH_ENABLED=false`). No `.env` and no `DATABASE_URL` for the companion itself.
 
-![Session](screenshots/session.png)
+The desk restores on cold start without waiting on a network. Chat without a live radio shows `radio apagada — usá la lista` and keeps using the local list. Clearing site data or switching origin wipes progress. Nothing is synced across devices.
 
-## Run locally
+Optional Windows live diary (`harbor-live.json`) is a local file you drop or paste. The browser never reads `Documentos\Anno 1800` on its own and never parses `.a7s` saves.
 
-Node 22.
+## Status
+
+Playable companion: campaign rail, session desk (next step / do-don't / checks), city stamps, island pulse, calm modes (*Estoy saturado*, *Monedas en rojo*), Spanish buddy chat, HUD screenshot paste for one next step, and `/tablero` as a secondary presence view.
+
+Optional extras on Windows: install page (`/instalar`), connect page (`/conectar`), and a save watcher that writes `harbor-live.json`. The in-game pack does **not** run Lua (that crashes Anno); the watcher reads the latest save instead.
+
+`package.json` still names the Grok export (`app-builder-workspace`). That is not the product name.
+
+## Prerequisites
+
+- **Node.js 22** (the sandbox/export contract; no `engines` field in `package.json`)
+- **npm** (this repo ships `package-lock.json`)
+
+## Install
 
 ```bash
+git clone https://github.com/crisesarmiento/anno-1800-expert-buddy.git
+cd anno-1800-expert-buddy
 npm install
+```
+
+## Develop
+
+```bash
 npm run dev
 ```
 
-Dev server is `0.0.0.0:8080` (Grok preview contract). Production build:
+Vite listens on **`0.0.0.0:8080`** (`strictPort`). Open http://127.0.0.1:8080/
+
+`npm run dev` packs the telemetry zip (`scripts/pack-mod.mjs`) then starts Vite through `scripts/with-app-env.mjs`.
+
+Useful extras (not required to run the app):
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+```
+
+## Production build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-Auth and database are **off**. No accounts. No `.env` required for the companion itself.
+`npm run build` packs the mod zip, runs `vite build`, then `npm run db:migrate`. With no `DATABASE_URL`, migrate **skips** (local/preview). Nitro's production preview is **`127.0.0.1:8081`**.
 
-## Repo shape (honest)
+Do not use `vite` / `npx vite` directly — env flags (`VITE_AUTH_ENABLED`) only load through the npm scripts.
 
-This is a raw Grok App Builder export, not a cleaned template.
+## Limitations
 
-| Path | What it is |
-| --- | --- |
-| `src/components/harbor-app.tsx` | The product |
-| `src/lib/data` | Campaign missions, layouts, people |
-| `src/lib/buddy` | Chat answers |
-| `AGENTS.md` | Grok sandbox contract, not app docs |
-| `.grok/` | Builder metadata |
-| `screenshots/` | QA captures from the build |
-
-`package.json` still says `app-builder-workspace`. That is the export name, not the product name.
+- Unofficial fan companion. Anno 1800 is Ubisoft; this is not affiliated.
+- Mission titles stay in Spanish to match the in-game journal.
+- Screenshot HUD advice is a local server function. Offline chat does not invent a vision call.
+- `scripts/preview.mjs stop|restart` is a Linux sandbox helper for port 8081, not a macOS/Windows workflow.
+- `AGENTS.md` and `.grok/` are the Grok App Builder contract, not player docs.
 
 ## License
 
-Source is Cristian Sarmiento's. Anno 1800 is Ubisoft. This is an unofficial fan companion, not affiliated with Ubisoft.
+Source is Cristian Sarmiento's. Anno 1800 is Ubisoft. Unofficial fan companion, not affiliated with Ubisoft.
