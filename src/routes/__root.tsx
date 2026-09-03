@@ -32,7 +32,7 @@ export const Route = createRootRoute({
     ],
   }),
   component: () => (
-    <html lang="es-AR" className="antialiased" suppressHydrationWarning>
+    <html lang="es-AR" className="antialiased" data-surface="second-screen" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

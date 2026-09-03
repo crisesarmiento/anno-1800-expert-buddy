@@ -1,5 +1,6 @@
 import { missionsById } from "./data/campaign.ts";
 import type { LiveSnapshot } from "./live/types.ts";
+import { islandLines, sessionLine } from "./second-screen.ts";
 
 /** Stamp ids — player said they already saw it this save. */
 export const SEEN_ISLA = "story:isla";
@@ -46,6 +47,8 @@ export type IslandSketch = SeenIsland & { x: number; y: number };
 
 export type GatedStory = {
   islands: SeenIsland[];
+  islandLines: string[];
+  sessionLine: string;
   sketch: IslandSketch[];
   islandAsk: string | null;
   islandChip: string | null;
@@ -186,6 +189,8 @@ export function gatedStory(input: GatedStoryInput): GatedStory {
 
   return {
     islands,
+    islandLines: islandLines(islands),
+    sessionLine: sessionLine({ snapshot: input.snapshot, missionId: input.missionId }),
     sketch: islandSketch(islands),
     islandAsk,
     islandChip,

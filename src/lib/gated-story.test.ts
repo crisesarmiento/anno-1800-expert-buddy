@@ -151,4 +151,27 @@ describe("gated story second-monitor layer", () => {
     assert.equal(tenSecondLine("Crown Falls te espera con leyes 7:1"), "Seguí el diario. Nada más.");
     assert.equal(isWalkthrough("Poné el mercado. Plantá diez casas. Llená granjeros."), true);
   });
+
+  it("exposes one session line and one line per seen island", () => {
+    const spark = gatedStory(input({ missionId: "ch1-spark" }));
+    assert.equal(spark.sessionLine, "Una chispa que vuelve");
+    const named = gatedStory(
+      input({
+        missionId: "ch1-spark",
+        snapshot: snapshot({
+          sessionName: "Autosave",
+          telemetry: {
+            islands: [
+              { id: "bright-sands", name: "Bright Sands" },
+              { id: "crown", name: "Crown Falls" },
+            ],
+          },
+        }),
+      }),
+    );
+    assert.equal(named.sessionLine, "Autosave · Una chispa que vuelve");
+    assert.deepEqual(named.islandLines, ["Bright Sands", "Crown Falls"]);
+    assert.match(layer, /data-session-line=/);
+    assert.match(layer, /data-island-line=/);
+  });
 });

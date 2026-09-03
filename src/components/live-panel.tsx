@@ -142,11 +142,11 @@ export function LivePanel() {
     };
   }, []);
 
-  async function onFile(file: File | undefined) {
+  async function onFile(file: File | undefined, opts: { silent?: boolean } = {}) {
     if (!file) return;
     const result = await ingestLiveFile(file, locale);
     if (!result.ok) {
-      setLiveBanner(result.message, true);
+      if (!opts.silent) setLiveBanner(result.message, true);
       return;
     }
     applyLiveSnapshot(result.snapshot, file.name);
@@ -194,7 +194,7 @@ export function LivePanel() {
           const file = await handle.getFile();
           if (file.lastModified === last) return;
           last = file.lastModified;
-          await onFile(file);
+          await onFile(file, { silent: true });
         } catch {
           /* ignore */
         }

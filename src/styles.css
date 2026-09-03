@@ -71,6 +71,14 @@
     color-scheme: light;
   }
 
+  html[data-surface="second-screen"],
+  html[data-surface="second-screen"] body,
+  html[data-surface="second-screen"] #app {
+    pointer-events: auto;
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+
   html,
   body,
   #app {

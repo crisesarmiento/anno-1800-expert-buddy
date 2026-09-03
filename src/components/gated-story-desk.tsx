@@ -32,6 +32,16 @@ export function GatedStoryDesk() {
         <p className="mt-2 font-display text-lg leading-snug">{story.tip.line}</p>
       </article>
 
+      <article data-gated-session="" className="rounded-xl border border-ink/25 bg-card p-4">
+        <p className="flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+          <InkSeal kind="book" tone="ink" className="size-7" title="Esta partida" />
+          Esta partida
+        </p>
+        <p data-session-line="" className="mt-2 font-display text-lg leading-snug">
+          {story.sessionLine}
+        </p>
+      </article>
+
       <article data-gated-map="" className="rounded-xl border border-ink/25 bg-card p-4">
         <p className="flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
           <InkSeal kind="anchor" tone="ink" className="size-7" title="Islas ya vistas" />
@@ -76,7 +86,15 @@ export function GatedStoryDesk() {
         </svg>
         {story.islands.length === 0 ? (
           <p className="mt-2 text-sm leading-relaxed">Nada sellado en esta partida.</p>
-        ) : null}
+        ) : (
+          <ul data-island-lines="" className="mt-3 flex flex-col gap-1">
+            {story.islandLines.map((line) => (
+              <li key={line} data-island-line="" className="text-sm leading-snug">
+                {line}
+              </li>
+            ))}
+          </ul>
+        )}
         {story.islandAsk ? (
           <ManualChip ask={story.islandAsk} label={story.islandChip ?? ASK_ISLA} onStamp={() => stamp(SEEN_ISLA)} />
         ) : null}
