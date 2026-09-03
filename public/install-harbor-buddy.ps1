@@ -3,33 +3,118 @@
 
 $ErrorActionPreference = "Stop"
 
-function Find-AnnoRoot {
-  $candidates = @(
-    (Join-Path $env:USERPROFILE "Documents\Anno 1800"),
-    (Join-Path $env:USERPROFILE "OneDrive\Documents\Anno 1800")
-  )
-  $myDocs = [Environment]::GetFolderPath("MyDocuments")
-  if ($myDocs) {
-    $candidates += (Join-Path $myDocs "Anno 1800")
-  }
-  foreach ($path in $candidates) {
-    if ($path -and (Test-Path -LiteralPath $path)) {
-      return $path
+function Add-UniquePath($list, [string]$path) {
+  if (-not $path) { return }
+  $path = [Environment]::ExpandEnvironmentVariables($path.Trim())
+  if (-not $path) { return }
+  if ($list -notcontains $path) { [void]$list.Add($path) }
+}
+
+function Get-DocumentFolders {
+  $folders = New-Object System.Collections.Generic.List[string]
+  Add-UniquePath $folders (Join-Path $env:USERPROFILE "Documents")
+  Add-UniquePath $folders (Join-Path $env:USERPROFILE "Documentos")
+  Add-UniquePath $folders (Join-Path $env:USERPROFILE "OneDrive\Documents")
+  Add-UniquePath $folders (Join-Path $env:USERPROFILE "OneDrive\Documentos")
+  Add-UniquePath $folders ([Environment]::GetFolderPath("MyDocuments"))
+  foreach ($envName in @("OneDrive", "OneDriveConsumer", "OneDriveCommercial")) {
+    $root = [Environment]::GetEnvironmentVariable($envName)
+    if ($root) {
+      Add-UniquePath $folders (Join-Path $root "Documents")
+      Add-UniquePath $folders (Join-Path $root "Documentos")
     }
   }
-  Write-Host "No encontré Anno 1800 en Documentos. ¿Lo instalaste?"
+  foreach ($key in @(
+      "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",
+      "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
+    )) {
+    try {
+      if (Test-Path -LiteralPath $key) {
+        $item = Get-ItemProperty -LiteralPath $key -ErrorAction SilentlyContinue
+        if ($item -and $item.Personal) { Add-UniquePath $folders ([string]$item.Personal) }
+      }
+    } catch { }
+  }
+  return $folders
+}
+
+function Get-AnnoCandidates {
+  $out = New-Object System.Collections.Generic.List[string]
+  foreach ($doc in Get-DocumentFolders) {
+    Add-UniquePath $out (Join-Path $doc "Anno 1800")
+  }
+  return $out
+}
+
+function Find-LatestA7sUnder([string]$accounts) {
+  if (-not $accounts) { return $null }
+  if (-not (Test-Path -LiteralPath $accounts)) { return $null }
+  return Get-ChildItem -LiteralPath $accounts -Recurse -File -Filter "*.a7s" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTimeUtc -Descending |
+    Select-Object -First 1
+}
+
+function Get-AnnoRootFromSave($save) {
+  if (-not $save) { return $null }
+  $dir = $save.Directory
+  while ($dir) {
+    if ($dir.Name -eq "Anno 1800") { return $dir.FullName }
+    $dir = $dir.Parent
+  }
+  return $null
+}
+
+function Browse-AnnoRoot {
+  Write-Host "No encuentro Documentos\Anno 1800 ni un .a7s reciente. Lo instalaste?"
   $typed = Read-Host "Pegá la carpeta Anno 1800 (Enter para salir)"
   if (-not $typed) { exit 1 }
-  $leaf = Split-Path -Leaf $typed.TrimEnd("\", "/")
-  if ($leaf -ne "Anno 1800") {
-    Write-Host "Solo copio adentro de una carpeta que se llame Anno 1800."
-    exit 1
-  }
+  $typed = $typed.Trim()
   if (-not (Test-Path -LiteralPath $typed)) {
     Write-Host "Esa carpeta no existe."
     exit 1
   }
-  return $typed
+  $item = Get-Item -LiteralPath $typed
+  if (-not $item.PSIsContainer) { $item = $item.Directory }
+  if ($item.Name -eq "Anno 1800") { return $item.FullName }
+  $fromSave = Find-LatestA7sUnder $item.FullName
+  if (-not $fromSave) {
+    $fromSave = Find-LatestA7sUnder (Join-Path $item.FullName "accounts")
+  }
+  $root = Get-AnnoRootFromSave $fromSave
+  if ($root) { return $root }
+  $dir = $item
+  while ($dir) {
+    if ($dir.Name -eq "Anno 1800") { return $dir.FullName }
+    $dir = $dir.Parent
+  }
+  Write-Host "Solo copio adentro de una carpeta que se llame Anno 1800 (o que tenga accounts\*.a7s)."
+  exit 1
+}
+
+function Find-AnnoRoot {
+  $bestSave = $null
+  foreach ($path in Get-AnnoCandidates) {
+    if (-not $path -or -not (Test-Path -LiteralPath $path)) { continue }
+    $save = Find-LatestA7sUnder (Join-Path $path "accounts")
+    if ($save -and (-not $bestSave -or $save.LastWriteTimeUtc -gt $bestSave.LastWriteTimeUtc)) {
+      $bestSave = $save
+    }
+  }
+  if ($bestSave) {
+    $root = Get-AnnoRootFromSave $bestSave
+    if ($root) {
+      Write-Host "Usando el .a7s más reciente (solo lectura): $($bestSave.FullName)"
+      Write-Host "Guardado: $($bestSave.LastWriteTime)"
+      return $root
+    }
+  }
+  foreach ($path in Get-AnnoCandidates) {
+    if ($path -and (Test-Path -LiteralPath $path)) {
+      Write-Host "Carpeta Anno 1800: $path"
+      return $path
+    }
+  }
+  return Browse-AnnoRoot
 }
 
 function Find-ModZip {
