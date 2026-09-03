@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { InkSeal } from "@/components/stamps";
+import { TallerCity } from "@/components/taller-city";
 import {
   TALLER_NIHOEL,
   TALLER_RATIOS_VERSION,
@@ -46,6 +47,7 @@ export function TallerBench() {
           <h1 className="font-display text-3xl font-semibold tracking-tight">Umbral</h1>
           <TallerStamp stamp={stamp} />
         </article>
+        <TallerCity />
         <p className="text-xs leading-relaxed text-muted-foreground">
           Ratios estáticos {TALLER_RATIOS_VERSION} (wiki CC-BY-SA, no params.js de NiHoel).{" "}
           <a href={TALLER_WIKI} target="_blank" rel="noreferrer" className="underline">

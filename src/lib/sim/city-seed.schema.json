@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/crisesarmiento/anno-1800-expert-buddy/src/lib/sim/city-seed.schema.json",
+  "title": "Harbor city seed v1",
+  "description": "Conteos que carga el jugador. El watcher harbor-live.json solo marca presencia de nombres.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "game", "updatedAt", "islands"],
+  "properties": {
+    "schema": { "const": "harbor-city-v1" },
+    "game": { "const": "anno-1800" },
+    "updatedAt": { "type": "string", "minLength": 1 },
+    "mode": {
+      "type": "string",
+      "enum": ["campaign", "perfect"],
+      "default": "campaign",
+      "description": "campaign es el default. perfect solo en Taller."
+    },
+    "missionHint": { "type": "string" },
+    "islands": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/island" }
+    }
+  },
+  "$defs": {
+    "island": {
+      "type": "object",
+      "required": ["id", "world", "houses", "buildings"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "world": { "type": "string", "enum": ["old", "new"] },
+        "name": { "type": "string" },
+        "houses": { "$ref": "#/$defs/houses" },
+        "buildings": { "$ref": "#/$defs/buildings" },
+        "productivity": {
+          "type": "number",
+          "minimum": 0,
+          "default": 100,
+          "description": "100 = wiki sin luz."
+        },
+        "modifiers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "R": { "type": "number", "description": "Aumento de capacidad. Default 0." },
+            "N": { "type": "number", "description": "Diario / propaganda. Default 0." },
+            "B": { "type": "number", "description": "Ayuntamiento / items. Default 0." }
+          }
+        },
+        "pulse": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "coins": { "type": "string", "enum": ["up", "down", "unknown"] },
+            "houses": { "type": "string", "enum": ["ok", "yellow", "empty", "unknown"] }
+          }
+        },
+        "notes": { "type": "string" },
+        "confidence": {
+          "type": "string",
+          "enum": ["seed", "presence"],
+          "description": "presence = el watcher vio nombres, no conteos. No inventar t/min."
+        }
+      }
+    },
+    "houses": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "farmer": { "type": "integer", "minimum": 0 },
+        "worker": { "type": "integer", "minimum": 0 },
+        "artisan": { "type": "integer", "minimum": 0 },
+        "engineer": { "type": "integer", "minimum": 0 },
+        "investor": { "type": "integer", "minimum": 0 },
+        "jornalero": { "type": "integer", "minimum": 0 },
+        "obrero": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "buildings": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "properties": {
+        "marketplace": { "type": "integer", "minimum": 0 },
+        "lumberjack": { "type": "integer", "minimum": 0 },
+        "sawmill": { "type": "integer", "minimum": 0 },
+        "fishery": { "type": "integer", "minimum": 0 },
+        "sheep": { "type": "integer", "minimum": 0 },
+        "knitters": { "type": "integer", "minimum": 0 },
+        "potato": { "type": "integer", "minimum": 0 },
+        "distillery": { "type": "integer", "minimum": 0 },
+        "pig": { "type": "integer", "minimum": 0 },
+        "slaughterhouse": { "type": "integer", "minimum": 0 },
+        "grain": { "type": "integer", "minimum": 0 },
+        "mill": { "type": "integer", "minimum": 0 },
+        "bakery": { "type": "integer", "minimum": 0 },
+        "clay": { "type": "integer", "minimum": 0 },
+        "brick": { "type": "integer", "minimum": 0 },
+        "iron-mine": { "type": "integer", "minimum": 0 },
+        "charcoal": { "type": "integer", "minimum": 0 },
+        "furnace": { "type": "integer", "minimum": 0 },
+        "steelworks": { "type": "integer", "minimum": 0 },
+        "rendering": { "type": "integer", "minimum": 0 },
+        "soap": { "type": "integer", "minimum": 0 },
+        "sails": { "type": "integer", "minimum": 0 },
+        "weapons": { "type": "integer", "minimum": 0 },
+        "plantain": { "type": "integer", "minimum": 0 },
+        "fish-oil": { "type": "integer", "minimum": 0 },
+        "kitchen": { "type": "integer", "minimum": 0 },
+        "alpaca": { "type": "integer", "minimum": 0 },
+        "poncho": { "type": "integer", "minimum": 0 },
+        "sugar-cane": { "type": "integer", "minimum": 0 },
+        "rum-distillery": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

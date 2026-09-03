@@ -1,0 +1,33 @@
+{
+  "schema": "harbor-city-v1",
+  "game": "anno-1800",
+  "updatedAt": "2026-09-03T00:00:00.000Z",
+  "mode": "campaign",
+  "missionHint": "Una chispa que vuelve",
+  "islands": [
+    {
+      "id": "bright-sands",
+      "world": "old",
+      "houses": {
+        "farmer": 10,
+        "worker": 0,
+        "artisan": 0,
+        "engineer": 0,
+        "investor": 0
+      },
+      "buildings": {
+        "lumberjack": 1,
+        "sawmill": 1,
+        "marketplace": 1,
+        "fishery": 0,
+        "sheep": 0,
+        "knitters": 0
+      },
+      "pulse": {
+        "coins": "down",
+        "houses": "empty"
+      },
+      "notes": "primera isla, mercado cerca del puerto"
+    }
+  ]
+}
