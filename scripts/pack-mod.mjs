@@ -14,6 +14,9 @@ if (!existsSync(src)) {
   process.exit(1);
 }
 
+// Ceiling: dump_live.lua stays in tools/. Never pack Lua or a scripts/ dir.
+// See docs/telemetry-ceiling.md. Regression: scripts/telemetry-ceiling.test.mjs.
+
 const infoPath = join(src, "modinfo.json");
 const info = JSON.parse(readFileSync(infoPath, "utf8"));
 if (!info.ModID || !info.Version || typeof info.ModName !== "object" || typeof info.Category !== "object") {
@@ -88,6 +91,13 @@ function zipFolder(folder, dest, prefix) {
 }
 
 zipFolder(src, out, "harbor-buddy-telemetry");
+{
+  const packed = readFileSync(out);
+  if (packed.includes("dump_live.lua") || packed.includes(".lua")) {
+    console.error("[pack-mod] refuse: lua leaked into", out);
+    process.exit(1);
+  }
+}
 console.log("[pack-mod]", info.Version, out);
 
 const SKIP = new Set(

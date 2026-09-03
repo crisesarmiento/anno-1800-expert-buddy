@@ -2,6 +2,7 @@
 
 Contrato del snapshot `harbor-live-v1`. El vigilante lee el último `.a7s` (UTF-8/UTF-16 + zlib suelto) y busca **needles del catálogo**. El mod instalable es XML vacío: no inyecta, no Lua, no GUIDs.
 
+Techo Signal (read-only, sin Lua/DLL/Python): `docs/telemetry-ceiling.md`.
 Schema: `docs/harbor-live.schema.json`.
 
 ## Lo que sí hay

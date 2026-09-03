@@ -22,7 +22,7 @@ Optional Windows live diary (`harbor-live.json`) is a local file you drop or pas
 
 Playable companion: campaign rail, session desk (next step / do-don't / checks), city stamps, island pulse, calm modes (*Estoy saturado*, *Monedas en rojo*), Spanish buddy chat, HUD screenshot paste for one next step, and `/tablero` as a secondary presence view.
 
-Optional extras on Windows: install page (`/instalar`), connect page (`/conectar`), and a save watcher that writes `harbor-live.json`. The in-game pack does **not** run Lua (that crashes Anno); the watcher reads the latest save instead.
+Optional extras on Windows: install page (`/instalar`), connect page (`/conectar`), and a save watcher that writes `harbor-live.json`. The in-game pack does **not** run Lua (that crashes Anno); the watcher reads the latest save instead. Hard ceiling: `docs/telemetry-ceiling.md` — read-only on `.a7s`, no Lua/DLL/Python inject; the telemetry zip is a stub and is not required for the watcher.
 
 `package.json` still names the Grok export (`app-builder-workspace`). That is not the product name.
 
