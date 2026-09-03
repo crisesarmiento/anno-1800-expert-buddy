@@ -23,6 +23,7 @@ import { MissionFinder } from "@/components/mission-finder";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
 import { SessionDeskSurface } from "@/components/session-desk-surface";
 import { Stamp, buildingStamp } from "@/components/stamps";
+import { pickCampaignTip } from "@/lib/campaign-tips";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -284,6 +285,11 @@ function CampaignRail() {
 
 function Welcome() {
   const setMissionId = useHarbor((s) => s.setMissionId);
+  const snapshot = useHarbor((s) => s.liveSnapshot);
+  const stamps = useHarbor((s) => s.stamps);
+  const missionId = useHarbor((s) => s.missionId);
+  const completed = useHarbor((s) => s.completed);
+  const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
   const t = useT();
 
   return (
@@ -297,8 +303,17 @@ function Welcome() {
         <h1 className="mt-3 font-display text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
           Esto, ahora
         </h1>
-        <p data-esto-ahora-item="" className="mt-4 max-w-prose text-lg leading-relaxed">
-          {ESTO_AHORA_IDLE}
+        <p
+          data-esto-ahora-item=""
+          data-campaign-tip-family={campaignTip?.family ?? ""}
+          data-campaign-tip-kind={campaignTip?.kind ?? "idle"}
+          className="mt-4 max-w-prose text-lg leading-relaxed"
+        >
+          {campaignTip?.kind === "chip" ? (
+            <span data-campaign-tip-chip="">{campaignTip.line}</span>
+          ) : (
+            (campaignTip?.line ?? ESTO_AHORA_IDLE)
+          )}
         </p>
       </article>
 
