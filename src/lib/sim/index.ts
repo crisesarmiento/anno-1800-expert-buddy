@@ -13,11 +13,13 @@ export {
 } from "./chains.ts";
 export {
   CHAPTER_RANK,
+  TIER_NAME_ES,
   buildingChapter,
   chapterAllowsBuilding,
   compute,
   computeDemand,
   computeSupply,
+  goodBalance,
   housesSupportedByGood,
   housesSupportedFish,
   parseCitySeed,
@@ -52,6 +54,7 @@ export {
   type CitySeed,
   type CityStats,
   type Confidence,
+  type GoodBalance,
   type GoodFlow,
   type GoodId,
   type HouseCounts,

@@ -21,6 +21,7 @@ import {
   type CitySeed,
   type CityStats,
   type Confidence,
+  type GoodBalance,
   type GoodFlow,
   type GoodId,
   type HouseCounts,
@@ -32,6 +33,16 @@ import {
   type PopulationTier,
   type SimMode,
 } from "./types.ts";
+
+export const TIER_NAME_ES: Record<PopulationTier, string> = {
+  farmer: "granjero",
+  worker: "obrero",
+  artisan: "artesano",
+  engineer: "ingeniero",
+  investor: "inversor",
+  jornalero: "jornalero",
+  obrero: "obrero",
+};
 
 const TIERS: PopulationTier[] = [
   "farmer",
@@ -198,6 +209,16 @@ function parseIsland(raw: unknown, index: number): Island {
     };
   }
   if (typeof raw.notes === "string") island.notes = raw.notes;
+  if (asRecord(raw.occupancy)) {
+    const occupancy: Island["occupancy"] = {};
+    for (const tier of TIERS) {
+      const value = raw.occupancy[tier];
+      if (typeof value === "number" && Number.isFinite(value)) {
+        occupancy[tier] = Math.min(1, Math.max(0, value));
+      }
+    }
+    if (Object.keys(occupancy).length > 0) island.occupancy = occupancy;
+  }
   if (raw.confidence === "presence" || raw.confidence === "seed") {
     island.confidence = raw.confidence;
   }
@@ -214,6 +235,64 @@ function housesOf(island: Island, tier: PopulationTier): number {
 
 function inhabitants(island: Island, tier: PopulationTier): number {
   return housesOf(island, tier) * HOUSE_CAPACITY[tier];
+}
+
+function housesMaxOf(island: Island): Partial<Record<PopulationTier, number>> {
+  const out: Partial<Record<PopulationTier, number>> = {};
+  for (const tier of TIERS) {
+    const houses = housesOf(island, tier);
+    if (houses > 0) out[tier] = houses * HOUSE_CAPACITY[tier];
+  }
+  return out;
+}
+
+/** Mano de obra estimada. Occupancy missing = Taller assumes full houses and says so. */
+function workforceEstimateOf(island: Island): {
+  byTier: Partial<Record<PopulationTier, number>>;
+  assumedFull: boolean;
+} {
+  const occupancy = island.occupancy;
+  const assumedFull = !occupancy || Object.keys(occupancy).length === 0;
+  const byTier: Partial<Record<PopulationTier, number>> = {};
+  for (const tier of TIERS) {
+    const houses = housesOf(island, tier);
+    if (houses <= 0) continue;
+    const frac = occupancy?.[tier] ?? 1;
+    byTier[tier] = houses * HOUSE_CAPACITY[tier] * Math.min(1, Math.max(0, frac));
+  }
+  return { byTier, assumedFull };
+}
+
+/** falta = supply below demand. saturado = supply well past demand (or demand-less supply). */
+export function goodBalance(
+  gap: number | null | undefined,
+  demand: number | null | undefined,
+): GoodBalance | null {
+  if (gap == null) return null;
+  if (gap < -1e-9) return "falta";
+  const d = demand ?? 0;
+  if (d > 0 ? gap > d * 0.5 : gap > 1e-9) return "saturado";
+  return "alcanza";
+}
+
+function workforceDeficitAlerts(
+  workforce: Partial<Record<PopulationTier, number>> | null,
+  housesMax: Partial<Record<PopulationTier, number>>,
+): CityAlert[] {
+  if (!workforce) return [];
+  const alerts: CityAlert[] = [];
+  for (const tier of TIERS) {
+    const needed = workforce[tier];
+    if (needed == null) continue;
+    const have = housesMax[tier] ?? 0;
+    if (needed > have) {
+      alerts.push({
+        id: `workforce-${tier}`,
+        line: `Las fábricas piden ${Math.round(needed)} ${TIER_NAME_ES[tier]} y las casas dan como mucho ${Math.round(have)}. Faltan manos, no toneladas.`,
+      });
+    }
+  }
+  return alerts;
 }
 
 export function computeDemand(
@@ -740,20 +819,30 @@ function computeIsland(
   }
 
   const nextBuild = pickNextBuild(island, mode, chapter, confidence);
-  const alerts = islandAlerts(island, mode, chapter, confidence, demand, supply, nextBuild);
+  let alerts = islandAlerts(island, mode, chapter, confidence, demand, supply, nextBuild);
+
+  const housesMax = housesMaxOf(island);
+  const { byTier: workforceEstimate, assumedFull: occupancyAssumedFull } = workforceEstimateOf(island);
+  const workforce = confidence === "presence" ? null : sumWorkforce(island);
+  if (confidence !== "presence") {
+    alerts = [...alerts, ...workforceDeficitAlerts(workforce, housesMax)];
+  }
 
   return {
     id: island.id,
     world: island.world,
     confidence,
     housesPresent: { ...island.houses },
+    housesMax,
+    workforceEstimate,
+    occupancyAssumedFull,
     housesSupported:
       confidence === "presence" ? {} : housesSupportedByGood(rawSupply, island.modifiers),
     demand,
     supply,
     gap,
     flows: confidence === "presence" ? [] : flowsOf(demand, supply),
-    workforce: confidence === "presence" ? null : sumWorkforce(island),
+    workforce,
     maintenance: confidence === "presence" ? null : sumMaintenance(island),
     alerts,
     nextBuild,
