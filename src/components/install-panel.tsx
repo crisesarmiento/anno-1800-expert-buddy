@@ -3,10 +3,56 @@ import { Link } from "@tanstack/react-router";
 import { Check, Download } from "lucide-react";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
+import { buildLauncherScript, launcherFileName } from "@/lib/launcher";
 import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
 
-export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
+/**
+ * steam:// + watcher + this page, bundled into one downloadable .bat.
+ * Opt-in only: nothing runs until the player double-clicks the download.
+ * Never sends F5/keystrokes to Anno — the player still saves themselves.
+ */
+function LauncherCard() {
+  const t = useT();
+
+  function onDownload() {
+    const origin = window.location.origin;
+    const blob = new Blob([buildLauncherScript(origin)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = launcherFileName();
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <li className="rounded-md bg-muted p-4" data-install-launcher="">
+      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        {t.install.launcher.kicker}
+      </p>
+      <p className="mt-1 text-sm font-medium">{t.install.launcher.title}</p>
+      <p className="mt-2 text-sm leading-relaxed">{t.install.launcher.copy}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.install.launcher.warn}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button type="button" onClick={onDownload}>
+          <Download className="size-3.5" />
+          {t.install.launcher.btn}
+        </Button>
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t.install.launcher.note}</p>
+    </li>
+  );
+}
+
+export function InstallPanel({
+  embedded = false,
+  launcher = false,
+}: {
+  embedded?: boolean;
+  /** steam:// + watcher + web power-up. /instalar only — never Home, never /conectar. */
+  launcher?: boolean;
+}) {
   const t = useT();
   const [done, setDone] = useState<number[]>([]);
   const checks = [t.install.check1, t.install.check2, t.install.check3, t.install.check4];
@@ -73,6 +119,8 @@ export function InstallPanel({ embedded = false }: { embedded?: boolean }) {
             </Button>
           </div>
         </li>
+
+        {launcher ? <LauncherCard /> : null}
 
         <li className="rounded-md bg-muted p-4">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

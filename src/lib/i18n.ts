@@ -128,6 +128,14 @@ const es = {
     check4: "Vigilante abierto · Ctrl+F5 en Anno · soltar o vigilar harbor-live.json",
     fallback: "Si el instalador no encuentra Anno, copiá a mano la carpeta del zip a Documentos\\Anno 1800\\mods\\harbor-buddy-telemetry. Tiene que haber un modinfo.json justo ahí.",
     back: "Volver al escritorio",
+    launcher: {
+      kicker: "4. Lanzador opcional",
+      title: "Steam + vigilante + esta página",
+      copy: "Un solo doble clic: abre Anno por Steam, prende el vigilante y abre esta página. Nunca manda F5 — guardás vos, cuando quieras.",
+      warn: "Solo Steam. Si tenés Epic Games, usá los pasos de arriba a mano.",
+      btn: "Descargar lanzador (.bat)",
+      note: "Si el ID de Steam no coincide con tu Anno, abrí el .bat con el Bloc de notas y cambiá el número.",
+    },
   },
   connect: {
     kicker: "Cómo conectar Anno",
@@ -407,6 +415,14 @@ const en: UiDict = {
     check4: "Watcher open · Ctrl+F5 in Anno · drop or watch harbor-live.json",
     fallback: "If the installer cannot find Anno, copy the zip folder by hand to Documents\\Anno 1800\\mods\\harbor-buddy-telemetry. There must be a modinfo.json right inside.",
     back: "Back to the desk",
+    launcher: {
+      kicker: "4. Optional launcher",
+      title: "Steam + watcher + this page",
+      copy: "One double-click: opens Anno via Steam, starts the watcher, and opens this page. It never sends F5 — you still save when you want.",
+      warn: "Steam only. On Epic Games, use the steps above by hand.",
+      btn: "Download launcher (.bat)",
+      note: "If the Steam ID does not match your Anno, open the .bat in Notepad and change the number.",
+    },
   },
   connect: {
     kicker: "How to connect Anno",
@@ -684,6 +700,14 @@ const it: UiDict = {
     check4: "Watcher aperto · Ctrl+F5 in Anno · trascina o osserva harbor-live.json",
     fallback: "Se l'installer non trova Anno, copia a mano la cartella dello zip in Documenti\\Anno 1800\\mods\\harbor-buddy-telemetry. Deve esserci un modinfo.json proprio lì.",
     back: "Torna alla scrivania",
+    launcher: {
+      kicker: "4. Launcher opzionale",
+      title: "Steam + watcher + questa pagina",
+      copy: "Un doppio clic: apre Anno via Steam, avvia il watcher e apre questa pagina. Non manda mai F5 — salvi tu, quando vuoi.",
+      warn: "Solo Steam. Su Epic Games, usa i passaggi sopra a mano.",
+      btn: "Scarica launcher (.bat)",
+      note: "Se l'ID Steam non corrisponde al tuo Anno, apri il .bat con il Blocco note e cambia il numero.",
+    },
   },
   connect: {
     kicker: "Come collegare Anno",
@@ -961,6 +985,14 @@ const de: UiDict = {
     check4: "Watcher offen · Strg+F5 in Anno · harbor-live.json ablegen oder beobachten",
     fallback: "Wenn der Installer Anno nicht findet, kopiere den Zip-Ordner von Hand nach Dokumente\\Anno 1800\\mods\\harbor-buddy-telemetry. Dort muss eine modinfo.json liegen.",
     back: "Zurück zum Schreibtisch",
+    launcher: {
+      kicker: "4. Optionaler Launcher",
+      title: "Steam + Watcher + diese Seite",
+      copy: "Ein Doppelklick: öffnet Anno über Steam, startet den Watcher und öffnet diese Seite. Schickt nie F5 — du speicherst selbst, wann du willst.",
+      warn: "Nur Steam. Bei Epic Games die Schritte oben von Hand nutzen.",
+      btn: "Launcher herunterladen (.bat)",
+      note: "Passt die Steam-ID nicht zu deinem Anno, öffne die .bat mit dem Editor und ändere die Nummer.",
+    },
   },
   connect: {
     kicker: "Anno verbinden",
