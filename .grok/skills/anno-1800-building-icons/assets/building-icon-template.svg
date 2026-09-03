@@ -1,0 +1,12 @@
+<!-- Original construction guide for Harbor Buddy building icons. No Ubisoft artwork. Unofficial fan project; not affiliated with Ubisoft. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Guía de construcción de icono de edificio</title>
+  <desc id="desc">Encuadre isométrico vacío con zona de huella, volumen y rasgo funcional.</desc>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="56" height="56" rx="4" opacity=".18" stroke-dasharray="2 3"/>
+    <path opacity=".35" stroke-dasharray="2 2" d="m10 43 22 13 22-13-22-13-22 13Z"/>
+    <path opacity=".55" d="m17 31 15-9 15 9v16L32 56 17 47V31Z"/>
+    <path opacity=".8" d="m17 31 15 9 15-9M32 40v16"/>
+    <circle cx="46" cy="17" r="7" opacity=".35" stroke-dasharray="2 2"/>
+  </g>
+</svg>

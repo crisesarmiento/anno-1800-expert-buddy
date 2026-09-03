@@ -1,0 +1,49 @@
+<!-- Original Harbor Buddy 10x10 grid example. No Ubisoft artwork. Unofficial fan project; not affiliated with Ubisoft. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-labelledby="title desc">
+  <title id="title">Ejemplo original de grilla 10 por 10</title>
+  <desc id="desc">Calles, casas, jardines, agua, mercado y aserradero se representan dentro de una grilla de diez por diez.</desc>
+  <defs>
+    <pattern id="cells" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="#14110e" stroke="#b7a78e" stroke-opacity=".32"/>
+    </pattern>
+    <g id="home" fill="none" stroke="#14110e" stroke-width="1.7" stroke-linejoin="round">
+      <path d="m4 10 6-5 6 5v6H4z" fill="#c9a36a"/>
+      <path d="M8 16v-4h4v4"/>
+    </g>
+    <g id="tree" fill="none" stroke="#14110e" stroke-width="1.5" stroke-linecap="round">
+      <path d="M10 16v-5"/>
+      <circle cx="10" cy="8" r="4" fill="#7ea37c"/>
+    </g>
+  </defs>
+  <rect x="10" y="10" width="200" height="200" rx="4" fill="url(#cells)" stroke="#c9a36a" stroke-width="2"/>
+  <g fill="#b7a78e">
+    <rect x="10" y="50" width="200" height="20"/>
+    <rect x="90" y="10" width="20" height="200"/>
+  </g>
+  <g fill="#2f5658" stroke="#f3e6cf" stroke-opacity=".55">
+    <rect x="10" y="10" width="80" height="40"/>
+    <path d="M18 22c4-4 8 4 12 0s8 4 12 0M18 38c4-4 8 4 12 0s8 4 12 0M50 22c4-4 8 4 12 0s8 4 12 0M50 38c4-4 8 4 12 0s8 4 12 0" fill="none" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(110 70)">
+    <use href="#home" x="0" y="0"/><use href="#home" x="20" y="0"/><use href="#home" x="40" y="0"/>
+    <use href="#home" x="0" y="20"/><use href="#home" x="20" y="20"/><use href="#home" x="40" y="20"/>
+    <use href="#home" x="0" y="40"/><use href="#home" x="20" y="40"/><use href="#home" x="40" y="40"/>
+    <use href="#tree" x="60" y="0"/><use href="#tree" x="60" y="20"/><use href="#tree" x="60" y="40"/>
+  </g>
+  <g transform="translate(10 70)">
+    <use href="#home" x="0" y="0"/><use href="#home" x="20" y="0"/><use href="#tree" x="40" y="0"/>
+    <use href="#home" x="0" y="20"/><use href="#home" x="20" y="20"/><use href="#tree" x="40" y="20"/>
+    <use href="#home" x="0" y="40"/><use href="#home" x="20" y="40"/><use href="#tree" x="40" y="40"/>
+  </g>
+  <g transform="translate(50 130)" fill="none" stroke="#f3e6cf" stroke-width="1.6" stroke-linejoin="round">
+    <rect width="40" height="40" fill="#c45c4a" stroke="#14110e"/>
+    <path d="M8 28h24V16l-6-5-5 5-5-5-8 7zM13 28v-7h14v7"/>
+  </g>
+  <g transform="translate(110 150)" fill="none" stroke="#f3e6cf" stroke-width="1.6" stroke-linejoin="round">
+    <rect width="60" height="40" fill="#1e1a14" stroke="#c45c4a"/>
+    <path d="M8 30h39V17l-9 6-8-6-8 6-7-6-7 5zM47 30V9h7v21M16 12h12"/>
+    <circle cx="22" cy="12" r="5"/>
+  </g>
+  <g fill="#7ea37c"><rect x="170" y="70" width="40" height="80"/></g>
+  <g transform="translate(170 70)"><use href="#tree" x="0" y="0"/><use href="#tree" x="20" y="20"/><use href="#tree" x="0" y="40"/><use href="#tree" x="20" y="60"/></g>
+</svg>

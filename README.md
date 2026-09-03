@@ -8,6 +8,18 @@ Not a min-max spreadsheet. Default is **spoilers off**. Tagline: *bastante bien,
 
 [github.com/crisesarmiento/anno-1800-expert-buddy](https://github.com/crisesarmiento/anno-1800-expert-buddy)
 
+## A look at the buddy
+
+| City stamps                                                                                                                 | Economy pulse                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ![A 10 by 10 city stamp with roads, homes, gardens, water, and building marks inside the grid](screenshots/stamps-grid.png) | ![The Harbor Buddy coins-in-red state with a short calm recommendation](screenshots/coins-red.png) |
+| **Production chains**                                                                                                       | **Diplomacy**                                                                                      |
+| ![A short raw-material-to-factory chain on a dark wood surface](screenshots/chains.png)                                     | ![The diplomacy desk with calm guidance for campaign characters](screenshots/diplomacy.png)        |
+
+## Design skill pack
+
+The repository includes an [Agent Skills design pack](.grok/skills/README.md) for future work on Harbor Buddy. Its ten focused skills cover the visual system, original building icons, 10×10 grids, mission chrome, economy pulse, diplomacy, presence charts, Rioplatense copy, source handling, and visual QA. The pack guides design work only; it does not replace the existing React and TanStack Start product architecture.
+
 ## Why it exists
 
 The game's campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. This app is that voice on a **second monitor** (tab or PWA): Spanish-first (UI also in English, Italian, and German), one mission at a time, calm modes when the ticker is red or you are overloaded. Not an overlay and not click-through on the game.
