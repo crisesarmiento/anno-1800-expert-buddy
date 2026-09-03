@@ -3,6 +3,7 @@
 -- MUST NOT run on load. dump() at require-time crashes some loaders.
 -- Writes ONLY harbor-live-v1 JSON. Never invents titles.
 -- If nothing is readable, writes quests: [].
+-- No inject. No population counts, warehouse stock, NPC routes, or factory sim.
 
 local SCHEMA = "harbor-live-v1"
 local GAME = "anno-1800"

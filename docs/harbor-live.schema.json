@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anno-1800-expert-buddy.local/docs/harbor-live.schema.json",
+  "title": "harbor-live-v1",
+  "description": "JSON that the Windows watcher writes to Documents/Anno 1800/harbor-live.json. Signal lane only: no inject, no .a7s in the browser. Field policy: docs/harbor-live-fields.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source", "updatedAt", "game", "quests"],
+  "properties": {
+    "schema": { "const": "harbor-live-v1" },
+    "source": { "type": "string", "enum": ["telemetry", "save", "file"] },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "savedAt": { "type": "string", "format": "date-time" },
+    "game": { "const": "anno-1800" },
+    "sessionName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "quests": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "state"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "state": { "type": "string", "enum": ["active", "ready", "done"] },
+          "objective": { "type": "string", "minLength": 1, "maxLength": 400 }
+        }
+      }
+    },
+    "pulseHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coins", "houses"],
+      "properties": {
+        "coins": { "type": "string", "enum": ["unknown", "up", "down"] },
+        "houses": { "type": "string", "enum": ["unknown", "ok", "yellow", "empty"] }
+      }
+    },
+    "workforce": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "farmers": { "const": true },
+        "workers": { "const": true },
+        "artisans": { "const": true },
+        "engineers": { "const": true }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "buildings": { "$ref": "#/$defs/namedHits" },
+        "people": { "$ref": "#/$defs/namedHits" },
+        "chains": { "$ref": "#/$defs/namedHits" },
+        "islands": { "$ref": "#/$defs/namedHits" },
+        "hints": {
+          "type": "array",
+          "maxItems": 30,
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "namedHits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      }
+    }
+  }
+}

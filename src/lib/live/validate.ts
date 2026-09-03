@@ -6,6 +6,7 @@ import {
   LIVE_MAX_QUESTS,
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
+  LIVE_WORKFORCE_TIERS,
   type LiveIngestResult,
   type LiveNamedHit,
   type LivePulseHint,
@@ -14,6 +15,7 @@ import {
   type LiveSnapshot,
   type LiveSource,
   type LiveTelemetry,
+  type LiveWorkforce,
 } from "./types.ts";
 
 const JSON_MIME = new Set(["application/json", "text/plain"]);
@@ -127,6 +129,20 @@ function parseUpdatedAt(value: unknown) {
   return new Date(value).toISOString();
 }
 
+function parseOptionalIso(value: unknown) {
+  if (typeof value !== "string" || Number.isNaN(Date.parse(value))) return undefined;
+  return new Date(value).toISOString();
+}
+
+function normalizeWorkforce(value: unknown): LiveWorkforce | undefined {
+  if (!asRecord(value)) return undefined;
+  const workforce: LiveWorkforce = {};
+  for (const tier of LIVE_WORKFORCE_TIERS) {
+    if (value[tier] === true) workforce[tier] = true;
+  }
+  return Object.keys(workforce).length ? workforce : undefined;
+}
+
 export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIngestResult {
   if (!asRecord(raw)) return { ok: false, message: msg("schema", locale) };
   if (raw.schema !== LIVE_SCHEMA) return { ok: false, message: msg("schema", locale) };
@@ -162,6 +178,14 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   if (pulseHint) snapshot.pulseHint = pulseHint;
   const telemetry = normalizeTelemetry(raw.telemetry);
   if (telemetry) snapshot.telemetry = telemetry;
+  const sessionName = clipName(raw.sessionName, LIVE_MAX_TITLE);
+  if (sessionName) snapshot.sessionName = sessionName;
+  const islandName = clipName(raw.islandName, LIVE_MAX_TITLE);
+  if (islandName) snapshot.islandName = islandName;
+  const savedAt = parseOptionalIso(raw.savedAt);
+  if (savedAt) snapshot.savedAt = savedAt;
+  const workforce = normalizeWorkforce(raw.workforce);
+  if (workforce) snapshot.workforce = workforce;
   return { ok: true, snapshot };
 }
 
