@@ -68,7 +68,10 @@ test("telemetry pack stays an empty stub; watcher does not need it", () => {
   assert.match(watcher, /ReadAllBytes\(\$save\.FullName\)/);
   assert.doesNotMatch(watcher, /WriteAll(?:Bytes|Text)\(\$save/);
   assert.doesNotMatch(watcher, /\.a7s["'].*(Write|Set-Content|Out-File)/i);
-  assert.match(watcher, /WriteAllText\(\$outJson/);
+  assert.match(watcher, /function Write-HarborLiveCrashSafe/);
+  assert.match(watcher, /Flush\(\$true\)/);
+  assert.match(watcher, /harbor-live\.last-good\.json/);
+  assert.doesNotMatch(watcher, /WriteAllText\(\$outJson/);
   assert.doesNotMatch(watcher, /mods\\harbor-buddy-telemetry/);
   assert.doesNotMatch(watcher, /\bpython(?:\.exe)?\b/i);
   assert.doesNotMatch(watcher, /\b(?:LoadLibrary|AnnoPython|ctypes)\b/);

@@ -146,6 +146,7 @@ export function LivePanel() {
     if (!file) return;
     const result = await ingestLiveFile(file, locale);
     if (!result.ok) {
+      if (result.kind === "broken") return;
       if (!opts.silent) setLiveBanner(result.message, true);
       return;
     }
@@ -155,6 +156,7 @@ export function LivePanel() {
   function onPaste() {
     const result = ingestLiveJsonText(paste, locale);
     if (!result.ok) {
+      if (result.kind === "broken") return;
       setLiveBanner(result.message, true);
       return;
     }
