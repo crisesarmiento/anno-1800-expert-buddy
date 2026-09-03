@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
-import { BUILDINGS, CHAINS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
+import { BUILDINGS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
 import {
   compute,
   housesSupportedFish,
@@ -158,6 +158,11 @@ describe("campaign-ch1 fixture", () => {
     assert.match(
       island.alerts.find((row) => row.id === "clothes-soon")?.line ?? "",
       /0 telares/,
+    );
+    assert.equal(
+      island.alerts.some((row) => row.good === "schnapps" || /schnapps/i.test(row.line)),
+      false,
+      "lujo no se pide mientras falta un básico",
     );
   });
 
