@@ -111,6 +111,18 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
       .slice(0, 30);
     if (hints.length) telemetry.hints = hints;
   }
+  if (Array.isArray(value.goods)) {
+    const goods: NonNullable<LiveTelemetry["goods"]> = [];
+    for (const item of value.goods.slice(0, 40)) {
+      if (!asRecord(item)) continue;
+      const id = clipName(item.id, 48);
+      const name = clipName(item.name, 80);
+      const amount = typeof item.amount === "number" && Number.isFinite(item.amount) ? Math.trunc(item.amount) : null;
+      if (!id || !name || amount == null) continue;
+      goods.push({ id, name, amount });
+    }
+    if (goods.length) telemetry.goods = goods;
+  }
   return Object.keys(telemetry).length ? telemetry : undefined;
 }
 

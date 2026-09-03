@@ -67,6 +67,9 @@ test("Windows ps1 scripts suggest latest save and fall back to browse", () => {
 test("watcher reads saves and only writes harbor-live.json", () => {
   assert.match(watcher, /\[System\.IO\.File\]::ReadAllBytes\(\$save\.FullName\)/);
   assert.match(watcher, /function Write-HarborLiveCrashSafe/);
+  assert.match(watcher, /HarborBuddy\.A7sScan/);
+  assert.match(watcher, /Ctrl\+F5/);
+  assert.match(watcher, /accountdata\.a7s/);
   assert.doesNotMatch(watcher, /WriteAllText\(\$outJson/);
   assert.equal((watcher.match(/WriteAllBytes/g) || []).length, 0);
 });

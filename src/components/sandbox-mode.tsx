@@ -10,6 +10,7 @@ import {
   sandboxTallerLink,
   tipsForMode,
 } from "@/lib/sandbox-mode";
+import { useHarbor } from "@/lib/store";
 
 export function SandboxModeChip({ className }: { className?: string }) {
   return (
@@ -30,6 +31,7 @@ export function SandboxModeChip({ className }: { className?: string }) {
 export function SandboxModePage() {
   const taller = sandboxTallerLink();
   const tips = tipsForMode(SANDBOX_TIPS, "sandbox");
+  const goods = useHarbor((s) => s.liveSnapshot?.telemetry?.goods) ?? [];
 
   return (
     <div className="min-h-dvh bg-background" data-sandbox-mode="" data-visual="diario">
@@ -69,6 +71,21 @@ export function SandboxModePage() {
           >
             {taller.label}
           </a>
+        </article>
+        <article data-sandbox-stock="" className="rounded-xl border border-border bg-card p-5">
+          <p className="text-xs font-medium tracking-wide text-mist uppercase">{SANDBOX_COPY.stock}</p>
+          {goods.length === 0 ? (
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{SANDBOX_COPY.stockEmpty}</p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-2 text-sm leading-relaxed">
+              {goods.map((item) => (
+                <li key={item.id} className="flex items-baseline justify-between gap-3">
+                  <span>{item.name}</span>
+                  <span className="font-medium tabular-nums text-ink">{item.amount}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </article>
         <ul data-sandbox-tips="" className="flex flex-col gap-3">
           {tips.map((tip) => (

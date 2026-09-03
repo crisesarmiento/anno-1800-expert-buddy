@@ -50,6 +50,7 @@ describe("harbor-live ingest", () => {
     assert.ok(schema.properties.islandName);
     assert.ok(schema.properties.savedAt);
     assert.ok(schema.properties.workforce);
+    assert.ok((schema.properties.telemetry as { properties?: { goods?: unknown } }).properties?.goods);
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);

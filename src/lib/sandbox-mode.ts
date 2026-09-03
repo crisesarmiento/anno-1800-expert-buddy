@@ -35,6 +35,8 @@ export const SANDBOX_COPY = {
   back: "Volver a la campaña",
   taller: "Ver taller",
   now: "Abrí el taller si te trabás en una cadena. No hay diario de misiones acá.",
+  stock: "Almacén",
+  stockEmpty: "Sin bienes todavía. El vigilante los escribe al guardar (Ctrl+F5 o autoguardado).",
 } as const;
 
 /** Fandom production buildings — always on in sandbox (taller is looser than campaign desk). */

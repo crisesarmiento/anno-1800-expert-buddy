@@ -4,7 +4,7 @@ Los `.a7s` de Anno 1800 **no se parsean en el navegador**. Techo Signal: `docs/t
 
 El loader oficial **no corre Lua**, así que el mod XML no escribe `harbor-live.json`.
 
-El vigilante de Windows (`watch-harbor-live.ps1`) sugiere el `.a7s` más reciente por mtime bajo `Documentos\Anno 1800\accounts` (también OneDrive y la clave de registro Personal). Si no hay, pide la carpeta a mano (mismo browse de siempre). Lee ese save, busca títulos de campaña y escribe el mismo archivo que pedía la telemetría:
+El vigilante de Windows (`watch-harbor-live.ps1`) sugiere el `.a7s` de **sesión** más reciente por mtime bajo `Documentos\Anno 1800\accounts` (ignora `accountdata.a7s`). Lee Resource File V2.2 / FileDB (GUIDs), no títulos en texto. Guardar en Anno es **Ctrl+F5**; el autoguardado también cuenta.
 
 - nombre: `harbor-live.json`
 - schema: `harbor-live-v1` (`docs/harbor-live.schema.json`)

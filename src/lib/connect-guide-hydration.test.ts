@@ -29,7 +29,7 @@ describe("ConnectGuide hydration copy", () => {
 
   it("renders each step as one text node (no adjacent index + copy)", () => {
     assert.match(guideSrc, /\$\{index \+ 1\}\. \$\{step\}/);
-    assert.doesNotMatch(guideSrc, /\{index \+ 1\}\. /);
+    assert.doesNotMatch(guideSrc, /\{index \+ 1\}\. <\/span>/);
   });
 
   it("holds locale-dependent copy at DEFAULT_LOCALE until after mount", () => {
