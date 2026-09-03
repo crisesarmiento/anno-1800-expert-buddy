@@ -264,7 +264,7 @@ function packWatcherBundle() {
     "@echo off",
     "setlocal EnableExtensions",
     "cd /d \"%~dp0\"",
-    "echo Harbor Buddy vigilante 0.4.2 - un solo archivo",
+    "echo Harbor Buddy vigilante 0.4.3 - un solo archivo",
     "if exist \"watch-harbor-live.ps1\" (",
     "  echo Encontre un .ps1 viejo en esta carpeta. Lo renombro a .old para no usarlo.",
     "  move /Y \"watch-harbor-live.ps1\" \"watch-harbor-live.ps1.old\" >nul",

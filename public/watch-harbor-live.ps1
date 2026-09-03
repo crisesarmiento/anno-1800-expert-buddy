@@ -221,7 +221,18 @@ function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
       $fs.Dispose()
     }
     if ([System.IO.File]::Exists($target)) {
-      [System.IO.File]::Replace($tmp, $target, $null)
+      # PS 5.1 marshals $null as "" → File.Replace throws "path is not of a legal form".
+      # OneDrive (typical Anno folder) can also reject ReplaceFile. Copy-overwrite is the fallback.
+      $backup = "$target.bak"
+      try {
+        [System.IO.File]::Replace($tmp, $target, $backup)
+      } catch {
+        [System.IO.File]::Copy($tmp, $target, $true)
+        [System.IO.File]::Delete($tmp)
+      }
+      if ([System.IO.File]::Exists($backup)) {
+        try { [System.IO.File]::Delete($backup) } catch { }
+      }
     } else {
       [System.IO.File]::Move($tmp, $target)
     }

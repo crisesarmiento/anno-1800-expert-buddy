@@ -103,6 +103,8 @@ describe("crash-safe harbor-live.json", () => {
     assert.match(ps, /Flush\(\$true\)/);
     assert.match(ps, /harbor-live\.last-good\.json/);
     assert.match(ps, /\[System\.IO\.File\]::Replace\(/);
+    assert.match(ps, /\$backup = "\$target\.bak"/);
+    assert.doesNotMatch(ps, /File\]::Replace\([^)]*\$null/);
     assert.doesNotMatch(ps, /WriteAllText\(\$outJson/);
     assert.doesNotMatch(ps, /WriteAll(?:Bytes|Text)\(\$save/);
     assert.match(ps, /schema\s+=\s+"harbor-live-v1"/);
