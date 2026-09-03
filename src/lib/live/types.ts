@@ -25,12 +25,19 @@ export type LiveNamedHit = {
   name: string;
 };
 
+export type LiveGoodHit = {
+  id: string;
+  name: string;
+  amount: number;
+};
+
 export type LiveTelemetry = {
   buildings?: LiveNamedHit[];
   people?: LiveNamedHit[];
   chains?: LiveNamedHit[];
   islands?: LiveNamedHit[];
   hints?: string[];
+  goods?: LiveGoodHit[];
 };
 
 /** Presencia de estrato (needles del catálogo). Sin conteos. */

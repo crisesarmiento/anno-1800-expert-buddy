@@ -51,6 +51,7 @@ function Find-LatestA7sUnder([string]$accounts) {
   if (-not $accounts) { return $null }
   if (-not (Test-Path -LiteralPath $accounts)) { return $null }
   return Get-ChildItem -LiteralPath $accounts -Recurse -File -Filter "*.a7s" -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -ne "accountdata.a7s" } |
     Sort-Object LastWriteTimeUtc -Descending |
     Select-Object -First 1
 }
@@ -201,6 +202,9 @@ $utf8 = New-Object System.Text.UTF8Encoding $false
 $anno = Find-AnnoRoot
 $titlesPath = Find-Catalog
 $catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$guidJson = Get-Content -LiteralPath (Join-Path $PSScriptRoot "harbor-guids.json") -Raw -Encoding UTF8
+$scanCs = Get-Content -LiteralPath (Join-Path $PSScriptRoot "a7s-scan.cs") -Raw -Encoding UTF8
+Add-Type -TypeDefinition $scanCs -ReferencedAssemblies @("System.IO.Compression")
 $outJson = Join-Path $anno "harbor-live.json"
 $utf8Enc = [System.Text.Encoding]::UTF8
 $utf16Enc = [System.Text.Encoding]::Unicode
@@ -243,7 +247,7 @@ Write-Host "Harbor Buddy vigilante"
 Write-Host "Anno: $anno"
 Write-Host "Catalogo: $titlesPath"
 Write-Host "Salida: $outJson"
-Write-Host "Juga, guarda con F5. Ctrl+C para salir."
+Write-Host "Juga, guarda con Ctrl+F5 (o espera el autoguardado). Ctrl+C para salir."
 Write-Host ""
 
 $lastStamp = $null
@@ -261,60 +265,70 @@ while ($true) {
     }
     $lastStamp = $stamp
     $bytes = [System.IO.File]::ReadAllBytes($save.FullName)
-    $cap = [Math]::Min($bytes.Length, 12MB)
-    $even = $cap -band (-bnot 1)
-    $rawText = $utf8Enc.GetString($bytes, 0, $cap) + "`n" + $utf16Enc.GetString($bytes, 0, $even)
-    $blob = $rawText + "`n" + (Get-InflatedText $bytes)
-    $found = @()
-    foreach ($mission in $catalog.missions) {
-      $hit = $false
-      foreach ($title in $mission.titles) {
-        if (-not $title) { continue }
-        if ($blob.IndexOf($title, [StringComparison]::OrdinalIgnoreCase) -ge 0) { $hit = $true; break }
-      }
-      if ($hit) { $found += $mission }
+    $scan = [HarborBuddy.A7sScan]::Run($bytes, $guidJson) | ConvertFrom-Json
+    $prevMoney = $null
+    if (Test-Path -LiteralPath $outJson) {
+      try {
+        $prev = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($prev.pulseHint -and $prev.telemetry -and $prev.telemetry.goods) { }
+        if ($prev.PSObject.Properties.Name -contains "money") { $prevMoney = [int]$prev.money }
+      } catch { }
     }
 
-    $quests = @()
-    if ($found.Count -gt 0 -and $found.Count -le 10) {
-      for ($i = 0; $i -lt $found.Count; $i++) {
-        $state = if ($i -eq $found.Count - 1) { "active" } else { "done" }
-        $quests += [ordered]@{
-          title = [string]$found[$i].titles[0]
-          state = $state
-        }
-      }
-    } elseif ($found.Count -gt 10) {
-      Write-Host "$(Get-Date -Format HH:mm:ss) demasiados titulos ($($found.Count)) - usa el buscador."
-    }
+    $sessionName = [string]$scan.sessionName
+    if (-not $sessionName) { $sessionName = [System.IO.Path]::GetFileNameWithoutExtension($save.Name) }
+    if ($sessionName.Length -gt 200) { $sessionName = $sessionName.Substring(0, 200) }
 
-    $hintHits = @()
-    if ($catalog.hints) {
-      foreach ($hint in $catalog.hints) {
-        if (Test-Blob $blob @($hint.needles)) { $hintHits += [string]$hint.id }
+    $buildings = @()
+    foreach ($hit in @($scan.buildings)) {
+      if ($hit.id -and $hit.name) { $buildings += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name } }
+    }
+    $goods = @()
+    foreach ($hit in @($scan.goods)) {
+      if ($hit.id -and $hit.name) { $goods += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; amount = [int]$hit.amount } }
+    }
+    $islands = @()
+    foreach ($hit in @($scan.islands)) {
+      if ($hit.id -and $hit.name) { $islands += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name } }
+    }
+    $chainMap = @{
+      lumberjack = "wood"; sawmill = "wood"; fishery = "fish"; sheep = "clothes"; knitters = "clothes"
+      potato = "schnapps"; distillery = "schnapps"; sausage = "workers"; bread = "workers"; charcoal = "steel"
+    }
+    $chainLabel = @{ wood = "Wood"; fish = "Fish"; clothes = "Clothes"; schnapps = "Schnapps"; workers = "Worker food"; steel = "Steel" }
+    $chains = @(); $seenChain = @{}
+    foreach ($hit in $buildings) {
+      $cid = $chainMap[$hit.id]
+      if ($cid -and -not $seenChain[$cid]) {
+        $seenChain[$cid] = $true
+        $chains += [ordered]@{ id = $cid; name = [string]$chainLabel[$cid] }
       }
     }
+    $hints = @()
+    $workforce = [ordered]@{}
+    if ($scan.farmers) { $workforce.farmers = $true; $hints += "farmers" }
+    if ($scan.workers) { $workforce.workers = $true; $hints += "workers" }
+    if ($scan.artisans) { $workforce.artisans = $true; $hints += "artisans" }
+    if ($scan.engineers) { $workforce.engineers = $true; $hints += "engineers" }
+
+    $coins = "unknown"
+    if ($scan.PSObject.Properties.Name -contains "money") {
+      $money = [int]$scan.money
+      if ($money -lt 0) { $coins = "down" }
+      elseif ($prevMoney -ne $null -and $money -ne $prevMoney) {
+        $coins = if ($money -ge $prevMoney) { "up" } else { "down" }
+      }
+    }
+    $pulseHint = [ordered]@{ coins = $coins; houses = "unknown" }
 
     $telemetry = [ordered]@{
-      buildings = @(Collect-Hits $catalog.buildings $blob $false)
-      people    = @(Collect-Hits $catalog.people $blob $false)
-      chains    = @(Collect-Hits $catalog.chains $blob $true)
-      islands   = @(Collect-Hits $catalog.islands $blob $false)
-      hints     = @($hintHits)
+      buildings = @($buildings)
+      people    = @()
+      chains    = @($chains)
+      islands   = @($islands)
+      hints     = @($hints)
     }
-
-    # Campos seguros: filesystem + needles. Sin conteos, stock ni inject.
-    $sessionName = [System.IO.Path]::GetFileNameWithoutExtension($save.Name)
-    if ($sessionName.Length -gt 200) { $sessionName = $sessionName.Substring(0, 200) }
-    $islandName = $null
-    $islandHits = @($telemetry.islands)
-    if ($islandHits.Count -gt 0 -and $islandHits[0].name) {
-      $islandName = [string]$islandHits[0].name
-    }
-    $workforce = [ordered]@{}
-    foreach ($tier in @("farmers", "workers", "artisans", "engineers")) {
-      if ($hintHits -contains $tier) { $workforce[$tier] = $true }
-    }
+    if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
 
     $payload = [ordered]@{
       schema      = "harbor-live-v1"
@@ -324,18 +338,19 @@ while ($true) {
       game        = "anno-1800"
       sessionName = $sessionName
     }
+    $islandName = $null
+    if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
     if ($islandName) { $payload.islandName = $islandName }
-    $payload.quests = @($quests)
+    $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
+    $payload.pulseHint = $pulseHint
     $payload.telemetry = $telemetry
     $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
     $null = $json | ConvertFrom-Json
     Write-HarborLiveCrashSafe $outJson ($json + "`n")
     $bCount = @($telemetry.buildings).Count
-    $lastQuest = ""
-    if ($quests.Count -gt 0) { $lastQuest = [string]$quests[$quests.Count - 1].title }
-    if (-not $lastQuest) { $lastQuest = "(vacio - F5 o buscador)" }
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $lastQuest / $bCount edificios"
+    $gCount = @($goods).Count
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount edificios / $gCount bienes"
   } catch {
     Write-Host "$(Get-Date -Format HH:mm:ss) error: $($_.Exception.Message)"
   }

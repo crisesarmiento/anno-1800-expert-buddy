@@ -251,20 +251,27 @@ function packWatcherBundle() {
   if (ps.charCodeAt(0) === 0xfeff) ps = ps.slice(1);
   ps = ps.replace(/\r\n/g, "\n");
   const catalog = readFileSync(join(outDir, "harbor-catalog.json"), "utf8").trim();
+  const guids = readFileSync(join(outDir, "harbor-guids.json"), "utf8").trim();
+  const scanCs = readFileSync(join(root, "src/lib/live/a7s-scan.cs"), "utf8").replace(/\r\n/g, "\n").trim();
+  writeFileSync(join(outDir, "a7s-scan.cs"), `${scanCs}\n`);
   const needle = "$titlesPath = Find-Catalog\n$catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json";
-  if (!ps.includes(needle)) {
-    console.error("[pack-mod] watcher bundle: catalog load block not found");
+  const guidNeedle =
+    "$guidJson = Get-Content -LiteralPath (Join-Path $PSScriptRoot \"harbor-guids.json\") -Raw -Encoding UTF8\n$scanCs = Get-Content -LiteralPath (Join-Path $PSScriptRoot \"a7s-scan.cs\") -Raw -Encoding UTF8";
+  if (!ps.includes(needle) || !ps.includes(guidNeedle)) {
+    console.error("[pack-mod] watcher bundle: catalog or guid load block not found");
     process.exit(1);
   }
-  const injected = ps.replace(
-    needle,
-    `$titlesPath = "embedded"\n$catalog = @'\n${catalog}\n'@ | ConvertFrom-Json`,
-  );
+  const injected = ps
+    .replace(needle, `$titlesPath = "embedded"\n$catalog = @'\n${catalog}\n'@ | ConvertFrom-Json`)
+    .replace(
+      guidNeedle,
+      `$guidJson = @'\n${guids}\n'@\n$scanCs = @'\n${scanCs}\n'@`,
+    );
   const header = [
     "@echo off",
     "setlocal EnableExtensions",
     "cd /d \"%~dp0\"",
-    "echo Harbor Buddy vigilante 0.4.3 - un solo archivo",
+    "echo Harbor Buddy vigilante 0.5.0 - un solo archivo",
     "if exist \"watch-harbor-live.ps1\" (",
     "  echo Encontre un .ps1 viejo en esta carpeta. Lo renombro a .old para no usarlo.",
     "  move /Y \"watch-harbor-live.ps1\" \"watch-harbor-live.ps1.old\" >nul",

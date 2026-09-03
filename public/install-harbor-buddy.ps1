@@ -206,5 +206,7 @@ Copy-Helper "watch-harbor-live.ps1"
 Copy-Helper "watch-harbor-live.bat"
 Copy-Helper "harbor-titles.json"
 Copy-Helper "harbor-catalog.json"
-Write-Host "Para el diario: ejecutá watch-harbor-live.bat y guardá la partida (F5)."
+Copy-Helper "harbor-guids.json"
+Copy-Helper "a7s-scan.cs"
+Write-Host "Para el diario: ejecutá watch-harbor-live.bat y guardá la partida (Ctrl+F5 o autoguardado)."
 

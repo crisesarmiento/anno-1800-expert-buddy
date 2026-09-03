@@ -57,6 +57,7 @@ describe("sandbox as a separate mode", () => {
     assert.match(route, /createFileRoute\("\/sandbox"\)/);
     assert.match(page, /data-sandbox-mode=/);
     assert.match(page, /data-sandbox-taller=/);
+    assert.match(page, /data-sandbox-stock=/);
     assert.match(page, /SANDBOX_COPY\.title/);
     assert.match(source("./sandbox-mode.ts"), /Jugá suelto, no es la campaña/);
     assert.doesNotMatch(page, /DiaryTitleChips/);

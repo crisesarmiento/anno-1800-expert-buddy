@@ -59,6 +59,20 @@
           "type": "array",
           "maxItems": 30,
           "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+        },
+        "goods": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "amount"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+              "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "amount": { "type": "integer" }
+            }
+          }
         }
       }
     }

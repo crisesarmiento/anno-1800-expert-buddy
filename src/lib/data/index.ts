@@ -7,6 +7,7 @@ export * from "./find";
 export * from "./chains";
 export * from "./yellow-bar";
 export * from "./wiki-catalog";
+export * from "./guids";
 
 import { buildingsById } from "./buildings";
 import { chapters, chaptersById, missionsById } from "./campaign";
