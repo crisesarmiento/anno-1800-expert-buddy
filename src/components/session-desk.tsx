@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { DiaryTitleChips } from "@/components/diary-chips";
 import { PowerUpSection } from "@/components/live-panel";
 import { InkSeal } from "@/components/stamps";
@@ -78,18 +79,16 @@ export function SessionDesk() {
           Esto, ahora
         </h1>
         {taller ? (
-          <a
+          <Link
             data-taller-link=""
-            href={taller.href}
-            target="_blank"
-            rel="noreferrer noopener"
+            to="/taller"
             className={cn(
               "mt-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4",
               alarm ? "text-destructive-foreground" : "text-foreground",
             )}
           >
             Ver taller
-          </a>
+          </Link>
         ) : null}
         <p
           data-esto-ahora-item=""

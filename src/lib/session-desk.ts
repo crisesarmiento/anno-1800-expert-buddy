@@ -6,9 +6,9 @@ const NOW_FALLBACK = "Seguí el marcador de la misión.";
 export const DESK_UMBRALES = ["enough", "not-enough", "saturado", "rojo"] as const;
 export type DeskUmbral = (typeof DESK_UMBRALES)[number];
 
-/** Static fandom taller. Text link only — no Ubisoft art. */
+/** Opt-in in-app taller. Text chip only — no Ubisoft art. */
 export const TALLER_LINK = {
-  href: "https://anno1800.fandom.com/wiki/Production_buildings",
+  href: "/taller",
   label: "Ver taller",
 } as const;
 

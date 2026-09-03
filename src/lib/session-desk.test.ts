@@ -120,8 +120,8 @@ describe("deskCalmUmbral", () => {
     assert.equal(calm.taller, null);
   });
 
-  it("uses a static fandom taller URL with no art payload", () => {
-    assert.equal(TALLER_LINK.href, "https://anno1800.fandom.com/wiki/Production_buildings");
+  it("uses the in-app taller with no art payload", () => {
+    assert.equal(TALLER_LINK.href, "/taller");
     assert.doesNotMatch(TALLER_LINK.href, /ubisoft|cdn|jpg|png|webp/i);
   });
 });

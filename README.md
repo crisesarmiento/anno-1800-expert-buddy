@@ -4,6 +4,8 @@ A Vite + TanStack Start companion for **Anno 1800**. Keep it next to the game, t
 
 Not a min-max spreadsheet. Default is **spoilers off**. Tagline: *bastante bien, lindo, terminá la historia.*
 
+`/taller` is an opt-in workbench (not Home): one **Alcanza / No alcanza** stamp from **static versioned wiki ratios** (`wiki-v1-2026-09`, [Production chains](https://anno1800.fandom.com/wiki/Production_chains), CC-BY-SA) times the live snapshot fields that already exist (balance, saturation/workforce, session buildings). Method inspired by [NiHoel/Anno1800Calculator](https://github.com/NiHoel/Anno1800Calculator) (**MIT except `params.js`**). This app does **not** copy `params.js` (Ubisoft game assets). Not a factory simulator, goods grid, or t/min hero.
+
 [github.com/crisesarmiento/anno-1800-expert-buddy](https://github.com/crisesarmiento/anno-1800-expert-buddy)
 
 ## Why it exists
