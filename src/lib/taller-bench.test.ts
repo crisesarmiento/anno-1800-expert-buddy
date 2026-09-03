@@ -8,6 +8,8 @@ const route = readFileSync(new URL("../routes/taller.tsx", import.meta.url), "ut
 const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const app = readFileSync(new URL("../components/harbor-app.tsx", import.meta.url), "utf8");
 const desk = readFileSync(new URL("../components/session-desk.tsx", import.meta.url), "utf8");
+const ahora = readFileSync(new URL("../components/esto-ahora.tsx", import.meta.url), "utf8");
+const city = readFileSync(new URL("../components/taller-city.tsx", import.meta.url), "utf8");
 
 function sliceFn(src: string, name: string) {
   const start = src.indexOf(`function ${name}(`);
@@ -22,14 +24,17 @@ describe("Taller opt-in workbench", () => {
     assert.match(route, /TallerBench/);
     const welcome = sliceFn(app, "Welcome");
     assert.doesNotMatch(welcome, /TallerBench/);
+    assert.doesNotMatch(welcome, /TallerCity/);
     assert.doesNotMatch(welcome, /data-visual="taller"/);
     assert.doesNotMatch(welcome, /data-taller-stamp/);
+    assert.doesNotMatch(welcome, /data-taller-city/);
   });
 
   it("renders one Spanish alcanza/no or missing-good stamp", () => {
     assert.match(bench, /data-visual="taller"/);
     assert.match(bench, /data-taller-stamp/);
     assert.match(bench, /tallerThreshold/);
+    assert.match(bench, /TallerCity/);
     assert.doesNotMatch(bench, /t\/min|por minuto|goods-grid|solver/i);
     assert.doesNotMatch(bench, /<img\b/);
   });
@@ -44,5 +49,14 @@ describe("Taller opt-in workbench", () => {
     assert.equal(TALLER_LINK.href, "/taller");
     assert.match(desk, /data-taller-link/);
     assert.match(desk, /to=\{taller\.href\}|to="\/taller"|TALLER_LINK/);
+  });
+
+  it("keeps the city seed panel on Taller, never Home or Esto ahora", () => {
+    assert.match(city, /data-taller-city/);
+    assert.match(city, /data-taller-next-build/);
+    assert.doesNotMatch(city, /t\/min|por minuto|goods-grid|solver/i);
+    assert.doesNotMatch(app, /TallerCity|data-taller-city|@\/lib\/sim/);
+    assert.doesNotMatch(ahora, /TallerCity|data-taller-city|@\/lib\/sim/);
+    assert.doesNotMatch(desk, /TallerCity|data-taller-city|@\/lib\/sim/);
   });
 });
