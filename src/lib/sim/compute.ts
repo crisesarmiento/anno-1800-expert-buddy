@@ -16,6 +16,7 @@ import {
   CITY_SEED_GAME,
   CITY_SEED_SCHEMA,
   type BuildingId,
+  type CampaignChapterId,
   type CityAlert,
   type CitySeed,
   type CityStats,
@@ -64,6 +65,63 @@ const CONSUMER_GOODS = new Set<GoodId>([
   "bowler-hats",
 ]);
 
+export const CHAPTER_RANK: Record<CampaignChapterId, number> = {
+  prologue: 0,
+  ch1: 1,
+  ch2: 2,
+  ch3: 3,
+  ch4: 4,
+  end: 5,
+};
+
+const CHAPTER_IDS = Object.keys(CHAPTER_RANK) as CampaignChapterId[];
+
+/** First campaign chapter that uses this building. Later chapters stay gated. */
+const BUILDING_CHAPTER: Record<BuildingId, CampaignChapterId> = {
+  marketplace: "ch1",
+  lumberjack: "ch1",
+  sawmill: "ch1",
+  fishery: "ch1",
+  sheep: "ch1",
+  knitters: "ch1",
+  potato: "ch1",
+  distillery: "ch1",
+  pig: "ch1",
+  slaughterhouse: "ch1",
+  grain: "ch1",
+  mill: "ch1",
+  bakery: "ch1",
+  clay: "ch2",
+  brick: "ch2",
+  "iron-mine": "ch2",
+  charcoal: "ch2",
+  furnace: "ch2",
+  steelworks: "ch2",
+  rendering: "ch2",
+  soap: "ch2",
+  sails: "ch2",
+  weapons: "ch2",
+  plantain: "ch3",
+  "fish-oil": "ch3",
+  kitchen: "ch3",
+  alpaca: "ch3",
+  poncho: "ch3",
+  "sugar-cane": "ch3",
+  "rum-distillery": "ch3",
+};
+
+export function buildingChapter(id: BuildingId): CampaignChapterId {
+  return BUILDING_CHAPTER[id] ?? "ch1";
+}
+
+export function chapterAllowsBuilding(seen: CampaignChapterId, id: BuildingId): boolean {
+  return CHAPTER_RANK[seen] >= CHAPTER_RANK[buildingChapter(id)];
+}
+
+export function seenChapterId(seed: Pick<CitySeed, "chapterId">): CampaignChapterId {
+  return seed.chapterId ?? "ch1";
+}
+
 function asRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -91,6 +149,9 @@ export function parseCitySeed(raw: unknown): CitySeed {
     mode,
     islands,
   };
+  if (typeof raw.chapterId === "string" && CHAPTER_IDS.includes(raw.chapterId as CampaignChapterId)) {
+    seed.chapterId = raw.chapterId as CampaignChapterId;
+  }
   if (typeof raw.missionHint === "string" && raw.missionHint.trim()) {
     seed.missionHint = raw.missionHint.trim();
   }
@@ -163,8 +224,10 @@ export function computeDemand(
   for (const tier of TIERS) {
     const houses = housesOf(island, tier);
     if (houses <= 0) continue;
+    const pop = inhabitants(island, tier);
     for (const need of RESIDENCE_NEEDS[tier]) {
       if (need.good == null || need.cTonsPerSecond == null) continue;
+      if (need.unlockInhabitants != null && pop < need.unlockInhabitants) continue;
       const add = houses * consumeTonsPerMinute(need.cTonsPerSecond, modifiers);
       demand[need.good] = (demand[need.good] ?? 0) + add;
     }
@@ -276,10 +339,12 @@ function nextFromChain(
   island: Island,
   good: GoodId,
   mode: SimMode,
+  chapter: CampaignChapterId,
 ): NextBuild | null {
   const chain = chainByGood(good);
   if (!chain) return null;
   for (const link of chainLinks(chain, mode)) {
+    if (!chapterAllowsBuilding(chapter, link.buildingId)) continue;
     if (countOf(island, link.buildingId) < 1) {
       const building = buildingById(link.buildingId);
       if (!building) continue;
@@ -287,14 +352,82 @@ function nextFromChain(
         buildingId: building.id,
         nameEs: building.nameEs,
         wikiId: building.wikiId,
-        line: buddyLine(building.id, island),
+        line: buddyLine(building.id, island, mode),
       };
     }
   }
   return null;
 }
 
-function buddyLine(id: BuildingId, island: Island): string {
+function perfectLine(id: BuildingId): string {
+  switch (id) {
+    case "marketplace":
+      return "El mercado al medio del barrio. El ratio wiki no cambia el lugar.";
+    case "lumberjack":
+      return "Una cabaña de leñador al bosque. Completá el ratio de madera.";
+    case "sawmill":
+      return "Un aserradero por cada leñador. El ratio wiki iguala t/min.";
+    case "fishery":
+      return "Una pescadería. El ratio wiki cubre 80 residencias de granjero.";
+    case "sheep":
+      return "Una granja de ovejas afuera. Alimenta un telar del ratio wiki.";
+    case "knitters":
+      return "Un telar y una granja de ovejas. El ratio wiki cubre 65 residencias de granjero.";
+    case "potato":
+      return "Una granja de papas. El ratio wiki alimenta una destilería.";
+    case "distillery":
+      return "Una destilería. El ratio wiki cubre 60 residencias de granjero.";
+    case "pig":
+      return "Cerdos afuera. El ratio wiki alimenta un matadero.";
+    case "slaughterhouse":
+      return "Un matadero. El ratio wiki cubre 50 residencias de obrero.";
+    case "grain":
+      return "Dos granjas de trigo para el ratio wiki de pan.";
+    case "mill":
+      return "Un molino. El ratio wiki es 2 trigo : 1 molino : 2 panaderías.";
+    case "bakery":
+      return "Dos panaderías. El ratio wiki cubre 110 residencias de obrero.";
+    case "clay":
+      return "Una fosa de arcilla. El ratio wiki pide dos ladrilleras.";
+    case "brick":
+      return "Dos ladrilleras. Ese es el ratio wiki, no el de campaña.";
+    case "iron-mine":
+      return "Una mina. El acero wiki es 1 mina : 2 carboneras : 2 fundiciones : 3 acerías.";
+    case "charcoal":
+      return "Dos carboneras. El ratio wiki del acero pide el doble de carbón.";
+    case "furnace":
+      return "Dos fundiciones. El ratio wiki del acero no es una de cada.";
+    case "steelworks":
+      return "Tres acerías. El ratio wiki es 1 mina, 2 carboneras, 2 fundiciones y 3 acerías.";
+    case "kitchen":
+      return "Cocina de plátanos en ratio wiki: plantación, aceite y cocina.";
+    case "plantain":
+      return "Plantá plátanos afuera. El ratio wiki alimenta una cocina.";
+    case "fish-oil":
+      return "Aceite de pescado en la costa. El ratio wiki lo pide la cocina.";
+    case "alpaca":
+      return "Alpacas afuera. El ratio wiki cubre un taller de ponchos.";
+    case "poncho":
+      return "Un taller de ponchos. El ratio wiki cubre 80 residencias de jornalero.";
+    case "sugar-cane":
+      return "Caña para el ron. El ratio wiki alimenta una destilería.";
+    case "rum-distillery":
+      return "Una destilería de ron. Completá el ratio wiki y paramá.";
+    case "sails":
+      return "Un taller de velas. El ratio wiki se cuelga de la lana.";
+    case "weapons":
+      return "Una fábrica de armas. El ratio wiki es una cadena, no una flota.";
+    case "soap":
+      return "El jabón wiki se cuelga de los cerdos. Completá sebo y jabón.";
+    case "rendering":
+      return "Sebo para el jabón. El ratio wiki se cuelga de la cadena de cerdos.";
+    default:
+      return "Completá el ratio wiki de esta cadena. Si alcanza, no la toques.";
+  }
+}
+
+function buddyLine(id: BuildingId, island: Island, mode: SimMode): string {
+  if (mode === "perfect") return perfectLine(id);
   const farmers = housesOf(island, "farmer");
   switch (id) {
     case "marketplace":
@@ -364,7 +497,12 @@ function buddyLine(id: BuildingId, island: Island): string {
   }
 }
 
-function pickNextBuild(island: Island, mode: SimMode, confidence: Confidence): NextBuild | null {
+function pickNextBuild(
+  island: Island,
+  mode: SimMode,
+  chapter: CampaignChapterId,
+  confidence: Confidence,
+): NextBuild | null {
   if (confidence === "presence") return null;
 
   const farmers = housesOf(island, "farmer");
@@ -375,55 +513,56 @@ function pickNextBuild(island: Island, mode: SimMode, confidence: Confidence): N
   const newPop = jornaleros + obreros;
 
   if (island.world === "new") {
+    if (!chapterAllowsBuilding(chapter, "kitchen")) return null;
     if (newPop > 0 && countOf(island, "marketplace") < 1) {
-      return nextFromChainNamed("marketplace", island);
+      return nextFromChainNamed("marketplace", island, mode, chapter);
     }
-    if (countOf(island, "lumberjack") < 1) return nextFromChainNamed("lumberjack", island);
-    if (countOf(island, "sawmill") < 1) return nextFromChainNamed("sawmill", island);
+    if (countOf(island, "lumberjack") < 1) return nextFromChainNamed("lumberjack", island, mode, chapter);
+    if (countOf(island, "sawmill") < 1) return nextFromChainNamed("sawmill", island, mode, chapter);
     if (jornaleros > 0) {
-      const food = nextFromChain(island, "fried-plantains", mode);
+      const food = nextFromChain(island, "fried-plantains", mode, chapter);
       if (food) return food;
     }
     if (jornaleros >= 20) {
-      const clothes = nextFromChain(island, "ponchos", mode);
+      const clothes = nextFromChain(island, "ponchos", mode, chapter);
       if (clothes) return clothes;
     }
     return null;
   }
 
   if (oldPop > 0 && countOf(island, "marketplace") < 1) {
-    return nextFromChainNamed("marketplace", island);
+    return nextFromChainNamed("marketplace", island, mode, chapter);
   }
-  if (countOf(island, "lumberjack") < 1) return nextFromChainNamed("lumberjack", island);
-  if (countOf(island, "sawmill") < 1) return nextFromChainNamed("sawmill", island);
+  if (countOf(island, "lumberjack") < 1) return nextFromChainNamed("lumberjack", island, mode, chapter);
+  if (countOf(island, "sawmill") < 1) return nextFromChainNamed("sawmill", island, mode, chapter);
 
   if (farmers > 0 && countOf(island, "fishery") < 1) {
-    return nextFromChainNamed("fishery", island);
+    return nextFromChainNamed("fishery", island, mode, chapter);
   }
 
   const demand = computeDemand(island);
   const supply = computeSupply(island);
   if ((supply.fish ?? 0) < (demand.fish ?? 0)) {
-    return nextFromChainNamed("fishery", island);
+    return nextFromChainNamed("fishery", island, mode, chapter);
   }
 
   if (inhabitants(island, "farmer") >= 100) {
-    const clothes = nextFromChain(island, "work-clothes", mode);
+    const clothes = nextFromChain(island, "work-clothes", mode, chapter);
     if (clothes) return clothes;
   }
 
   if (inhabitants(island, "farmer") >= 100) {
-    const schnapps = nextFromChain(island, "schnapps", mode);
+    const schnapps = nextFromChain(island, "schnapps", mode, chapter);
     if (schnapps) return schnapps;
   }
 
   if (workers > 0) {
-    const sausages = nextFromChain(island, "sausages", mode);
+    const sausages = nextFromChain(island, "sausages", mode, chapter);
     if (sausages) return sausages;
   }
 
   if (inhabitants(island, "worker") >= 150) {
-    const bread = nextFromChain(island, "bread", mode);
+    const bread = nextFromChain(island, "bread", mode, chapter);
     if (bread) return bread;
   }
 
@@ -433,26 +572,34 @@ function pickNextBuild(island: Island, mode: SimMode, confidence: Confidence): N
       countOf(island, "furnace") +
       countOf(island, "steelworks") >
     0;
-  if (steelStarted) {
-    const steel = nextFromChain(island, "steel-beams", mode);
+  if (steelStarted && chapterAllowsBuilding(chapter, "iron-mine")) {
+    const steel = nextFromChain(island, "steel-beams", mode, chapter);
     if (steel) return steel;
   }
 
   return null;
 }
 
-function nextFromChainNamed(id: BuildingId, island: Island): NextBuild {
+function nextFromChainNamed(
+  id: BuildingId,
+  island: Island,
+  mode: SimMode,
+  chapter: CampaignChapterId,
+): NextBuild | null {
+  if (!chapterAllowsBuilding(chapter, id)) return null;
   const building = buildingById(id);
   return {
     buildingId: id,
     nameEs: building?.nameEs ?? id,
     wikiId: building?.wikiId ?? id,
-    line: buddyLine(id, island),
+    line: buddyLine(id, island, mode),
   };
 }
 
 function islandAlerts(
   island: Island,
+  mode: SimMode,
+  chapter: CampaignChapterId,
   confidence: Confidence,
   demand: Partial<Record<GoodId, number | null>>,
   supply: Partial<Record<GoodId, number | null>>,
@@ -487,7 +634,12 @@ function islandAlerts(
     });
   }
 
-  if (island.world === "old" && farmers > 0 && countOf(island, "fishery") < 1) {
+  if (
+    island.world === "old" &&
+    farmers > 0 &&
+    countOf(island, "fishery") < 1 &&
+    chapterAllowsBuilding(chapter, "fishery")
+  ) {
     alerts.push({
       id: "fish-missing",
       good: "fish",
@@ -495,7 +647,13 @@ function islandAlerts(
     });
   }
 
-  if (island.world === "old" && farmers > 0 && countOf(island, "knitters") < 1) {
+  if (
+    mode === "campaign" &&
+    island.world === "old" &&
+    farmers > 0 &&
+    countOf(island, "knitters") < 1 &&
+    chapterAllowsBuilding(chapter, "knitters")
+  ) {
     alerts.push({
       id: "clothes-soon",
       good: "work-clothes",
@@ -503,7 +661,12 @@ function islandAlerts(
     });
   }
 
-  if (island.world === "new" && jornaleros > 0 && countOf(island, "kitchen") < 1) {
+  if (
+    island.world === "new" &&
+    jornaleros > 0 &&
+    countOf(island, "kitchen") < 1 &&
+    chapterAllowsBuilding(chapter, "kitchen")
+  ) {
     alerts.push({
       id: "plantains-missing",
       good: "fried-plantains",
@@ -511,6 +674,7 @@ function islandAlerts(
     });
   }
 
+  const fishMissing = island.world === "old" && farmers > 0 && countOf(island, "fishery") < 1;
   const basicGapOpen = [...CONSUMER_GOODS].some((good) => {
     const need = [...RESIDENCE_NEEDS.farmer, ...RESIDENCE_NEEDS.worker, ...RESIDENCE_NEEDS.jornalero].find(
       (row) => row.good === good && row.kind === "basic",
@@ -527,7 +691,10 @@ function islandAlerts(
     const need = [...RESIDENCE_NEEDS.farmer, ...RESIDENCE_NEEDS.worker, ...RESIDENCE_NEEDS.jornalero].find(
       (row) => row.good === good,
     );
-    if (need?.kind === "luxury" && basicGapOpen) continue;
+    if (need?.kind === "luxury" && (basicGapOpen || (mode === "campaign" && fishMissing))) continue;
+    const chain = chainByGood(good);
+    const firstBuilding = chain ? chainLinks(chain, mode)[0]?.buildingId : undefined;
+    if (firstBuilding && !chapterAllowsBuilding(chapter, firstBuilding)) continue;
     const name = need?.nameEs ?? good;
     alerts.push({
       id: `gap-${good}`,
@@ -546,7 +713,12 @@ function islandAlerts(
   return alerts;
 }
 
-function computeIsland(island: Island, mode: SimMode, live?: LivePresence): IslandStats {
+function computeIsland(
+  island: Island,
+  mode: SimMode,
+  chapter: CampaignChapterId,
+  live?: LivePresence,
+): IslandStats {
   const liveIds = live?.buildingIds ?? [];
   const hasCounts = Object.values(island.buildings).some((n) => (n ?? 0) > 0)
     || TIERS.some((tier) => housesOf(island, tier) > 0);
@@ -567,8 +739,8 @@ function computeIsland(island: Island, mode: SimMode, live?: LivePresence): Isla
     gap[good] = confidence === "presence" ? null : gapOf(supply[good] ?? 0, demand[good] ?? 0);
   }
 
-  const nextBuild = pickNextBuild(island, mode, confidence);
-  const alerts = islandAlerts(island, confidence, demand, supply, nextBuild);
+  const nextBuild = pickNextBuild(island, mode, chapter, confidence);
+  const alerts = islandAlerts(island, mode, chapter, confidence, demand, supply, nextBuild);
 
   return {
     id: island.id,
@@ -608,7 +780,8 @@ function mergeMaps(
 
 export function compute(seed: CitySeed, live?: LivePresence): CityStats {
   const mode: SimMode = seed.mode ?? "campaign";
-  const islands = seed.islands.map((island) => computeIsland(island, mode, live));
+  const chapter = seenChapterId(seed);
+  const islands = seed.islands.map((island) => computeIsland(island, mode, chapter, live));
   const confidence: Confidence = islands.every((row) => row.confidence === "presence")
     ? "presence"
     : islands.some((row) => row.confidence === "seed")

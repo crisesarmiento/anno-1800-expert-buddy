@@ -54,6 +54,8 @@ describe("Taller opt-in workbench", () => {
   it("keeps the city seed panel on Taller, never Home or Esto ahora", () => {
     assert.match(city, /data-taller-city/);
     assert.match(city, /data-taller-next-build/);
+    assert.match(city, /La Inapetente/);
+    assert.doesNotMatch(city, /Bright Sands/);
     assert.doesNotMatch(city, /t\/min|por minuto|goods-grid|solver/i);
     assert.doesNotMatch(app, /TallerCity|data-taller-city|@\/lib\/sim/);
     assert.doesNotMatch(ahora, /TallerCity|data-taller-city|@\/lib\/sim/);

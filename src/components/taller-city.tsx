@@ -9,9 +9,12 @@ import type { SimMode } from "@/lib/sim/types";
  */
 export function TallerCity() {
   const [mode, setMode] = useState<SimMode>("campaign");
-  const stats = useMemo(() => {
+  const { stats, islandName } = useMemo(() => {
     const seed = parseCitySeed({ ...campaignCh1, mode });
-    return compute(seed);
+    return {
+      stats: compute(seed),
+      islandName: seed.islands[0]?.name ?? "La Inapetente",
+    };
   }, [mode]);
   const island = stats.islands[0];
   const farmers = island?.housesPresent.farmer ?? 0;
@@ -21,7 +24,9 @@ export function TallerCity() {
   return (
     <article className="hero-orla rounded-xl p-5 sm:p-7" data-taller-city="seed">
       <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Ciudad</p>
-      <h2 className="font-display mt-2 text-2xl font-semibold tracking-tight">Bright Sands</h2>
+      <h2 className="font-display mt-2 text-2xl font-semibold tracking-tight" data-taller-island="">
+        {islandName}
+      </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         {farmers} casas de granjero. El seed lo carga el jugador; el watcher no alcanza para conteos.
       </p>

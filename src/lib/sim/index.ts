@@ -12,12 +12,16 @@ export {
   outputTMinAt100,
 } from "./chains.ts";
 export {
+  CHAPTER_RANK,
+  buildingChapter,
+  chapterAllowsBuilding,
   compute,
   computeDemand,
   computeSupply,
   housesSupportedByGood,
   housesSupportedFish,
   parseCitySeed,
+  seenChapterId,
 } from "./compute.ts";
 export {
   ARTISAN_NEEDS,
@@ -42,6 +46,7 @@ export {
   CITY_SEED_SCHEMA,
   type BuildingCounts,
   type BuildingId,
+  type CampaignChapterId,
   type CityAlert,
   type CitySeed,
   type CityStats,

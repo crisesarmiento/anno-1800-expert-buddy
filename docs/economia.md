@@ -58,7 +58,9 @@ En una cadena, 1 t de input = 1 t de output. El ratio perfecto iguala t/min de c
 
 ## Capítulo 1 — qué esperar
 
-Con 10 casas de granjero, mercado, leñador, aserradero y **0 pescaderías**, el motor pide una pescadería. Una cubre 80 casas de granjero (wiki). La ropa se pone amarilla al llegar a 100 granjeros: todavía no es el próximo gesto.
+La isla del fixture de capítulo 1 es **La Inapetente** (no Bright Sands: esa es de Edvard).
+
+Con 10 casas de granjero, mercado, leñador, aserradero y **0 pescaderías**, el motor pide una pescadería. Una cubre 80 casas de granjero (wiki). La ropa se pone amarilla al llegar a 100 granjeros: todavía no es el próximo gesto. Schnapps (lujo) no se pide mientras falta pescado. `mode: "perfect"` usa el ratio wiki, no la narración de campaña. nextBuild y alertas no adelantan un capítulo que todavía no viste.
 
 ## Qué sigue en null
 

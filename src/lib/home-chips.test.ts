@@ -53,6 +53,18 @@ describe("Home chips-first with one Esto ahora", () => {
     assert.match(sessionLib, /sessionNowItem/);
   });
 
+  it("never paints live quests[] or Taller nextBuild on campaign Home", () => {
+    const home = sliceFn(welcome, "Welcome");
+    assert.match(home, /pickCampaignTip/);
+    assert.match(home, /DiaryTitleChips/);
+    assert.match(home, /data-welcome-primary="chips"/);
+    assert.doesNotMatch(home, /snapshot\.quests|quests\.map|quest\.title/);
+    assert.doesNotMatch(home, /nextBuild|TallerCity|@\/lib\/sim/);
+    assert.doesNotMatch(desk, /nextBuild|TallerCity|@\/lib\/sim/);
+    assert.doesNotMatch(desk, /snapshot\.quests|quests\.map/);
+    assert.match(desk, /pickCampaignTip/);
+  });
+
   it("keeps Live collapsed by default and expandable", () => {
     const power = sliceFn(live, "PowerUpSection");
     assert.match(power, /data-live-section=/);

@@ -13,6 +13,7 @@ export const CITY_SEED_GAME = "anno-1800" as const;
 export type SimMode = "campaign" | "perfect";
 export type World = "old" | "new";
 export type Confidence = "seed" | "presence";
+export type CampaignChapterId = "prologue" | "ch1" | "ch2" | "ch3" | "ch4" | "end";
 
 export type PopulationTier =
   | "farmer"
@@ -144,6 +145,8 @@ export type CitySeed = {
   updatedAt: string;
   /** Default campaign. Perfect ratios only in Taller. */
   mode?: SimMode;
+  /** Already-seen campaign chapter. Default ch1. Later chapters stay gated. */
+  chapterId?: CampaignChapterId;
   missionHint?: string;
   islands: Island[];
 };
