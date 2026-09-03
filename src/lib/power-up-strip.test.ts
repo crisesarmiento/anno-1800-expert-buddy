@@ -31,7 +31,7 @@ describe("PowerUpStrip website collapse + install copy", () => {
     assert.match(power, /t\.power\.s2/);
     assert.match(power, /t\.power\.s3/);
     assert.match(power, /t\.install\.dlZipBtn/);
-    assert.match(power, /<LivePanel \/>/);
+    assert.match(power, /<LivePanel/);
     assert.match(power, /to="\/instalar"/);
   });
 

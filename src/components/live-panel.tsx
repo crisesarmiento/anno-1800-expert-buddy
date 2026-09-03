@@ -3,9 +3,19 @@ import { Link } from "@tanstack/react-router";
 import { FileJson, Upload } from "lucide-react";
 import { ConnectGuide } from "@/components/connect-guide";
 import { HarborCard } from "@/components/harbor-card";
+import { InkSeal } from "@/components/stamps";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import fixture from "@/lib/live/fixture.json";
+import {
+  LIVE_POLL_MS,
+  liveChipLabel,
+  persistLiveHandle,
+  readPersistedLiveHandle,
+  refreshLiveHandle,
+  tickLiveHandle,
+  type LiveFileHandle,
+} from "@/lib/live/handle-store";
 import {
   downloadLiveSnapshot,
   ingestLiveFile,
@@ -54,10 +64,98 @@ export function TryLiveExample({ featured = false }: { featured?: boolean }) {
   );
 }
 
+function pickerApi() {
+  return (
+    window as Window & {
+      showOpenFilePicker?: (options: {
+        types: { description: string; accept: Record<string, string[]> }[];
+      }) => Promise<FileSystemFileHandle[]>;
+    }
+  ).showOpenFilePicker;
+}
+
 export function PowerUpSection() {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [hasHandle, setHasHandle] = useState(false);
+  const watchTimer = useRef<number | null>(null);
+  const lastModified = useRef(0);
+  const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
+  const setLiveBanner = useHarbor((s) => s.setLiveBanner);
+  const locale = useHarbor((s) => s.locale);
   const steps = [t.power.s1, t.power.s2, t.power.s3];
+
+  useEffect(() => {
+    void readPersistedLiveHandle().then((handle) => {
+      if (handle) setHasHandle(true);
+    });
+    return () => {
+      if (watchTimer.current) window.clearInterval(watchTimer.current);
+    };
+  }, []);
+
+  const applyFile = async (file: File, opts: { silent?: boolean } = {}) => {
+    const result = await ingestLiveFile(file, locale);
+    if (!result.ok) {
+      if (!opts.silent) setLiveBanner(result.message, true);
+      return;
+    }
+    applyLiveSnapshot(result.snapshot, file.name);
+  };
+
+  const startPoll = (handle: LiveFileHandle) => {
+    if (watchTimer.current) window.clearInterval(watchTimer.current);
+    lastModified.current = 0;
+    const tick = async () => {
+      try {
+        lastModified.current = await tickLiveHandle(handle, lastModified.current, (file) =>
+          applyFile(file, { silent: true }),
+        );
+      } catch {
+        /* stay calm */
+      }
+    };
+    void tick();
+    watchTimer.current = window.setInterval(() => {
+      void tick();
+    }, LIVE_POLL_MS);
+  };
+
+  const pickLiveHandle = async () => {
+    const picker = pickerApi();
+    if (!picker) return undefined;
+    try {
+      const [handle] = await picker({
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+      });
+      await persistLiveHandle(handle);
+      setHasHandle(true);
+      return handle;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const onLiveChip = async (event: { preventDefault(): void; stopPropagation(): void }) => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      const existing = await readPersistedLiveHandle();
+      if (existing) {
+        const file = await refreshLiveHandle();
+        if (file) await applyFile(file);
+        startPoll(existing);
+        return;
+      }
+      const handle = await pickLiveHandle();
+      if (!handle) return;
+      const file = await refreshLiveHandle();
+      if (file) await applyFile(file);
+      startPoll(handle);
+    } catch {
+      /* stay calm */
+    }
+  };
 
   return (
     <details
@@ -73,6 +171,17 @@ export function PowerUpSection() {
           <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.power.kicker}</p>
           <h2 className="mt-1 font-display text-xl font-medium tracking-tight sm:text-2xl">{t.power.title}</h2>
         </span>
+        {!open ? (
+          <button
+            type="button"
+            data-live-refresh-chip=""
+            onClick={(event) => void onLiveChip(event)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/35 bg-card px-3 py-1.5 text-sm text-ink hover:border-ink"
+          >
+            <InkSeal kind="book" tone="ink" className="size-7" />
+            <span className="font-display">{liveChipLabel(hasHandle)}</span>
+          </button>
+        ) : null}
         <span className="text-sm text-primary">{open ? t.power.collapse : t.power.expand}</span>
       </summary>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t.power.hint}</p>
@@ -104,14 +213,23 @@ export function PowerUpSection() {
         </Button>
       </div>
       <div className="mt-4">
-        <LivePanel />
+        <LivePanel
+          onHandlePinned={(handle) => {
+            setHasHandle(true);
+            startPoll(handle);
+          }}
+        />
       </div>
       <p className="mt-4 text-sm text-muted-foreground">{t.welcome.windows}</p>
     </details>
   );
 }
 
-export function LivePanel() {
+export function LivePanel({
+  onHandlePinned,
+}: {
+  onHandlePinned?: (handle: LiveFileHandle) => void;
+} = {}) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -171,13 +289,7 @@ export function LivePanel() {
   }
 
   async function onPin() {
-    const picker = (
-      window as Window & {
-        showOpenFilePicker?: (options: {
-          types: { description: string; accept: Record<string, string[]> }[];
-        }) => Promise<FileSystemFileHandle[]>;
-      }
-    ).showOpenFilePicker;
+    const picker = pickerApi();
     if (!picker) {
       inputRef.current?.click();
       return;
@@ -186,15 +298,17 @@ export function LivePanel() {
       const [handle] = await picker({
         types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
       });
-      if (watchTimer.current) window.clearInterval(watchTimer.current);
+      await persistLiveHandle(handle);
       setWatching(true);
+      if (onHandlePinned) {
+        onHandlePinned(handle);
+        return;
+      }
+      if (watchTimer.current) window.clearInterval(watchTimer.current);
       let last = 0;
       const tick = async () => {
         try {
-          const file = await handle.getFile();
-          if (file.lastModified === last) return;
-          last = file.lastModified;
-          await onFile(file, { silent: true });
+          last = await tickLiveHandle(handle, last, (file) => onFile(file, { silent: true }));
         } catch {
           /* ignore */
         }
@@ -202,7 +316,7 @@ export function LivePanel() {
       await tick();
       watchTimer.current = window.setInterval(() => {
         void tick();
-      }, 2500);
+      }, LIVE_POLL_MS);
     } catch {
       /* cancelled */
     }
