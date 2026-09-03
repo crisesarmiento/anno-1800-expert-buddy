@@ -42,6 +42,13 @@ describe("PowerUpStrip website collapse + install copy", () => {
     assert.match(power, /sm:p-6/);
   });
 
+  it("hides the Actualizar live chip when File System Access is not Chromium", () => {
+    assert.match(power, /hasFsAccess/);
+    assert.match(power, /useState\(false\)/);
+    assert.match(power, /setHasFsAccess\(Boolean\(pickerApi\(\)\)\)/);
+    assert.match(power, /!open && hasFsAccess/);
+  });
+
   it("does not add or edit Windows installer scripts", () => {
     assert.doesNotMatch(power, /writeFile|fs\.|spawn\(|exec\(/);
     assert.match(power, /href="\/install-harbor-buddy\.bat"/);

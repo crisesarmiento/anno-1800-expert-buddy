@@ -4,7 +4,7 @@ Harbor Buddy mira archivos. No toca el juego.
 
 Comunidad: editores de plata, inject de Python y el loader Python de mods **tiran Anno**. Este techo es a propósito.
 
-`pulseHint` (coins / houses) es opcional y lo pone la UI o un fixture. El vigilante **no lo inventa**. Campos: `docs/harbor-live-fields.md`. Schema: `docs/harbor-live.schema.json`.
+`pulseHint` (coins / houses) es opcional. El vigilante lo calcula desde señales reales del escaneo: `coins` del delta de dinero contra el escaneo anterior, `houses` de la presencia de residencias / mercado / pescadería. Sin señal clara queda `unknown` — **nunca adivina** `down`/`empty`. Campos: `docs/harbor-live-fields.md`. Schema: `docs/harbor-live.schema.json`.
 
 ## Obligatorio
 

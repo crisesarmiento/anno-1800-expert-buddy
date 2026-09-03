@@ -78,6 +78,9 @@ export function PowerUpSection() {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [hasHandle, setHasHandle] = useState(false);
+  // Chromium File System Access only. Starts false so SSR/hydration match; other
+  // browsers (Firefox, Safari) never flip it — honest degrade, no dead chip.
+  const [hasFsAccess, setHasFsAccess] = useState(false);
   const watchTimer = useRef<number | null>(null);
   const lastModified = useRef(0);
   const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
@@ -86,6 +89,7 @@ export function PowerUpSection() {
   const steps = [t.power.s1, t.power.s2, t.power.s3];
 
   useEffect(() => {
+    setHasFsAccess(Boolean(pickerApi()));
     void readPersistedLiveHandle().then((handle) => {
       if (handle) setHasHandle(true);
     });
@@ -172,7 +176,7 @@ export function PowerUpSection() {
           <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.power.kicker}</p>
           <h2 className="mt-1 font-display text-xl font-medium tracking-tight sm:text-2xl">{t.power.title}</h2>
         </span>
-        {!open ? (
+        {!open && hasFsAccess ? (
           <button
             type="button"
             data-live-refresh-chip=""

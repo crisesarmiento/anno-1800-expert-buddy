@@ -171,6 +171,21 @@ function Get-NewestSave([string]$anno) {
   return Find-LatestA7sUnder (Join-Path $anno "accounts")
 }
 
+# Houses pulse from presence, same rule as src/lib/live/a7s-snapshot.ts housesHint:
+# no residence tier or no marketplace -> empty; farmers with no fishery/fish stock -> yellow.
+function Get-HousesPulse($scan, $buildings, $goods) {
+  $hasHouses = [bool]$scan.farmers -or [bool]$scan.workers -or [bool]$scan.artisans -or [bool]$scan.engineers
+  if (-not $hasHouses) { return "empty" }
+  $hasMarket = @($buildings) | Where-Object { $_.id -eq "marketplace" } | Select-Object -First 1
+  if (-not $hasMarket) { return "empty" }
+  $hasFishery = @($buildings) | Where-Object { $_.id -eq "fishery" } | Select-Object -First 1
+  $fishAmount = 0
+  $fishGood = @($goods) | Where-Object { $_.id -eq "fish" } | Select-Object -First 1
+  if ($fishGood) { $fishAmount = [int]$fishGood.amount }
+  if ($scan.farmers -and -not $hasFishery -and $fishAmount -le 0) { return "yellow" }
+  return "ok"
+}
+
 function Get-InflatedText([byte[]]$bytes) {
   Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
   $chunks = New-Object System.Collections.Generic.List[string]
@@ -270,7 +285,6 @@ while ($true) {
     if (Test-Path -LiteralPath $outJson) {
       try {
         $prev = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($prev.pulseHint -and $prev.telemetry -and $prev.telemetry.goods) { }
         if ($prev.PSObject.Properties.Name -contains "money") { $prevMoney = [int]$prev.money }
       } catch { }
     }
@@ -319,7 +333,8 @@ while ($true) {
         $coins = if ($money -ge $prevMoney) { "up" } else { "down" }
       }
     }
-    $pulseHint = [ordered]@{ coins = $coins; houses = "unknown" }
+    $houses = Get-HousesPulse $scan $buildings $goods
+    $pulseHint = [ordered]@{ coins = $coins; houses = $houses }
 
     $telemetry = [ordered]@{
       buildings = @($buildings)

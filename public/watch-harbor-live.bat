@@ -183,6 +183,21 @@ function Get-NewestSave([string]$anno) {
   return Find-LatestA7sUnder (Join-Path $anno "accounts")
 }
 
+# Houses pulse from presence, same rule as src/lib/live/a7s-snapshot.ts housesHint:
+# no residence tier or no marketplace -> empty; farmers with no fishery/fish stock -> yellow.
+function Get-HousesPulse($scan, $buildings, $goods) {
+  $hasHouses = [bool]$scan.farmers -or [bool]$scan.workers -or [bool]$scan.artisans -or [bool]$scan.engineers
+  if (-not $hasHouses) { return "empty" }
+  $hasMarket = @($buildings) | Where-Object { $_.id -eq "marketplace" } | Select-Object -First 1
+  if (-not $hasMarket) { return "empty" }
+  $hasFishery = @($buildings) | Where-Object { $_.id -eq "fishery" } | Select-Object -First 1
+  $fishAmount = 0
+  $fishGood = @($goods) | Where-Object { $_.id -eq "fish" } | Select-Object -First 1
+  if ($fishGood) { $fishAmount = [int]$fishGood.amount }
+  if ($scan.farmers -and -not $hasFishery -and $fishAmount -le 0) { return "yellow" }
+  return "ok"
+}
+
 function Get-InflatedText([byte[]]$bytes) {
   Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
   $chunks = New-Object System.Collections.Generic.List[string]
@@ -894,7 +909,8 @@ $catalog = @'
       "id": "ditchwater",
       "names": [
         "Ditchwater",
-        "Ditch Water"
+        "Ditch Water",
+        "La Inapetente"
       ]
     },
     {
@@ -992,262 +1008,262 @@ $catalog = @'
 }
 '@ | ConvertFrom-Json
 $guidJson = @'
-{
-  "schema": "harbor-guids-v1",
-  "rows": [
-    {
-      "guid": 1010266,
-      "id": "lumberjack",
-      "kind": "building",
-      "name": "Lumberjack's Hut"
-    },
-    {
-      "guid": 1010267,
-      "id": "sheep",
-      "kind": "building",
-      "name": "Sheep Farm"
-    },
-    {
-      "guid": 1010294,
-      "id": "sawmill",
-      "kind": "building",
-      "name": "Sawmill"
-    },
-    {
-      "guid": 1010297,
-      "id": "sawmill",
-      "kind": "building",
-      "name": "Sawmill"
-    },
-    {
-      "guid": 1010298,
-      "id": "charcoal",
-      "kind": "building",
-      "name": "Charcoal Kiln"
-    },
-    {
-      "guid": 1010372,
-      "id": "marketplace",
-      "kind": "building",
-      "name": "Marketplace"
-    },
-    {
-      "guid": 1010371,
-      "id": "warehouse",
-      "kind": "building",
-      "name": "Warehouse"
-    },
-    {
-      "guid": 1010343,
-      "id": "farmer-house",
-      "kind": "building",
-      "name": "Farmer Residence"
-    },
-    {
-      "guid": 1010344,
-      "id": "worker-house",
-      "kind": "building",
-      "name": "Worker Residence"
-    },
-    {
-      "guid": 1010345,
-      "id": "artisan-house",
-      "kind": "building",
-      "name": "Artisan Residence"
-    },
-    {
-      "guid": 1010346,
-      "id": "engineer-house",
-      "kind": "building",
-      "name": "Engineer Residence"
-    },
-    {
-      "guid": 1010278,
-      "id": "fishery",
-      "kind": "building",
-      "name": "Fishery"
-    },
-    {
-      "guid": 1010265,
-      "id": "potato",
-      "kind": "building",
-      "name": "Potato Farm"
-    },
-    {
-      "guid": 1010262,
-      "id": "bread",
-      "kind": "building",
-      "name": "Grain Farm"
-    },
-    {
-      "guid": 1010269,
-      "id": "sausage",
-      "kind": "building",
-      "name": "Pig Farm"
-    },
-    {
-      "guid": 1010316,
-      "id": "knitters",
-      "kind": "building",
-      "name": "Knitter's Hut"
-    },
-    {
-      "guid": 1010358,
-      "id": "pub",
-      "kind": "building",
-      "name": "Pub"
-    },
-    {
-      "guid": 1010360,
-      "id": "school",
-      "kind": "building",
-      "name": "School"
-    },
-    {
-      "guid": 1010359,
-      "id": "church",
-      "kind": "building",
-      "name": "Church"
-    },
-    {
-      "guid": 101254,
-      "id": "jornalero",
-      "kind": "building",
-      "name": "Jornalero Residence"
-    },
-    {
-      "guid": 101255,
-      "id": "obrero",
-      "kind": "building",
-      "name": "Obrero Residence"
-    },
-    {
-      "guid": 101257,
-      "id": "marketplace",
-      "kind": "building",
-      "name": "Marketplace"
-    },
-    {
-      "guid": 1010312,
-      "id": "distillery",
-      "kind": "building",
-      "name": "Schnapps Distillery"
-    },
-    {
-      "guid": 1010035,
-      "id": "warehouse",
-      "kind": "building",
-      "name": "Warehouse"
-    },
-    {
-      "guid": 1010017,
-      "id": "money",
-      "kind": "good",
-      "name": "Coins"
-    },
-    {
-      "guid": 120008,
-      "id": "wood-log",
-      "kind": "good",
-      "name": "Wood"
-    },
-    {
-      "guid": 1010196,
-      "id": "wood",
-      "kind": "good",
-      "name": "Timber"
-    },
-    {
-      "guid": 1010200,
-      "id": "fish",
-      "kind": "good",
-      "name": "Fish"
-    },
-    {
-      "guid": 1010195,
-      "id": "potato",
-      "kind": "good",
-      "name": "Potatoes"
-    },
-    {
-      "guid": 1010216,
-      "id": "schnapps",
-      "kind": "good",
-      "name": "Schnapps"
-    },
-    {
-      "guid": 1010197,
-      "id": "wool",
-      "kind": "good",
-      "name": "Wool"
-    },
-    {
-      "guid": 1010237,
-      "id": "clothes",
-      "kind": "good",
-      "name": "Work Clothes"
-    },
-    {
-      "guid": 1010199,
-      "id": "pigs",
-      "kind": "good",
-      "name": "Pigs"
-    },
-    {
-      "guid": 1010238,
-      "id": "sausage",
-      "kind": "good",
-      "name": "Sausages"
-    },
-    {
-      "guid": 1010192,
-      "id": "grain",
-      "kind": "good",
-      "name": "Grain"
-    },
-    {
-      "guid": 1010213,
-      "id": "bread",
-      "kind": "good",
-      "name": "Bread"
-    },
-    {
-      "guid": 1010203,
-      "id": "soap",
-      "kind": "good",
-      "name": "Soap"
-    },
-    {
-      "guid": 1010224,
-      "id": "steel",
-      "kind": "good",
-      "name": "Steel"
-    },
-    {
-      "guid": 1010210,
-      "id": "sails",
-      "kind": "good",
-      "name": "Sails"
-    },
-    {
-      "guid": 180023,
-      "id": "old-world",
-      "kind": "island",
-      "name": "Old World"
-    },
-    {
-      "guid": 180025,
-      "id": "new-world",
-      "kind": "island",
-      "name": "New World"
-    },
-    {
-      "guid": 180014,
-      "id": "bright-sands",
-      "kind": "island",
-      "name": "Bright Sands"
-    }
-  ]
+{
+  "schema": "harbor-guids-v1",
+  "rows": [
+    {
+      "guid": 1010266,
+      "id": "lumberjack",
+      "kind": "building",
+      "name": "Lumberjack's Hut"
+    },
+    {
+      "guid": 1010267,
+      "id": "sheep",
+      "kind": "building",
+      "name": "Sheep Farm"
+    },
+    {
+      "guid": 1010294,
+      "id": "sawmill",
+      "kind": "building",
+      "name": "Sawmill"
+    },
+    {
+      "guid": 1010297,
+      "id": "sawmill",
+      "kind": "building",
+      "name": "Sawmill"
+    },
+    {
+      "guid": 1010298,
+      "id": "charcoal",
+      "kind": "building",
+      "name": "Charcoal Kiln"
+    },
+    {
+      "guid": 1010372,
+      "id": "marketplace",
+      "kind": "building",
+      "name": "Marketplace"
+    },
+    {
+      "guid": 1010371,
+      "id": "warehouse",
+      "kind": "building",
+      "name": "Warehouse"
+    },
+    {
+      "guid": 1010343,
+      "id": "farmer-house",
+      "kind": "building",
+      "name": "Farmer Residence"
+    },
+    {
+      "guid": 1010344,
+      "id": "worker-house",
+      "kind": "building",
+      "name": "Worker Residence"
+    },
+    {
+      "guid": 1010345,
+      "id": "artisan-house",
+      "kind": "building",
+      "name": "Artisan Residence"
+    },
+    {
+      "guid": 1010346,
+      "id": "engineer-house",
+      "kind": "building",
+      "name": "Engineer Residence"
+    },
+    {
+      "guid": 1010278,
+      "id": "fishery",
+      "kind": "building",
+      "name": "Fishery"
+    },
+    {
+      "guid": 1010265,
+      "id": "potato",
+      "kind": "building",
+      "name": "Potato Farm"
+    },
+    {
+      "guid": 1010262,
+      "id": "bread",
+      "kind": "building",
+      "name": "Grain Farm"
+    },
+    {
+      "guid": 1010269,
+      "id": "sausage",
+      "kind": "building",
+      "name": "Pig Farm"
+    },
+    {
+      "guid": 1010316,
+      "id": "knitters",
+      "kind": "building",
+      "name": "Knitter's Hut"
+    },
+    {
+      "guid": 1010358,
+      "id": "pub",
+      "kind": "building",
+      "name": "Pub"
+    },
+    {
+      "guid": 1010360,
+      "id": "school",
+      "kind": "building",
+      "name": "School"
+    },
+    {
+      "guid": 1010359,
+      "id": "church",
+      "kind": "building",
+      "name": "Church"
+    },
+    {
+      "guid": 101254,
+      "id": "jornalero",
+      "kind": "building",
+      "name": "Jornalero Residence"
+    },
+    {
+      "guid": 101255,
+      "id": "obrero",
+      "kind": "building",
+      "name": "Obrero Residence"
+    },
+    {
+      "guid": 101257,
+      "id": "marketplace",
+      "kind": "building",
+      "name": "Marketplace"
+    },
+    {
+      "guid": 1010312,
+      "id": "distillery",
+      "kind": "building",
+      "name": "Schnapps Distillery"
+    },
+    {
+      "guid": 1010035,
+      "id": "warehouse",
+      "kind": "building",
+      "name": "Warehouse"
+    },
+    {
+      "guid": 1010017,
+      "id": "money",
+      "kind": "good",
+      "name": "Coins"
+    },
+    {
+      "guid": 120008,
+      "id": "wood-log",
+      "kind": "good",
+      "name": "Wood"
+    },
+    {
+      "guid": 1010196,
+      "id": "wood",
+      "kind": "good",
+      "name": "Timber"
+    },
+    {
+      "guid": 1010200,
+      "id": "fish",
+      "kind": "good",
+      "name": "Fish"
+    },
+    {
+      "guid": 1010195,
+      "id": "potato",
+      "kind": "good",
+      "name": "Potatoes"
+    },
+    {
+      "guid": 1010216,
+      "id": "schnapps",
+      "kind": "good",
+      "name": "Schnapps"
+    },
+    {
+      "guid": 1010197,
+      "id": "wool",
+      "kind": "good",
+      "name": "Wool"
+    },
+    {
+      "guid": 1010237,
+      "id": "clothes",
+      "kind": "good",
+      "name": "Work Clothes"
+    },
+    {
+      "guid": 1010199,
+      "id": "pigs",
+      "kind": "good",
+      "name": "Pigs"
+    },
+    {
+      "guid": 1010238,
+      "id": "sausage",
+      "kind": "good",
+      "name": "Sausages"
+    },
+    {
+      "guid": 1010192,
+      "id": "grain",
+      "kind": "good",
+      "name": "Grain"
+    },
+    {
+      "guid": 1010213,
+      "id": "bread",
+      "kind": "good",
+      "name": "Bread"
+    },
+    {
+      "guid": 1010203,
+      "id": "soap",
+      "kind": "good",
+      "name": "Soap"
+    },
+    {
+      "guid": 1010224,
+      "id": "steel",
+      "kind": "good",
+      "name": "Steel"
+    },
+    {
+      "guid": 1010210,
+      "id": "sails",
+      "kind": "good",
+      "name": "Sails"
+    },
+    {
+      "guid": 180023,
+      "id": "old-world",
+      "kind": "island",
+      "name": "Old World"
+    },
+    {
+      "guid": 180025,
+      "id": "new-world",
+      "kind": "island",
+      "name": "New World"
+    },
+    {
+      "guid": 180014,
+      "id": "bright-sands",
+      "kind": "island",
+      "name": "Bright Sands"
+    }
+  ]
 }
 '@
 $scanCs = @'
@@ -1582,7 +1598,6 @@ while ($true) {
     if (Test-Path -LiteralPath $outJson) {
       try {
         $prev = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($prev.pulseHint -and $prev.telemetry -and $prev.telemetry.goods) { }
         if ($prev.PSObject.Properties.Name -contains "money") { $prevMoney = [int]$prev.money }
       } catch { }
     }
@@ -1631,7 +1646,8 @@ while ($true) {
         $coins = if ($money -ge $prevMoney) { "up" } else { "down" }
       }
     }
-    $pulseHint = [ordered]@{ coins = $coins; houses = "unknown" }
+    $houses = Get-HousesPulse $scan $buildings $goods
+    $pulseHint = [ordered]@{ coins = $coins; houses = $houses }
 
     $telemetry = [ordered]@{
       buildings = @($buildings)

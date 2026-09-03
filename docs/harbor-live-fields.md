@@ -17,7 +17,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `sessionName` | basename del `.a7s` | p.ej. `Autosave`. No es el título interno de sesión. |
 | `islandName` | primer hit `catalog.islands` | Igual que `telemetry.islands[0].name`. |
 | `quests[]` | GUID de quest mapeado (tabla chica) | `title` en el idioma del juego + `state`. Crece cuando aparece un GUID nuevo. |
-| `pulseHint` | opcional, UI / fixture | El watcher no lo inventa. |
+| `pulseHint` | `coins` desde el delta de dinero contra el escaneo anterior; `houses` desde presencia (residencias, mercado, pescadería/stock de pescado) | Sin señal clara, queda `unknown`. Nunca adivina `down`/`empty`. |
 | `workforce` | hints `farmers` / `workers` / `artisans` / `engineers` | **Presencia** (`true`). Sin números. |
 | `telemetry.buildings` | `CountsPerGUID` → tabla GUID | Presencia. Nombres en inglés si el juego está en inglés. |
 | `telemetry.people` | GUIDs NPC mapeados | NPCs como hit, no rutas. |
