@@ -136,6 +136,35 @@ function namedHits(map: Map<string, { name: string; count?: number; amount?: num
     .slice(0, 80);
 }
 
+export function coinsHint(money: number | null, previousMoney?: number | null): LivePulseHint["coins"] {
+  if (money == null) return "unknown";
+  if (money < 0) return "down";
+  if (previousMoney == null || previousMoney === money) return "unknown";
+  return money >= previousMoney ? "up" : "down";
+}
+
+/** Presence only. Residences + no market → empty; farmers without fish → yellow. */
+export function housesHint(scan: Pick<SaveScan, "farmers" | "workers" | "artisans" | "engineers" | "buildingCounts" | "goods">): LivePulseHint["houses"] {
+  const hasHouses = scan.farmers || scan.workers || scan.artisans || scan.engineers;
+  if (!hasHouses) return "empty";
+  const hasMarket = (scan.buildingCounts.get("marketplace")?.count ?? 0) > 0;
+  if (!hasMarket) return "empty";
+  const hasFishBuilding = (scan.buildingCounts.get("fishery")?.count ?? 0) > 0;
+  const fishAmount = scan.goods.get("fish")?.amount ?? 0;
+  if (scan.farmers && !hasFishBuilding && fishAmount <= 0) return "yellow";
+  return "ok";
+}
+
+export function pulseHintFromScan(
+  scan: Pick<SaveScan, "farmers" | "workers" | "artisans" | "engineers" | "buildingCounts" | "goods" | "money">,
+  previousMoney?: number | null,
+): LivePulseHint {
+  return {
+    coins: coinsHint(scan.money, previousMoney),
+    houses: housesHint(scan),
+  };
+}
+
 export function snapshotFromScan(
   scan: SaveScan,
   opts: { previousMoney?: number | null; savedAt?: string; sessionName?: string },
@@ -204,16 +233,7 @@ export function snapshotFromScan(
     quests.push({ title: row.name, state: "active" });
   }
 
-  let pulseHint: LivePulseHint | undefined;
-  if (scan.money != null) {
-    let coins: LivePulseHint["coins"] = "unknown";
-    if (opts.previousMoney != null && opts.previousMoney !== scan.money) {
-      coins = scan.money >= opts.previousMoney ? "up" : "down";
-    } else if (scan.money < 0) {
-      coins = "down";
-    }
-    pulseHint = { coins, houses: "unknown" };
-  }
+  const pulseHint = pulseHintFromScan(scan, opts.previousMoney);
 
   const telemetry: LiveTelemetry = {};
   if (buildings.length) telemetry.buildings = buildings;
@@ -233,7 +253,7 @@ export function snapshotFromScan(
   if (sessionName) snapshot.sessionName = sessionName;
   if (opts.savedAt) snapshot.savedAt = opts.savedAt;
   if (islands[0]) snapshot.islandName = islands[0].name;
-  if (pulseHint) snapshot.pulseHint = pulseHint;
+  snapshot.pulseHint = pulseHint;
   if (Object.keys(workforce).length) snapshot.workforce = workforce;
   if (Object.keys(telemetry).length) snapshot.telemetry = telemetry;
   return snapshot;

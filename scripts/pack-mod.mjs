@@ -209,7 +209,7 @@ function packCatalog(missions) {
     chains,
     islands: [
       { id: "bright-sands", names: ["Bright Sands"] },
-      { id: "ditchwater", names: ["Ditchwater", "Ditch Water"] },
+      { id: "ditchwater", names: ["Ditchwater", "Ditch Water", "La Inapetente"] },
       { id: "crown-falls", names: ["Crown Falls"] },
       { id: "la-isla", names: ["La Isla"] },
       { id: "cape", names: ["Cape Trelawney"] },
