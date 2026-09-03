@@ -1,0 +1,54 @@
+/* Original Harbor Buddy design tokens. No Ubisoft artwork. Unofficial fan project; not affiliated with Ubisoft. */
+:root {
+  --hb-ink: #14110e;
+  --hb-ink-raised: #1e1a14;
+  --hb-brass: #c9a36a;
+  --hb-cream: #f3e6cf;
+  --hb-sea: #2f5658;
+  --hb-moss: #7ea37c;
+  --hb-rust: #c45c4a;
+  --hb-mist: #b7a78e;
+
+  --hb-surface-deck: var(--hb-ink);
+  --hb-surface-raised: var(--hb-ink-raised);
+  --hb-surface-paper: var(--hb-cream);
+  --hb-text-on-dark: var(--hb-cream);
+  --hb-text-on-paper: var(--hb-ink);
+  --hb-text-muted: var(--hb-mist);
+  --hb-state-ok: var(--hb-moss);
+  --hb-state-alert: var(--hb-rust);
+  --hb-state-info: var(--hb-sea);
+  --hb-state-unknown: var(--hb-mist);
+  --hb-action: var(--hb-brass);
+
+  --hb-font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --hb-font-ui: "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  --hb-radius-paper: 2px;
+  --hb-radius-control: 6px;
+  --hb-radius-panel: 10px;
+  --hb-border-fine: 1px;
+  --hb-shadow-paper: 0 1px 0 rgb(20 17 14 / 0.35), 0 8px 18px -15px rgb(0 0 0 / 0.7);
+  --hb-shadow-metal: inset 0 1px 0 rgb(243 230 207 / 0.06), 0 5px 14px -12px rgb(0 0 0 / 0.9);
+
+  --hb-motion-fast: 110ms;
+  --hb-motion-base: 180ms;
+  --hb-motion-slow: 260ms;
+  --hb-ease-heavy: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --hb-cell-road: var(--hb-mist);
+  --hb-cell-home: var(--hb-brass);
+  --hb-cell-garden: var(--hb-moss);
+  --hb-cell-public: var(--hb-rust);
+  --hb-cell-water: var(--hb-sea);
+  --hb-cell-industry: var(--hb-ink-raised);
+  --hb-cell-empty: rgb(183 167 142 / 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --hb-motion-fast: 0ms;
+    --hb-motion-base: 0ms;
+    --hb-motion-slow: 0ms;
+  }
+}

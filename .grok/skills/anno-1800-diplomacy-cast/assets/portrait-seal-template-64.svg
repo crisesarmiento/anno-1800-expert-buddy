@@ -1,0 +1,12 @@
+<!-- Original portrait seal guide for Harbor Buddy. No Ubisoft artwork. Unofficial fan project; not affiliated with Ubisoft. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Guía vacía de retrato sello</title>
+  <desc id="desc">Medallón con guías para cabeza, hombros y un símbolo de rol original.</desc>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="27" stroke-width="2"/>
+    <circle cx="32" cy="32" r="22.5" opacity=".3" stroke-dasharray="2 2"/>
+    <ellipse cx="30" cy="25" rx="8" ry="10" opacity=".55"/>
+    <path d="M15 51c2-10 8-15 15-15s13 5 16 15" opacity=".55"/>
+    <circle cx="47" cy="43" r="7" opacity=".3" stroke-dasharray="2 2"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<!-- Original empty seal template for Harbor Buddy. No Ubisoft artwork. Unofficial fan project; not affiliated with Ubisoft. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Plantilla vacía de sello</title>
+  <desc id="desc">Dos círculos imperfectos y un área central vacía para una silueta original.</desc>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="2.2" d="M32 4.5c15.7.2 27.8 12 27.4 27.8-.4 15.3-12.1 27-27.5 27.2C16.2 59.7 4.3 47.8 4.7 32.1 5.1 16.8 16.8 4.4 32 4.5Z"/>
+    <path stroke-width="1.2" stroke-dasharray="2.5 2" d="M31.8 9.7c12.7-.2 22.6 9.8 22.5 22.6-.2 12.4-9.9 21.9-22.4 22-12.8.1-22.4-9.7-22.2-22.4.2-12.4 9.8-22 22.1-22.2Z"/>
+    <path opacity=".35" d="M21 43.5h22M24 47h16"/>
+  </g>
+</svg>
