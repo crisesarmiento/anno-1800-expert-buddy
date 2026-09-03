@@ -133,6 +133,11 @@ export type Island = {
   pulse?: IslandPulse;
   notes?: string;
   /**
+   * Fraction (0-1) of house capacity actually filled, per tier. Missing = Taller
+   * assumes the houses are full and says so; never invented from live/a7s.
+   */
+  occupancy?: Partial<Record<PopulationTier, number>>;
+  /**
    * `presence` = watcher saw names, not counts. Compute must not invent t/min.
    * Default `seed` when the player typed counts.
    */
@@ -168,11 +173,22 @@ export type HousesSupported = Partial<
   Record<GoodId, Partial<Record<PopulationTier, number | null>>>
 >;
 
+export type GoodBalance = "falta" | "alcanza" | "saturado";
+
 export type IslandStats = {
   id: string;
   world: World;
   confidence: Confidence;
   housesPresent: HouseCounts;
+  /** Houses × wiki capacity per tier, i.e. habitantes máx. */
+  housesMax: Partial<Record<PopulationTier, number>>;
+  /**
+   * Mano de obra estimada: houses × capacity × occupancy (or assumed full).
+   * See `occupancyAssumedFull`.
+   */
+  workforceEstimate: Partial<Record<PopulationTier, number>>;
+  /** True when the seed had no occupancy field and Taller assumed full houses. */
+  occupancyAssumedFull: boolean;
   housesSupported: HousesSupported;
   demand: Partial<Record<GoodId, number | null>>;
   supply: Partial<Record<GoodId, number | null>>;

@@ -71,4 +71,26 @@ describe("Taller opt-in workbench", () => {
     assert.doesNotMatch(ahora, /goodStamp|goodNameEs|data-taller-good/);
     assert.doesNotMatch(desk, /goodStamp|goodNameEs|data-taller-good/);
   });
+
+  it("renders one card per island with Estadísticas-style Spanish sections", () => {
+    assert.match(city, /data-taller-city-card=/);
+    assert.match(city, /stats\.islands\.map/);
+    assert.match(city, /Población/);
+    assert.match(city, /Producción/);
+    assert.match(city, /Almacén/);
+    assert.match(city, /Finanzas/);
+    assert.match(city, /data-taller-house-tier=/);
+    assert.match(city, /data-taller-workforce-estimate=/);
+    assert.match(city, /data-taller-production-building=/);
+    assert.match(city, /data-taller-good-flow=/);
+    assert.match(city, /data-taller-balance=/);
+  });
+
+  it("never invents live-only stats and points to the in-game tabs instead", () => {
+    assert.match(city, /data-taller-liveonly=/);
+    assert.match(city, /Ctrl\+W/);
+    assert.match(city, /Ctrl\+E/);
+    assert.match(city, /Ctrl\+Q\/R\/W\/E/);
+    assert.doesNotMatch(city, /useHarbor|liveSnapshot|\.telemetry\b/);
+  });
 });

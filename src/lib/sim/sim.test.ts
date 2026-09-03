@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { BUILDINGS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
 import {
   compute,
+  goodBalance,
   housesSupportedFish,
   parseCitySeed,
 } from "./compute.ts";
@@ -288,5 +289,112 @@ describe("missing wiki stays null", () => {
     assert.equal(BUILDINGS.lumberjack.maintenance, null);
     assert.equal(BUILDINGS.knitters.maintenance, null);
     assert.equal(BUILDINGS.slaughterhouse.maintenance, null);
+  });
+});
+
+describe("per-island stats stay per-island", () => {
+  function twoIslandSeed(): CitySeed {
+    const base = parseCitySeed(fixture);
+    const first = base.islands[0]!;
+    const second = {
+      ...first,
+      id: "second-island",
+      name: "Segunda Isla",
+      houses: { farmer: 20, worker: 0, artisan: 0, engineer: 0, investor: 0 },
+      buildings: { ...first.buildings, fishery: 1 },
+    };
+    return { ...base, islands: [first, second] };
+  }
+
+  it("does not mix one island's houses/buildings into another's demand or supply", () => {
+    const seed = twoIslandSeed();
+    const stats = compute(seed);
+    const [a, b] = stats.islands;
+    assert.ok(a && b);
+    close(a.demand.fish ?? -1, 0.25, 1e-6);
+    close(a.supply.fish ?? -1, 0, 1e-9);
+    close(b.demand.fish ?? -1, 0.5, 1e-6);
+    close(b.supply.fish ?? -1, 2, 1e-9);
+    assert.equal(a.housesMax.farmer, 100);
+    assert.equal(b.housesMax.farmer, 200);
+  });
+
+  it("merges city-wide totals from both islands without double counting either", () => {
+    const seed = twoIslandSeed();
+    const stats = compute(seed);
+    close(stats.demand.fish ?? -1, 0.75, 1e-6);
+    close(stats.supply.fish ?? -1, 2, 1e-9);
+  });
+});
+
+describe("mano de obra estimada (occupancy)", () => {
+  it("assumes full houses and says so when the seed has no occupancy", () => {
+    const seed = parseCitySeed(fixture);
+    const stats = compute(seed);
+    const island = stats.islands[0]!;
+    assert.equal(island.occupancyAssumedFull, true);
+    assert.equal(island.workforceEstimate.farmer, island.housesMax.farmer);
+  });
+
+  it("scales workforce estimate down when occupancy is under 1", () => {
+    const base = parseCitySeed(fixture);
+    const island = base.islands[0]!;
+    const stats = compute({
+      ...base,
+      islands: [{ ...island, occupancy: { farmer: 0.5 } }],
+    });
+    const first = stats.islands[0]!;
+    assert.equal(first.occupancyAssumedFull, false);
+    assert.equal(first.housesMax.farmer, 100);
+    assert.equal(first.workforceEstimate.farmer, 50);
+  });
+});
+
+describe("workforce warning when buildings outdemand houses", () => {
+  function fisheryOnlyIsland(fisheryCount: number): CitySeed["islands"][number] {
+    return {
+      id: "la-inapetente",
+      world: "old",
+      houses: { farmer: 10 },
+      buildings: { fishery: fisheryCount },
+    };
+  }
+
+  it("warns when fisheries need more farmers than the houses can supply", () => {
+    const base = parseCitySeed(fixture);
+    const stats = compute({ ...base, islands: [fisheryOnlyIsland(5)] });
+    const first = stats.islands[0]!;
+    assert.equal(first.workforce?.farmer, 125);
+    assert.equal(first.housesMax.farmer, 100);
+    assert.ok(first.alerts.some((row) => row.id === "workforce-farmer"));
+    assert.match(
+      first.alerts.find((row) => row.id === "workforce-farmer")?.line ?? "",
+      /125.*100/,
+    );
+  });
+
+  it("does not warn when the houses cover the workforce the fisheries need", () => {
+    const base = parseCitySeed(fixture);
+    const stats = compute({ ...base, islands: [fisheryOnlyIsland(1)] });
+    const first = stats.islands[0]!;
+    assert.equal(first.alerts.some((row) => row.id === "workforce-farmer"), false);
+  });
+});
+
+describe("goodBalance classifier", () => {
+  it("is null when either side is unknown", () => {
+    assert.equal(goodBalance(null, 1), null);
+  });
+
+  it("is falta when the gap is negative", () => {
+    assert.equal(goodBalance(-0.1, 1), "falta");
+  });
+
+  it("is alcanza for a modest surplus", () => {
+    assert.equal(goodBalance(0.1, 1), "alcanza");
+  });
+
+  it("is saturado for a large oversupply", () => {
+    assert.equal(goodBalance(2, 1), "saturado");
   });
 });

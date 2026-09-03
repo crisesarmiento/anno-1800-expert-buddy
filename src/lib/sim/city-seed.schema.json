@@ -64,6 +64,20 @@
           }
         },
         "notes": { "type": "string" },
+        "occupancy": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Fracción 0-1 de casas ocupadas por clase. Si falta, Taller asume llenas y lo dice.",
+          "properties": {
+            "farmer": { "type": "number", "minimum": 0, "maximum": 1 },
+            "worker": { "type": "number", "minimum": 0, "maximum": 1 },
+            "artisan": { "type": "number", "minimum": 0, "maximum": 1 },
+            "engineer": { "type": "number", "minimum": 0, "maximum": 1 },
+            "investor": { "type": "number", "minimum": 0, "maximum": 1 },
+            "jornalero": { "type": "number", "minimum": 0, "maximum": 1 },
+            "obrero": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
         "confidence": {
           "type": "string",
           "enum": ["seed", "presence"],
