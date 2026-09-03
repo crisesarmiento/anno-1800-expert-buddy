@@ -1,0 +1,102 @@
+{
+  "schema": "campaign-tips-v1",
+  "notes": "Static Spanish seed. Live watcher only picks a family from harbor-live.json thresholds. UI shows one 10s line, never this list. No ratios (Taller). No wiki.",
+  "tips": [
+    {
+      "id": "ow-coins-stop",
+      "category": "economy",
+      "liveFamily": "coins",
+      "region": "old-world",
+      "requires": [],
+      "line": "Pará de construir. El saldo está rojo. Pausá lo que duerme."
+    },
+    {
+      "id": "ow-coins-kahina",
+      "category": "economy",
+      "liveFamily": "coins",
+      "region": "old-world",
+      "requires": ["kahina"],
+      "line": "Vendé el sobrante a Kahina. El verde vuelve bajando el gasto."
+    },
+    {
+      "id": "ow-brake-houses",
+      "category": "economy",
+      "liveFamily": "brake",
+      "region": "old-world",
+      "requires": [],
+      "line": "No plantes más casas. Llená las que ya están."
+    },
+    {
+      "id": "ow-brake-one",
+      "category": "economy",
+      "liveFamily": "brake",
+      "region": "old-world",
+      "requires": ["farmers"],
+      "line": "Una cosa a la vez. El pueblo ya está saturado."
+    },
+    {
+      "id": "ow-terrain-scout",
+      "category": "terrain",
+      "liveFamily": "applies-now",
+      "region": "old-world",
+      "requires": ["bright-sands"],
+      "line": "Scoutear islas no es colonizarlas. Primero este pueblo."
+    },
+    {
+      "id": "ow-terrain-ticker",
+      "category": "terrain",
+      "liveFamily": "applies-now",
+      "region": "old-world",
+      "requires": ["bright-sands"],
+      "line": "Esta isla, este ticker. No fundés otra colonia ahora."
+    },
+    {
+      "id": "ow-org-hannah",
+      "category": "org",
+      "liveFamily": "applies-now",
+      "region": "old-world",
+      "requires": ["hannah"],
+      "line": "Hannah marcó el laburo. Eso es la lista de hoy."
+    },
+    {
+      "id": "ow-org-kahina",
+      "category": "org",
+      "liveFamily": "applies-now",
+      "region": "old-world",
+      "requires": ["kahina"],
+      "line": "Kahina es el banco. Comerciá antes de pelear."
+    },
+    {
+      "id": "ow-org-edvard",
+      "category": "org",
+      "liveFamily": "applies-now",
+      "region": "old-world",
+      "requires": ["edvard"],
+      "line": "Edvard pide cajones chicos. Entregá y seguí el diario."
+    },
+    {
+      "id": "nw-terrain-home",
+      "category": "terrain",
+      "liveFamily": "applies-now",
+      "region": "new-world",
+      "requires": ["isabel"],
+      "line": "La Isla no es la capital. El Viejo Mundo tiene que seguir en verde."
+    },
+    {
+      "id": "arctic-terrain-wait",
+      "category": "terrain",
+      "liveFamily": "applies-now",
+      "region": "arctic",
+      "requires": ["arctic"],
+      "line": "El Ártico ya está en esta partida. No mudes el pueblo de casa."
+    },
+    {
+      "id": "enbesa-org-wait",
+      "category": "org",
+      "liveFamily": "applies-now",
+      "region": "enbesa",
+      "requires": ["enbesa"],
+      "line": "Enbesa ya llegó. No desarmes el ticker de casa por el desierto."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { DiaryTitleChips } from "@/components/diary-chips";
 import { PowerUpSection } from "@/components/live-panel";
 import { InkSeal } from "@/components/stamps";
+import { pickCampaignTip } from "@/lib/campaign-tips";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
 import { deskCalmUmbral, sessionEstoAhora } from "@/lib/session-desk";
 import { resolveMission } from "@/lib/data";
@@ -16,7 +17,11 @@ export function SessionDesk() {
   const pulse = useHarbor((s) => s.pulse);
   const calm = useHarbor((s) => s.calm);
   const checkItems = useHarbor((s) => s.checkItems);
+  const snapshot = useHarbor((s) => s.liveSnapshot);
+  const stamps = useHarbor((s) => s.stamps);
+  const completed = useHarbor((s) => s.completed);
   const resolved = resolveMission(missionId);
+  const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
 
   if (!resolved) return null;
 
@@ -86,15 +91,24 @@ export function SessionDesk() {
             Ver taller
           </a>
         ) : null}
-        <p data-esto-ahora-item="" className="mt-6 text-lg leading-relaxed">
-          <button
-            type="button"
-            id={CHECK_HIGHLIGHT_ID(nowIndex)}
-            onClick={() => commit({ kind: "toggleCheck", index: nowIndex })}
-            className="text-left"
-          >
-            {now?.text ?? ESTO_AHORA_IDLE}
-          </button>
+        <p
+          data-esto-ahora-item=""
+          data-campaign-tip-family={campaignTip?.family ?? ""}
+          data-campaign-tip-kind={campaignTip?.kind ?? "idle"}
+          className="mt-6 text-lg leading-relaxed"
+        >
+          {campaignTip?.kind === "chip" ? (
+            <span data-campaign-tip-chip="">{campaignTip.line}</span>
+          ) : (
+            <button
+              type="button"
+              id={CHECK_HIGHLIGHT_ID(nowIndex)}
+              onClick={() => commit({ kind: "toggleCheck", index: nowIndex })}
+              className="text-left"
+            >
+              {campaignTip?.line ?? now?.text ?? ESTO_AHORA_IDLE}
+            </button>
+          )}
         </p>
       </article>
       <div data-home-primary="chips">
