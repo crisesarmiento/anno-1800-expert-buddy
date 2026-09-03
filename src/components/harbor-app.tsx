@@ -17,6 +17,7 @@ import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
 import { DiaryTitleChips } from "@/components/diary-chips";
+import { SandboxModeChip } from "@/components/sandbox-mode";
 import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
@@ -100,6 +101,12 @@ function TopBar() {
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           {t.board}
+        </Link>
+        <Link
+          to="/sandbox"
+          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          Sandbox
         </Link>
         <Link
           to="/instalar"
@@ -298,6 +305,7 @@ function Welcome() {
       <div data-welcome-primary="chips">
         <DiaryTitleChips onPick={setMissionId} />
       </div>
+      <SandboxModeChip />
 
       <MissionFinder />
       <PowerUpSection />
