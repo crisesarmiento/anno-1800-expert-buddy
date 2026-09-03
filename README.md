@@ -10,7 +10,7 @@ Not a min-max spreadsheet. Default is **spoilers off**. Tagline: *bastante bien,
 
 ## Why it exists
 
-The game's campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. This app is that voice: Spanish-first (UI also in English, Italian, and German), one mission at a time, calm modes when the ticker is red or you are overloaded.
+The game's campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. This app is that voice on a **second monitor** (tab or PWA): Spanish-first (UI also in English, Italian, and German), one mission at a time, calm modes when the ticker is red or you are overloaded. Not an overlay and not click-through on the game.
 
 ## Local-first data and privacy
 
@@ -73,6 +73,7 @@ Do not use `vite` / `npx vite` directly — env flags (`VITE_AUTH_ENABLED`) only
 ## Limitations
 
 - Unofficial fan companion. Anno 1800 is Ubisoft; this is not affiliated.
+- Second-monitor tab/PWA only — never an overlay, never always-on-top, never click-through on Anno. First monitor / Ctrl+G stays the game. See `docs/second-screen.md`.
 - Mission titles stay in Spanish to match the in-game journal.
 - Screenshot HUD advice is a local server function. Offline chat does not invent a vision call.
 - `scripts/preview.mjs stop|restart` is a Linux sandbox helper for port 8081, not a macOS/Windows workflow.
