@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { applyLiveToProgress, liveMissLine, liveOkLine, matchLiveQuests, type LiveSnapshot } from "@/lib/live";
+import {
+  applyLiveToProgress,
+  liveMissLine,
+  liveOkLine,
+  liveOkSaveLine,
+  matchLiveSnapshot,
+  type LiveSnapshot,
+} from "@/lib/live";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
 import type { PulseSample } from "@/lib/dash";
 import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
@@ -195,7 +202,7 @@ export const useHarbor = create<HarborState>()(
           overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "sessionLifecycle" }),
         }),
       applyLiveSnapshot: (snapshot, fileName) => {
-        const match = matchLiveQuests(snapshot.quests);
+        const match = matchLiveSnapshot(snapshot);
         const progress = applyLiveToProgress(snapshot, match);
         const importedAt = new Date().toISOString();
         if (!progress.matched || !progress.missionId) {
@@ -213,6 +220,10 @@ export const useHarbor = create<HarborState>()(
         }
         const title = missionsById[progress.missionId]?.title ?? progress.missionId;
         const pulse = { ...get().pulse, ...progress.pulse };
+        const banner =
+          snapshot.quests.length > 0
+            ? liveOkLine(snapshot.quests.length, title, get().locale)
+            : liveOkSaveLine(title, get().locale);
         set({
           liveEnabled: true,
           liveSnapshot: snapshot,
@@ -226,7 +237,7 @@ export const useHarbor = create<HarborState>()(
           pulse,
           samples: pushSample(get().samples, pulse),
           calm: "session",
-          liveBanner: liveOkLine(snapshot.quests.length, title, get().locale),
+          liveBanner: banner,
           liveBannerFailed: false,
         });
       },
