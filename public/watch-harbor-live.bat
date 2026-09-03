@@ -994,6 +994,29 @@ $outJson = Join-Path $anno "harbor-live.json"
 $utf8Enc = [System.Text.Encoding]::UTF8
 $utf16Enc = [System.Text.Encoding]::Unicode
 
+function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
+  $leaf = [System.IO.Path]::GetFileName($Dest)
+  if ($leaf -ne "harbor-live.json") { throw "solo harbor-live.json" }
+  $dir = [System.IO.Path]::GetDirectoryName($Dest)
+  $lastGood = Join-Path $dir "harbor-live.last-good.json"
+  $bytes = $utf8.GetBytes($Text)
+  foreach ($target in @($Dest, $lastGood)) {
+    $tmp = "$target.tmp"
+    $fs = New-Object System.IO.FileStream($tmp, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+    try {
+      $fs.Write($bytes, 0, $bytes.Length)
+      $fs.Flush($true)
+    } finally {
+      $fs.Dispose()
+    }
+    if ([System.IO.File]::Exists($target)) {
+      [System.IO.File]::Replace($tmp, $target, $null)
+    } else {
+      [System.IO.File]::Move($tmp, $target)
+    }
+  }
+}
+
 Write-Host "Harbor Buddy vigilante"
 Write-Host "Anno: $anno"
 Write-Host "Catalogo: $titlesPath"
@@ -1084,7 +1107,8 @@ while ($true) {
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
     $payload.telemetry = $telemetry
     $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
-    [System.IO.File]::WriteAllText($outJson, $json + "`n", $utf8)
+    $null = $json | ConvertFrom-Json
+    Write-HarborLiveCrashSafe $outJson ($json + "`n")
     $bCount = @($telemetry.buildings).Count
     $lastQuest = ""
     if ($quests.Count -gt 0) { $lastQuest = [string]$quests[$quests.Count - 1].title }

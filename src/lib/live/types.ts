@@ -67,5 +67,5 @@ export type LiveMatch = {
 };
 
 export type LiveIngestOk = { ok: true; snapshot: LiveSnapshot };
-export type LiveIngestFail = { ok: false; message: string };
+export type LiveIngestFail = { ok: false; message: string; kind?: string; silent?: boolean };
 export type LiveIngestResult = LiveIngestOk | LiveIngestFail;

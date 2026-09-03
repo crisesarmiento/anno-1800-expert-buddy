@@ -8,7 +8,7 @@ Comunidad: editores de plata, inject de Python y el loader Python de mods **tira
 
 ## Obligatorio
 
-- **Read-only en `.a7s`.** El vigilante (`watch-harbor-live.ps1` / `.bat`) lee el último save y escribe solo `Documentos\Anno 1800\harbor-live.json`. Nunca escribe, empaqueta ni edita `.a7s`.
+- **Read-only en `.a7s`.** El vigilante (`watch-harbor-live.ps1` / `.bat`) lee el último save y escribe solo `Documentos\Anno 1800\harbor-live.json` (tmp → fsync → rename en el mismo volumen, más `harbor-live.last-good.json`). Nunca escribe, empaqueta ni edita `.a7s`. La app no escribe ese JSON: si el parse falla, usa last-good y no grita empty-state.
 - **Sin Lua in-game.** `tools/harbor-buddy-telemetry/dump_live.lua` no entra al zip ni al instalador ni al `.bat` del vigilante. El loader oficial no documenta Lua; un dump al cargar tira el juego.
 - **Sin inject.** No DLLs, no Anno Python API, no `ModOps` sobre assets vanilla, no parche de GUID.
 - **El pack de telemetría es un stub.** `mod/harbor-buddy-telemetry` es XML vacío (`<ModOps></ModOps>`). No hace falta para el diario. Si Anno se cae, el mod se apaga y el vigilante sigue.
