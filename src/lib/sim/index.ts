@@ -23,6 +23,7 @@ export {
   parseCitySeed,
   seenChapterId,
 } from "./compute.ts";
+export { GOOD_NAME_ES, goodNameEs } from "./goods.ts";
 export {
   ARTISAN_NEEDS,
   ENGINEER_NEEDS,

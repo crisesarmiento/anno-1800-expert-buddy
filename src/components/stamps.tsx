@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { GoodId } from "@/lib/sim/types";
 import { cn } from "@/lib/utils";
 
 const svg = {
@@ -317,6 +318,175 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M6 9v4c0 1.7 2.7 3 6 3s6-1.3 6-3V9M12 14v5M9.5 17.5 12 20l2.5-2.5" />
     </>
   ),
+  log: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+    </>
+  ),
+  plank: (
+    <>
+      <rect x="4" y="6" width="16" height="3.2" rx="0.6" />
+      <rect x="4" y="10.4" width="16" height="3.2" rx="0.6" />
+      <rect x="4" y="14.8" width="16" height="3.2" rx="0.6" />
+    </>
+  ),
+  shirt: (
+    <>
+      <path d="M9 4 5 6.5 6.5 10 9 8.5V20h6V8.5l2.5 1.5L19 6.5 15 4c-.8 1.2-2 2-3 2s-2.2-.8-3-2Z" />
+      <path d="M10 12h4" />
+    </>
+  ),
+  potato: (
+    <>
+      <ellipse cx="12" cy="13" rx="7" ry="5.2" />
+      <circle cx="9.5" cy="12" r=".6" fill="currentColor" />
+      <circle cx="14" cy="14.5" r=".6" fill="currentColor" />
+      <circle cx="12.5" cy="10.5" r=".6" fill="currentColor" />
+    </>
+  ),
+  flask: (
+    <>
+      <path d="M10 3h4v4l3 5v7a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-7l3-5z" />
+      <path d="M9.5 13h5" />
+    </>
+  ),
+  sausage: (
+    <>
+      <path d="M5 14c0-3 2.5-5.5 5.5-5.5S16 9 16 11.5c2.2-.3 4 1.2 4 3.3 0 2.4-2.2 4-4.7 3.5C13.8 19.5 5 18.5 5 14Z" />
+      <path d="M9 10.5c.5 1 .5 3 0 4.5M13 10.7c.6 1.2.6 3.4 0 4.8" />
+    </>
+  ),
+  sack: (
+    <>
+      <path d="M12 4v2.5" />
+      <path d="M8 6.5h8l1.5 6c.6 3.5-1.6 7.5-5.5 7.5S6.9 16 7.5 12.5z" />
+      <path d="M9.5 10h5" />
+    </>
+  ),
+  loaf: (
+    <>
+      <path d="M4 14c0-4 3.5-7 8-7s8 3 8 7-3.5 5-8 5-8-1-8-5Z" />
+      <path d="M9 9.5 8 13M12 9v5M15 9.5 16 13" />
+    </>
+  ),
+  clay: (
+    <>
+      <path d="M5 17c-.6-4 2-9 7-9s7.6 5 7 9" />
+      <path d="M4 17h16" />
+      <path d="M9 12.5c1-1 4-1 6 0" />
+    </>
+  ),
+  ore: (
+    <>
+      <path d="M6 14 9 6l6 1 3 7-4 6H9Z" />
+      <path d="M9 6l3 5 4-4M9 11l6-1 2 4-4 6" />
+    </>
+  ),
+  coal: (
+    <>
+      <path d="M5 15 8 8l5 1 4 3-1 6-6 2Z" />
+      <circle cx="9.5" cy="12.5" r=".6" fill="currentColor" />
+      <circle cx="13" cy="14.5" r=".6" fill="currentColor" />
+    </>
+  ),
+  ingot: (
+    <>
+      <path d="M5 15 7 9h10l2 6-2 4H7Z" />
+      <path d="M7.5 12h9" />
+    </>
+  ),
+  beam: (
+    <>
+      <path d="M6 4h12M6 20h12M12 4v16" />
+      <path d="M8 4v3M16 4v3M8 17v3M16 17v3" />
+    </>
+  ),
+  tallow: (
+    <>
+      <path d="M5 13c1-1 2-1.5 2.5-3 .5 1.5 2 2 3.5 1 1 1.5 3 1 3.5-1 1 1.5 2.5 1.5 3.5 3" />
+      <path d="M4 13c0 4 3.6 6.5 8 6.5s8-2.5 8-6.5" />
+    </>
+  ),
+  plantain: (
+    <>
+      <path d="M6 18c7 2 12-3 12-10-5 0-9 2-11 6" />
+      <path d="M6 18c-1-3 0-6 2-8" />
+    </>
+  ),
+  droplet: <path d="M12 4c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" />,
+  plate: (
+    <>
+      <ellipse cx="12" cy="15" rx="8" ry="3" />
+      <path d="M8 12.5c1.5-3 3-4.5 4-6M12 12c1.2-2.6 2.4-4 3.5-5.4" />
+    </>
+  ),
+  poncho: (
+    <>
+      <path d="M12 4 5 10l2 2 2-1.3V20h6v-9.3L17 12l2-2Z" />
+      <path d="M8 20h8" />
+    </>
+  ),
+  cane: (
+    <>
+      <path d="M9 21V6M15 21V4" />
+      <path d="M7.5 8h3M7.5 12h3M7.5 16h3M13.5 6h3M13.5 10h3M13.5 14h3M13.5 18h3" />
+    </>
+  ),
+  "rum-bottle": (
+    <>
+      <path d="M10 3h4v3.5l2 2V19a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8.5l2-2z" />
+      <path d="M9.5 12h5" />
+    </>
+  ),
+  can: (
+    <>
+      <path d="M6 7h12v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" />
+      <ellipse cx="12" cy="7" rx="6" ry="2" />
+      <path d="M9 11.5h6" />
+    </>
+  ),
+  spool: (
+    <>
+      <path d="M8 5h8M8 19h8" />
+      <path d="M8 5c0 4 8 4 8 7s-8 3-8 7" />
+      <path d="M16 5c0 4-8 4-8 7s8 3 8 7" />
+    </>
+  ),
+  coat: (
+    <>
+      <path d="M9 4 6 6.5 7.5 10 9 9V20h6V9l1.5 1L18 6.5 15 4c-.6 1.4-1.8 2.2-3 2.2S9.6 5.4 9 4Z" />
+      <path d="M12 6.2V20" />
+    </>
+  ),
+  glasses: (
+    <>
+      <circle cx="7.5" cy="13" r="3.2" />
+      <circle cx="16.5" cy="13" r="3.2" />
+      <path d="M10.7 13h2.6M4 12l1.5-2M20 12l-1.5-2" />
+    </>
+  ),
+  "coffee-cup": (
+    <>
+      <path d="M6 9h10v6a5 5 0 0 1-5 5 5 5 0 0 1-5-5z" />
+      <path d="M16 10.5h1.5a2.2 2.2 0 0 1 0 4.4H16" />
+      <path d="M9 6c0-1 .8-1 .8-2M12 6c0-1 .8-1 .8-2" />
+    </>
+  ),
+  "tortilla-stack": (
+    <>
+      <ellipse cx="12" cy="8" rx="7" ry="2" />
+      <ellipse cx="12" cy="12" rx="7" ry="2" />
+      <ellipse cx="12" cy="16" rx="7" ry="2" />
+    </>
+  ),
+  bowler: (
+    <>
+      <path d="M7 15c0-4 2.2-7 5-7s5 3 5 7" />
+      <path d="M4 15h16v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5Z" />
+    </>
+  ),
 };
 
 export function Stamp({
@@ -461,6 +631,51 @@ export const CELL_STAMP: Record<string, string> = {
 
 export function buildingStamp(id: string) {
   return BUILDING_STAMP[id] ?? "cottage";
+}
+
+/** One icon per good, original stamps (no game sprites). Taller Ciudad only. */
+export const GOOD_STAMP: Record<GoodId, string> = {
+  wood: "log",
+  timber: "plank",
+  fish: "fish",
+  wool: "yarn",
+  "work-clothes": "shirt",
+  potato: "potato",
+  schnapps: "flask",
+  pigs: "pig",
+  sausages: "sausage",
+  grain: "wheat",
+  flour: "sack",
+  bread: "loaf",
+  clay: "clay",
+  bricks: "brick",
+  iron: "ore",
+  coal: "coal",
+  steel: "ingot",
+  "steel-beams": "beam",
+  tallow: "tallow",
+  soap: "soap",
+  sails: "sail",
+  weapons: "cannon",
+  plantains: "plantain",
+  "fish-oil": "droplet",
+  "fried-plantains": "plate",
+  "alpaca-wool": "yarn",
+  ponchos: "poncho",
+  "sugar-cane": "cane",
+  rum: "rum-bottle",
+  "canned-food": "can",
+  "sewing-machines": "spool",
+  "fur-coats": "coat",
+  glasses: "glasses",
+  coffee: "coffee-cup",
+  beer: "tankard",
+  tortillas: "tortilla-stack",
+  "bowler-hats": "bowler",
+};
+
+export function goodStamp(id: GoodId): string {
+  return GOOD_STAMP[id] ?? "crate";
 }
 
 export function TileMark({ name, className }: { name: string; className?: string }) {

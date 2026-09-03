@@ -61,4 +61,14 @@ describe("Taller opt-in workbench", () => {
     assert.doesNotMatch(ahora, /TallerCity|data-taller-city|@\/lib\/sim/);
     assert.doesNotMatch(desk, /TallerCity|data-taller-city|@\/lib\/sim/);
   });
+
+  it("shows a good icon + Spanish name only inside Ciudad, never Home/Esto/diary chips", () => {
+    assert.match(city, /data-taller-good/);
+    assert.match(city, /goodStamp/);
+    assert.match(city, /goodNameEs/);
+    assert.doesNotMatch(city, /<img\b/);
+    assert.doesNotMatch(app, /goodStamp|goodNameEs|data-taller-good/);
+    assert.doesNotMatch(ahora, /goodStamp|goodNameEs|data-taller-good/);
+    assert.doesNotMatch(desk, /goodStamp|goodNameEs|data-taller-good/);
+  });
 });

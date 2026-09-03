@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { Stamp, goodStamp } from "@/components/stamps";
 import campaignCh1 from "@/lib/sim/fixtures/campaign-ch1.json";
-import { compute, parseCitySeed } from "@/lib/sim";
-import type { SimMode } from "@/lib/sim/types";
+import { buildingById, compute, goodNameEs, parseCitySeed } from "@/lib/sim";
+import type { GoodId, SimMode } from "@/lib/sim/types";
 
 /**
  * Panel mínimo de ciudad. Solo Taller. Sin grilla de bienes.
@@ -19,6 +20,7 @@ export function TallerCity() {
   const island = stats.islands[0];
   const farmers = island?.housesPresent.farmer ?? 0;
   const next = island?.nextBuild;
+  const nextGood = next ? buildingById(next.buildingId)?.output : undefined;
   const alerts = (island?.alerts ?? []).filter((row) => row.id !== "next");
 
   return (
@@ -46,8 +48,12 @@ export function TallerCity() {
       ) : null}
 
       {next ? (
-        <p data-taller-next-build={next.buildingId} className="mt-5 text-lg leading-relaxed">
-          {next.line}
+        <p
+          data-taller-next-build={next.buildingId}
+          className="mt-5 flex items-start gap-2 text-lg leading-relaxed"
+        >
+          {nextGood ? <GoodBadge good={nextGood} /> : null}
+          <span>{next.line}</span>
         </p>
       ) : (
         <p className="mt-5 text-lg leading-relaxed">No hay un próximo edificio en este seed.</p>
@@ -56,13 +62,25 @@ export function TallerCity() {
       {alerts.length > 0 ? (
         <ul className="mt-5 flex flex-col gap-2 text-sm leading-relaxed">
           {alerts.map((alert) => (
-            <li key={alert.id} data-taller-city-alert={alert.id}>
-              {alert.line}
+            <li key={alert.id} data-taller-city-alert={alert.id} className="flex items-start gap-2">
+              {alert.good ? <GoodBadge good={alert.good} /> : null}
+              <span>{alert.line}</span>
             </li>
           ))}
         </ul>
       ) : null}
     </article>
+  );
+}
+
+/** Icon + Spanish good name, original stamp only. Ciudad-only, never Home/Esto. */
+function GoodBadge({ good }: { good: GoodId }) {
+  const name = goodNameEs(good);
+  return (
+    <span data-taller-good={good} className="mt-0.5 inline-flex shrink-0 items-center gap-1.5">
+      <Stamp name={goodStamp(good)} title={name} className="size-6" />
+      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{name}</span>
+    </span>
   );
 }
 
