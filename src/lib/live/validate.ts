@@ -235,7 +235,7 @@ export function ingestLiveJsonText(text: string, locale?: string | null): LiveIn
   try {
     parsed = JSON.parse(text);
   } catch {
-    return { ok: false, message: msg("broken", locale) };
+    return { ok: false, message: msg("broken", locale), kind: "broken" };
   }
   return normalizeSnapshot(parsed, locale);
 }
