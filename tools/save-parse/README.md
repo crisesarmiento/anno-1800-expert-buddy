@@ -1,6 +1,6 @@
 # Save parse
 
-Los `.a7s` de Anno 1800 **no se parsean en el navegador**.
+Los `.a7s` de Anno 1800 **no se parsean en el navegador**. Techo Signal: `docs/telemetry-ceiling.md` (read-only, sin Lua/DLL/Python).
 
 El loader oficial **no corre Lua**, así que el mod XML no escribe `harbor-live.json`.
 
