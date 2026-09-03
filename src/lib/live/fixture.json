@@ -2,7 +2,13 @@
   "schema": "harbor-live-v1",
   "source": "file",
   "updatedAt": "2026-09-01T00:00:00.000Z",
+  "savedAt": "2026-08-31T23:50:00.000Z",
   "game": "anno-1800",
+  "sessionName": "Autosave",
+  "islandName": "Bright Sands",
+  "workforce": {
+    "farmers": true
+  },
   "quests": [
     {
       "title": "Una chispa que vuelve",

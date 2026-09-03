@@ -35,6 +35,51 @@ describe("harbor-live ingest", () => {
     assert.equal(progress.pulse.looking, "quest");
     assert.equal(progress.pulse.coins, "down");
     assert.equal(result.snapshot.telemetry?.buildings?.[0]?.id, "lumberjack");
+    assert.equal(result.snapshot.sessionName, "Autosave");
+    assert.equal(result.snapshot.islandName, "Bright Sands");
+    assert.equal(result.snapshot.savedAt, "2026-08-31T23:50:00.000Z");
+    assert.equal(result.snapshot.workforce?.farmers, true);
+  });
+
+  it("keeps schema required keys and strips refused extras", () => {
+    const schema = JSON.parse(
+      readFileSync(new URL("../../../docs/harbor-live.schema.json", import.meta.url), "utf8"),
+    ) as { required: string[]; properties: Record<string, unknown> };
+    assert.deepEqual(schema.required, ["schema", "source", "updatedAt", "game", "quests"]);
+    assert.ok(schema.properties.sessionName);
+    assert.ok(schema.properties.islandName);
+    assert.ok(schema.properties.savedAt);
+    assert.ok(schema.properties.workforce);
+    assert.equal(schema.properties.population, undefined);
+    assert.equal(schema.properties.warehouse, undefined);
+    assert.equal(schema.properties.goods, undefined);
+    assert.equal(schema.properties.tradeRoutes, undefined);
+
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-02T12:00:00.000Z",
+      savedAt: "2026-09-02T11:59:00.000Z",
+      game: "anno-1800",
+      sessionName: "quicksave",
+      islandName: "Ditchwater",
+      workforce: { farmers: true, workers: true, farmersCount: 50, artisans: false },
+      quests: [],
+      population: { farmers: 50 },
+      warehouse: { fullness: 0.8, wood: 12 },
+      goods: [{ id: "wood", stock: 12 }],
+      tradeRoutes: [{ npc: "kahina", good: "spices" }],
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.sessionName, "quicksave");
+    assert.equal(result.snapshot.islandName, "Ditchwater");
+    assert.equal(result.snapshot.savedAt, "2026-09-02T11:59:00.000Z");
+    assert.deepEqual(result.snapshot.workforce, { farmers: true, workers: true });
+    assert.equal("population" in result.snapshot, false);
+    assert.equal("warehouse" in result.snapshot, false);
+    assert.equal("goods" in result.snapshot, false);
+    assert.equal("tradeRoutes" in result.snapshot, false);
   });
 
   it("rejects a bad schema", () => {

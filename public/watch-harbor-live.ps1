@@ -176,14 +176,31 @@ while ($true) {
       hints     = @($hintHits)
     }
 
-    $payload = [ordered]@{
-      schema    = "harbor-live-v1"
-      source    = "save"
-      updatedAt = (Get-Date).ToUniversalTime().ToString("o")
-      game      = "anno-1800"
-      quests    = @($quests)
-      telemetry = $telemetry
+    # Campos seguros: filesystem + needles. Sin conteos, stock ni inject.
+    $sessionName = [System.IO.Path]::GetFileNameWithoutExtension($save.Name)
+    if ($sessionName.Length -gt 200) { $sessionName = $sessionName.Substring(0, 200) }
+    $islandName = $null
+    $islandHits = @($telemetry.islands)
+    if ($islandHits.Count -gt 0 -and $islandHits[0].name) {
+      $islandName = [string]$islandHits[0].name
     }
+    $workforce = [ordered]@{}
+    foreach ($tier in @("farmers", "workers", "artisans", "engineers")) {
+      if ($hintHits -contains $tier) { $workforce[$tier] = $true }
+    }
+
+    $payload = [ordered]@{
+      schema      = "harbor-live-v1"
+      source      = "save"
+      updatedAt   = (Get-Date).ToUniversalTime().ToString("o")
+      savedAt     = $save.LastWriteTimeUtc.ToString("o")
+      game        = "anno-1800"
+      sessionName = $sessionName
+    }
+    if ($islandName) { $payload.islandName = $islandName }
+    $payload.quests = @($quests)
+    if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
+    $payload.telemetry = $telemetry
     $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
     [System.IO.File]::WriteAllText($outJson, $json + "`n", $utf8)
     $bCount = @($telemetry.buildings).Count

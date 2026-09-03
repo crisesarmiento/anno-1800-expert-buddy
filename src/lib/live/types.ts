@@ -33,6 +33,16 @@ export type LiveTelemetry = {
   hints?: string[];
 };
 
+/** Presencia de estrato (needles del catálogo). Sin conteos. */
+export const LIVE_WORKFORCE_TIERS = [
+  "farmers",
+  "workers",
+  "artisans",
+  "engineers",
+] as const;
+export type LiveWorkforceTier = (typeof LIVE_WORKFORCE_TIERS)[number];
+export type LiveWorkforce = Partial<Record<LiveWorkforceTier, true>>;
+
 export type LiveSnapshot = {
   schema: typeof LIVE_SCHEMA;
   source: LiveSource;
@@ -41,6 +51,13 @@ export type LiveSnapshot = {
   quests: LiveQuest[];
   pulseHint?: LivePulseHint;
   telemetry?: LiveTelemetry;
+  /** Nombre del .a7s (filesystem). No se parsea el binario. */
+  sessionName?: string;
+  /** Primer hit de isla del catálogo, si hay. */
+  islandName?: string;
+  /** mtime UTC del .a7s. Distinto de updatedAt (cuándo se escribió el JSON). */
+  savedAt?: string;
+  workforce?: LiveWorkforce;
 };
 
 export type LiveMatch = {
