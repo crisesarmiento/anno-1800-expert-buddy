@@ -116,6 +116,12 @@ function TopBar() {
           {t.map}
         </Link>
         <Link
+          to="/taller"
+          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          Taller
+        </Link>
+        <Link
           to="/instalar"
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >

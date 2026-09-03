@@ -29,6 +29,8 @@
   --color-paper: #f3e6d0;
   --color-ink: #2a2118;
   --color-brass: #b8956a;
+  --color-paper-cool: #dce6ea;
+  --color-ink-cool: #1c2a33;
   --color-saturado: #c4923a;
   --color-monedas: #a6453a;
 
@@ -101,6 +103,24 @@
     outline: 2px solid var(--color-ring);
     outline-offset: 3px;
   }
+}
+
+[data-visual="taller"] {
+  --color-background: var(--color-paper-cool);
+  --color-paper: var(--color-paper-cool);
+  --color-ink: var(--color-ink-cool);
+  --color-foreground: var(--color-ink-cool);
+  --color-card: #e8eef2;
+  --color-card-foreground: var(--color-ink-cool);
+  --color-primary: #6a8494;
+  --color-primary-foreground: #e8eef2;
+  --color-muted: #cdd8de;
+  --color-muted-foreground: #4a5c66;
+  --color-border: #1c2a3333;
+  --color-brass: #6a8494;
+  --color-ring: #6a8494;
+  background-color: var(--color-paper-cool);
+  color: var(--color-ink-cool);
 }
 
 .hero-orla {
