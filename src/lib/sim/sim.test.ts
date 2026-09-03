@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
-import { BUILDINGS, CHAINS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
+import { BUILDINGS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
 import {
   compute,
   housesSupportedFish,
@@ -138,9 +138,13 @@ describe("wiki production", () => {
 });
 
 describe("campaign-ch1 fixture", () => {
-  it("parses and asks for a fishery", () => {
+  it("parses La Inapetente, not Bright Sands, and asks for a fishery", () => {
     const seed = parseCitySeed(fixture);
     assert.equal(seed.mode, "campaign");
+    assert.equal(seed.chapterId, "ch1");
+    assert.equal(seed.islands[0]?.id, "la-inapetente");
+    assert.equal(seed.islands[0]?.name, "La Inapetente");
+    assert.notEqual(seed.islands[0]?.id, "bright-sands");
     assert.equal(seed.islands[0]?.houses.farmer, 10);
     assert.equal(seed.islands[0]?.buildings.fishery, 0);
 
@@ -158,6 +162,11 @@ describe("campaign-ch1 fixture", () => {
     assert.match(
       island.alerts.find((row) => row.id === "clothes-soon")?.line ?? "",
       /0 telares/,
+    );
+    assert.equal(
+      island.alerts.some((row) => row.good === "schnapps" || /schnapps/i.test(row.line)),
+      false,
+      "lujo no se pide mientras falta un básico",
     );
   });
 
@@ -187,7 +196,7 @@ describe("presence confidence", () => {
       mode: "campaign",
       islands: [
         {
-          id: "bright-sands",
+          id: "la-inapetente",
           world: "old",
           houses: {},
           buildings: {},
@@ -201,6 +210,75 @@ describe("presence confidence", () => {
     assert.equal(stats.islands[0]?.workforce, null);
     assert.ok(stats.islands[0]?.alerts.some((row) => row.id === "presence"));
     assert.equal(Object.keys(stats.islands[0]?.demand ?? {}).length, 0);
+  });
+});
+
+function ch1Fed(island: CitySeed["islands"][number], extra: CitySeed["islands"][number]["buildings"]) {
+  return {
+    ...island,
+    buildings: {
+      ...island.buildings,
+      fishery: 1,
+      sheep: 1,
+      knitters: 1,
+      potato: 1,
+      distillery: 1,
+      ...extra,
+    },
+  };
+}
+
+describe("sim gate: chapter already seen + perfect copy", () => {
+  it("does not recommend steel or New World on a ch1 seed", () => {
+    const base = parseCitySeed(fixture);
+    const island = base.islands[0]!;
+    const seed: CitySeed = {
+      ...base,
+      chapterId: "ch1",
+      islands: [ch1Fed(island, { "iron-mine": 1 })],
+    };
+    const stats = compute(seed);
+    assert.equal(stats.nextBuild, null);
+    assert.notEqual(stats.nextBuild?.buildingId, "charcoal");
+    assert.notEqual(stats.nextBuild?.buildingId, "kitchen");
+    assert.equal(
+      stats.alerts.some((row) => /acería|plátanos|nuevo mundo/i.test(row.line)),
+      false,
+    );
+  });
+
+  it("recommends the next steel link once chapter 2 is already seen", () => {
+    const base = parseCitySeed(fixture);
+    const island = base.islands[0]!;
+    const seed: CitySeed = {
+      ...base,
+      chapterId: "ch2",
+      islands: [ch1Fed(island, { "iron-mine": 1 })],
+    };
+    const stats = compute(seed);
+    assert.equal(stats.nextBuild?.buildingId, "charcoal");
+  });
+
+  it("perfect pickNextBuild does not use ch1 campaign narration", () => {
+    const base = parseCitySeed(fixture);
+    const stats = compute({ ...base, mode: "perfect" });
+    assert.equal(stats.nextBuild?.buildingId, "fishery");
+    assert.doesNotMatch(stats.nextBuild?.line ?? "", /100 granjeros|ropa a 100/);
+    for (const alert of stats.alerts) {
+      assert.doesNotMatch(alert.line, /ropa a 100 granjeros/);
+    }
+    assert.match(stats.nextBuild?.line ?? "", /ratio wiki|80 residencias/i);
+  });
+
+  it("does not demand fish before the 50-farmer unlock", () => {
+    const base = parseCitySeed(fixture);
+    const island = base.islands[0]!;
+    const stats = compute({
+      ...base,
+      islands: [{ ...island, houses: { ...island.houses, farmer: 4 } }],
+    });
+    assert.equal(stats.islands[0]?.demand.fish, undefined);
+    assert.equal(stats.islands[0]?.demand["work-clothes"], undefined);
   });
 });
 

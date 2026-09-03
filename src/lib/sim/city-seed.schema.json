@@ -16,6 +16,12 @@
       "default": "campaign",
       "description": "campaign es el default. perfect solo en Taller."
     },
+    "chapterId": {
+      "type": "string",
+      "enum": ["prologue", "ch1", "ch2", "ch3", "ch4", "end"],
+      "default": "ch1",
+      "description": "Capítulo ya visto. nextBuild y alertas no adelantan el diario."
+    },
     "missionHint": { "type": "string" },
     "islands": {
       "type": "array",

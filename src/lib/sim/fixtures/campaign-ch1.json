@@ -3,10 +3,12 @@
   "game": "anno-1800",
   "updatedAt": "2026-09-03T00:00:00.000Z",
   "mode": "campaign",
+  "chapterId": "ch1",
   "missionHint": "Una chispa que vuelve",
   "islands": [
     {
-      "id": "bright-sands",
+      "id": "la-inapetente",
+      "name": "La Inapetente",
       "world": "old",
       "houses": {
         "farmer": 10,
@@ -27,7 +29,7 @@
         "coins": "down",
         "houses": "empty"
       },
-      "notes": "primera isla, mercado cerca del puerto"
+      "notes": "primera isla, mercado cerca del puerto. Bright Sands es de Edvard."
     }
   ]
 }
