@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-echo Harbor Buddy vigilante 0.4.2 - un solo archivo
+echo Harbor Buddy vigilante 0.4.3 - un solo archivo
 if exist "watch-harbor-live.ps1" (
   echo Encontre un .ps1 viejo en esta carpeta. Lo renombro a .old para no usarlo.
   move /Y "watch-harbor-live.ps1" "watch-harbor-live.ps1.old" >nul
@@ -1010,7 +1010,18 @@ function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
       $fs.Dispose()
     }
     if ([System.IO.File]::Exists($target)) {
-      [System.IO.File]::Replace($tmp, $target, $null)
+      # PS 5.1 marshals $null as "" → File.Replace throws "path is not of a legal form".
+      # OneDrive (typical Anno folder) can also reject ReplaceFile. Copy-overwrite is the fallback.
+      $backup = "$target.bak"
+      try {
+        [System.IO.File]::Replace($tmp, $target, $backup)
+      } catch {
+        [System.IO.File]::Copy($tmp, $target, $true)
+        [System.IO.File]::Delete($tmp)
+      }
+      if ([System.IO.File]::Exists($backup)) {
+        try { [System.IO.File]::Delete($backup) } catch { }
+      }
     } else {
       [System.IO.File]::Move($tmp, $target)
     }

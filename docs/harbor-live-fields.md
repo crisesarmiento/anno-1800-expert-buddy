@@ -47,7 +47,7 @@ El vigilante es el **único writer**. Chip Actualizar / File System Access solo 
 
 1. Escribe `harbor-live.json.tmp` en el mismo directorio (mismo volumen).
 2. `Flush($true)` (fsync a disco).
-3. `File.Replace` / `Move` atómico sobre `harbor-live.json`.
+3. `File.Replace` con un `.bak` (nunca `$null`: PowerShell 5.1 lo vuelve `""` y tira "path is not of a legal form"). Si OneDrive rechaza ReplaceFile, `Copy` overwrite. Luego `Move` si el destino no existía.
 4. Repite para `harbor-live.last-good.json` con los mismos bytes.
 
 Si `harbor-live.json` queda truncado, el ingest usa last-good y **no** pinta un empty-state de error. Schema version: `harbor-live-v1`.
