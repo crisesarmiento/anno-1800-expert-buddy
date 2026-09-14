@@ -39,6 +39,7 @@ function sample(over: Partial<SessionSnapshot> = {}): SessionSnapshot {
     calm: "overwhelmed",
     pulse: { ...defaultPulse, coins: "down", houses: "yellow" },
     overbuildBrake: { active: false },
+    activeIslandId: "la-inapetente",
     ...over,
   };
 }
@@ -51,12 +52,20 @@ describe("parseSessionSnapshot", () => {
     assert.equal(snap?.calm, "overwhelmed");
     assert.equal(snap?.stamps[0], "block-10");
     assert.equal(snap?.pulse.coins, "down");
+    assert.equal(snap?.activeIslandId, "la-inapetente");
   });
 
   it("rejects garbage and unknown versions", () => {
     assert.equal(parseSessionSnapshot(""), null);
     assert.equal(parseSessionSnapshot("{"), null);
     assert.equal(parseSessionSnapshot(JSON.stringify({ version: 99 })), null);
+  });
+
+  it("parses a missing activeIslandId field as null so old snapshots still load", () => {
+    const { activeIslandId: _drop, ...legacy } = sample();
+    void _drop;
+    const parsed = parseSessionSnapshot(JSON.stringify(legacy));
+    assert.equal(parsed?.activeIslandId, null);
   });
 });
 

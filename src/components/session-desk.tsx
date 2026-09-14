@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { DiaryTitleChips } from "@/components/diary-chips";
+import { IslandFocusChips } from "@/components/island-focus";
 import { PowerUpSection } from "@/components/live-panel";
 import { InkSeal } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
+import { resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
 import { deskCalmUmbral, sessionEstoAhora } from "@/lib/session-desk";
 import { resolveMission } from "@/lib/data";
 import { commitDeskMutation } from "@/lib/desk-offline";
@@ -21,6 +23,9 @@ export function SessionDesk() {
   const snapshot = useHarbor((s) => s.liveSnapshot);
   const stamps = useHarbor((s) => s.stamps);
   const completed = useHarbor((s) => s.completed);
+  const activeIslandId = useHarbor((s) => s.activeIslandId);
+  const setActiveIslandId = useHarbor((s) => s.setActiveIslandId);
+  const islandId = resolveIslandFocusId(activeIslandId);
   const resolved = resolveMission(missionId);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
 
@@ -34,6 +39,7 @@ export function SessionDesk() {
   const now = items.find((item) => !item.done) ?? items[0];
   const nowIndex = Math.max(0, items.indexOf(now));
   const { saturado, rojo, umbral, alarm, taller } = deskCalmUmbral(pulse, calm);
+  const scopedLine = scopeEstoAhoraLine(islandId, campaignTip?.line ?? now?.text ?? ESTO_AHORA_IDLE);
 
   function commit(kind: Parameters<typeof commitDeskMutation>[1]) {
     commitDeskMutation(getDeskHost(), kind);
@@ -75,6 +81,9 @@ export function SessionDesk() {
             }
           />
         </p>
+        <div className="mt-4" data-home-primary="island-focus">
+          <IslandFocusChips activeId={islandId} onPick={setActiveIslandId} />
+        </div>
         <h1 className="mt-4 font-display text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
           Esto, ahora
         </h1>
@@ -92,12 +101,13 @@ export function SessionDesk() {
         ) : null}
         <p
           data-esto-ahora-item=""
+          data-island-focus={islandId}
           data-campaign-tip-family={campaignTip?.family ?? ""}
           data-campaign-tip-kind={campaignTip?.kind ?? "idle"}
           className="mt-6 text-lg leading-relaxed"
         >
           {campaignTip?.kind === "chip" ? (
-            <span data-campaign-tip-chip="">{campaignTip.line}</span>
+            <span data-campaign-tip-chip="">{scopedLine}</span>
           ) : (
             <button
               type="button"
@@ -105,7 +115,7 @@ export function SessionDesk() {
               onClick={() => commit({ kind: "toggleCheck", index: nowIndex })}
               className="text-left"
             >
-              {campaignTip?.line ?? now?.text ?? ESTO_AHORA_IDLE}
+              {scopedLine}
             </button>
           )}
         </p>

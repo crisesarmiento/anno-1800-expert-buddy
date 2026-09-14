@@ -61,6 +61,7 @@ export function snapshotFromHarbor(): SessionSnapshot {
     calm: state.calm,
     pulse: state.pulse,
     overbuildBrake: state.overbuildBrake,
+    activeIslandId: state.activeIslandId,
   };
 }
 
@@ -78,6 +79,7 @@ export function applyHarborSnapshot(snapshot: SessionSnapshot): void {
     checks,
     checkItems: snapshot.checks,
     overbuildBrake: snapshot.overbuildBrake,
+    activeIslandId: snapshot.activeIslandId,
   });
 }
 

@@ -49,6 +49,7 @@ function sample(over: Partial<SessionSnapshot> = {}): SessionSnapshot {
     calm: "session",
     pulse: defaultPulse,
     overbuildBrake: { active: false },
+    activeIslandId: null,
     ...over,
   };
 }
