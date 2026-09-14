@@ -105,6 +105,7 @@ function blobOf(input: CampaignTipInput): string {
   const tel = snapshot.telemetry;
   if (tel) {
     for (const row of [...(tel.islands ?? []), ...(tel.buildings ?? []), ...(tel.people ?? []), ...(tel.chains ?? [])]) {
+      // Presence only — never building count (Taller consumes count).
       parts.push(row.id, row.name);
     }
     for (const hint of tel.hints ?? []) parts.push(hint);

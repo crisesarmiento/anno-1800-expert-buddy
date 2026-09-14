@@ -14,6 +14,7 @@ export function TallerBench() {
   const pulse = useHarbor((s) => s.pulse);
   const live = useHarbor((s) => s.liveSnapshot);
   const missionId = useHarbor((s) => s.missionId);
+  // Taller is the only consumer of telemetry.buildings count/grid UI.
   const buildings = live?.telemetry?.buildings;
   const stamp = tallerThreshold({
     balance: pulse.coins !== "unknown" ? pulse.coins : (live?.pulseHint?.coins ?? "unknown"),

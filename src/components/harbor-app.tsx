@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Anchor,
@@ -11,7 +11,6 @@ import {
   RotateCcw,
   Ship,
 } from "lucide-react";
-import { BlockGrid, HarborRoute } from "@/components/block-grid";
 import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
@@ -23,7 +22,7 @@ import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
 import { SessionDeskSurface } from "@/components/session-desk-surface";
-import { Stamp, buildingStamp } from "@/components/stamps";
+import { Stamp } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { HOME_SATURATED_TIP_MS } from "@/lib/home-saturated-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
@@ -34,7 +33,6 @@ import {
   chapters,
   firstPlayableMissionId,
   getMissionIndex,
-  layoutsById,
   missionsById,
   resolveMission,
 } from "@/lib/data";
@@ -461,23 +459,14 @@ function SessionDesk() {
   const t = useT();
   const resolved = resolveMission(missionId);
   const nav = missionId ? getMissionIndex(missionId) : null;
-  const [buildingId, setBuildingId] = useState<string | null>(null);
   const [personId, setPersonId] = useState<string | null>(null);
 
   useEffect(() => {
-    setBuildingId(null);
     setPersonId(null);
   }, [missionId]);
 
-  const activeBuilding = useMemo(() => {
-    if (!resolved) return null;
-    const id = buildingId ?? resolved.buildings[0]?.id;
-    return resolved.buildings.find((item) => item.id === id) ?? null;
-  }, [resolved, buildingId]);
-
   if (!resolved || !nav) return null;
-  const { mission, chapter, layout, buildings, life, people, lifeAsks } = resolved;
-  const shownLayout = layout ?? layoutsById["block-10"];
+  const { mission, chapter, life, people, lifeAsks } = resolved;
   const done = completed.includes(mission.id);
   const activePerson = people.find((person) => person.id === (personId ?? people[0]?.id)) ?? null;
   const checked = missionId ? (checks[missionId] ?? []) : [];
@@ -594,108 +583,6 @@ function SessionDesk() {
           ) : null}
         </div>
       </section>
-
-      {shownLayout ? (
-        <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <div className="flex items-start gap-3">
-            <IconWell>
-              <Stamp name="cottage" className="size-5" />
-            </IconWell>
-            <div className="min-w-0">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {t.session.stamp}
-              </p>
-              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">{shownLayout.title}</h2>
-            </div>
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{shownLayout.hint}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t.session.stampsNote}
-          </p>
-          <div className="mt-5">
-            <BlockGrid layout={shownLayout} />
-          </div>
-          {shownLayout.id === "first-city" || shownLayout.id === "block-10" ? (
-            <HarborRoute />
-          ) : null}
-          <ol className="mt-5 flex flex-col gap-2">
-            {shownLayout.steps.map((step, index) => (
-              <li key={step} className="flex gap-3 text-sm leading-relaxed">
-                <span className="font-display w-4 shrink-0 text-mist tabular-nums">{index + 1}</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
-
-      {buildings.length > 0 ? (
-        <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <div className="flex items-start gap-3">
-            <IconWell>
-              <Stamp name="stall" className="size-5" />
-            </IconWell>
-            <div className="min-w-0">
-              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {t.session.buildings}
-              </p>
-              <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">{t.session.whereReal}</h2>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {buildings.map((building) => (
-              <button
-                key={building.id}
-                type="button"
-                onClick={() => setBuildingId(building.id)}
-                className={cn(
-                  "inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm",
-                  activeBuilding?.id === building.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground hover:bg-secondary",
-                )}
-              >
-                <Stamp name={buildingStamp(building.id)} className="size-4" />
-                {building.name}
-              </button>
-            ))}
-          </div>
-          {activeBuilding ? (
-            <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
-              <div
-                className="grid size-24 shrink-0 place-items-center rounded-xl bg-muted text-primary"
-                aria-hidden
-              >
-                <Stamp name={buildingStamp(activeBuilding.id)} className="size-14" />
-              </div>
-              <div className="flex min-w-0 flex-col gap-3">
-              <p className="text-xs text-muted-foreground">
-                {fill(t.session.unlocks, activeBuilding.unlock.toLowerCase())}
-              </p>
-              <p className="text-sm leading-relaxed">{activeBuilding.buddy}</p>
-              <p className="text-sm leading-relaxed">
-                <span className="font-medium">{t.session.put}</span>
-                {activeBuilding.where}
-              </p>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                <span className="font-medium text-foreground">{t.session.watch}</span>
-                {activeBuilding.trap}
-              </p>
-              </div>
-            </div>
-          ) : null}
-        </section>
-      ) : (
-        <section className="rounded-xl bg-card p-4 shadow-border sm:p-6">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {t.session.waitCity}
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-medium tracking-tight">{t.session.notPuzzle}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {t.session.notPuzzleCopy}
-          </p>
-        </section>
-      )}
 
       {life ? (
         <section
