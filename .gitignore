@@ -42,3 +42,12 @@ prompts/PROMPT-LOCAL-*.md
 # local screenshot experiments (tracked screenshots/ stay)
 screenshots/instalar-hydrate.png
 screenshots/*-local.png
+
+
+# Vercel / Nitro build output (never commit)
+.vercel/
+
+# local agent / PC session notes (not product)
+harbor-pc-session-*.md
+harbor-studio-ops/
+
