@@ -49,7 +49,7 @@ export function TallerBench() {
           <TallerStamp stamp={stamp} />
         </article>
         <TallerGoodsBalance />
-        <TallerCity />
+        <TallerCity live={live} />
         <p className="text-xs leading-relaxed text-muted-foreground">
           Ratios estáticos {TALLER_RATIOS_VERSION} (wiki CC-BY-SA, no params.js de NiHoel).{" "}
           <a href={TALLER_WIKI} target="_blank" rel="noreferrer" className="underline">

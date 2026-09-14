@@ -1,0 +1,12 @@
+{
+  "counts": [
+    { "guid": 1010343, "count": 10 },
+    { "guid": 1010266, "count": 2 },
+    { "guid": 1010294, "count": 1 },
+    { "guid": 1010371, "count": 3 },
+    { "guid": 1010358, "count": 1 },
+    { "guid": 1010360, "count": 1 },
+    { "guid": 1010359, "count": 1 },
+    { "guid": 9999999, "count": 40 }
+  ]
+}

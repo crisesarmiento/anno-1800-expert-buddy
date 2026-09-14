@@ -1,0 +1,76 @@
+/**
+ * Taller Ciudades chip: apply mapper overlay to the current city-seed.
+ * Mapping lives in mapSaveCountsToCitySeed — this file only overlays or keeps.
+ * Never writes nextBuild or chains. Never paints Home.
+ */
+
+import type { LiveSnapshot } from "../live/types.ts";
+import { mapSaveCountsToCitySeed } from "./save-count-seed.ts";
+import type { SaveCountFill, SaveCountHit } from "./save-count-seed.ts";
+import type {
+  BuildingCounts,
+  CitySeed,
+  HouseCounts,
+  Island,
+  SimMode,
+} from "./types.ts";
+
+export const SAVE_COUNT_CHIP_LABEL = "Usar conteos del save";
+
+export const SAVE_COUNT_DEGRADE_ES =
+  "No hay conteos del save. Dejé el seed manual sin cambios.";
+
+export function fillFromSimMode(mode: SimMode): SaveCountFill {
+  return mode === "perfect" ? "sandbox" : "campaign";
+}
+
+export type ApplySaveCountsInput = {
+  seed: CitySeed;
+  live?: LiveSnapshot | null;
+  counts?: SaveCountHit[];
+  fill?: SaveCountFill;
+};
+
+export type ApplySaveCountsResult = {
+  seed: CitySeed;
+  applied: boolean;
+  message: string | null;
+};
+
+function overlayIsland(island: Island, houses: HouseCounts, buildings: BuildingCounts): Island {
+  return {
+    ...island,
+    houses: { ...houses },
+    buildings: { ...buildings },
+    confidence: "seed",
+  };
+}
+
+function overlaySeed(seed: CitySeed, houses: HouseCounts, buildings: BuildingCounts): CitySeed {
+  if (seed.islands.length === 0) return seed;
+  return {
+    ...seed,
+    islands: seed.islands.map((island, index) =>
+      index === 0 ? overlayIsland(island, houses, buildings) : island,
+    ),
+  };
+}
+
+export function applySaveCountsChip(input: ApplySaveCountsInput): ApplySaveCountsResult {
+  const fill = input.fill ?? fillFromSimMode(input.seed.mode ?? "campaign");
+  const mapped = mapSaveCountsToCitySeed({
+    fill,
+    chapterId: input.seed.chapterId,
+    live: input.live,
+    counts: input.counts,
+    manualSeed: input.seed,
+  });
+  if (mapped.degraded || mapped.keepManualSeed) {
+    return { seed: input.seed, applied: false, message: SAVE_COUNT_DEGRADE_ES };
+  }
+  return {
+    seed: overlaySeed(input.seed, mapped.houses, mapped.buildings),
+    applied: true,
+    message: null,
+  };
+}

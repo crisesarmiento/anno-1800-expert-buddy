@@ -2,6 +2,9 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Stamp, goodStamp } from "@/components/stamps";
 import campaignCh1 from "@/lib/sim/fixtures/campaign-ch1.json";
 import {
+  SAVE_COUNT_CHIP_LABEL,
+  applySaveCountsChip,
+  fillFromSimMode,
   TIER_NAME_ES,
   buildingById,
   compute,
@@ -10,7 +13,8 @@ import {
   outputTMinAt100,
   parseCitySeed,
 } from "@/lib/sim";
-import type { BuildingId, GoodId, Island, IslandStats, PopulationTier, SimMode } from "@/lib/sim/types";
+import type { BuildingId, CitySeed, GoodId, Island, IslandStats, PopulationTier, SimMode } from "@/lib/sim/types";
+import type { LiveSnapshot } from "@/lib/live/types";
 
 const LIVE_ONLY = [
   "Stock del almacén",
@@ -41,12 +45,21 @@ const BALANCE_LABEL = {
  * Campaña es el default; sandbox (ratio wiki) es un toggle de Taller.
  * Fixture de campaña: La Inapetente es la isla por defecto.
  */
-export function TallerCity() {
+export function TallerCity({ live = null }: { live?: LiveSnapshot | null }) {
   const [mode, setMode] = useState<SimMode>("campaign");
-  const { stats, seedIslands } = useMemo(() => {
-    const seed = parseCitySeed({ ...campaignCh1, mode });
-    return { stats: compute(seed), seedIslands: seed.islands };
-  }, [mode]);
+  const [appliedSeed, setAppliedSeed] = useState<CitySeed | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { stats, seedIslands, seed } = useMemo(() => {
+    const base = parseCitySeed({ ...campaignCh1, mode });
+    const working = appliedSeed ? parseCitySeed({ ...appliedSeed, mode }) : base;
+    return { stats: compute(working), seedIslands: working.islands, seed: working };
+  }, [mode, appliedSeed]);
+
+  function onUseSaveCounts() {
+    const result = applySaveCountsChip({ seed, live, fill: fillFromSimMode(mode) });
+    setNotice(result.message);
+    if (result.applied) setAppliedSeed(result.seed);
+  }
 
   return (
     <div className="flex flex-col gap-6" data-taller-city="seed">
@@ -57,7 +70,20 @@ export function TallerCity() {
         <ModeChip current={mode} value="perfect" onClick={setMode}>
           Sandbox (ratio wiki)
         </ModeChip>
+        <button
+          type="button"
+          data-taller-save-counts-chip=""
+          onClick={onUseSaveCounts}
+          className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm text-muted-foreground"
+        >
+          {SAVE_COUNT_CHIP_LABEL}
+        </button>
       </div>
+      {notice ? (
+        <p data-taller-save-counts-notice="" className="text-sm leading-relaxed text-muted-foreground">
+          {notice}
+        </p>
+      ) : null}
       {mode === "perfect" ? (
         <p className="text-sm leading-relaxed text-muted-foreground">
           Sandbox es el ratio wiki. En campaña, una de cada alcanza.

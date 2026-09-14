@@ -1,0 +1,14 @@
+{
+  "schema": "harbor-live-v1",
+  "source": "save",
+  "updatedAt": "2026-09-14T00:00:00.000Z",
+  "game": "anno-1800",
+  "quests": [],
+  "telemetry": {
+    "buildings": [
+      { "id": "lumberjack", "name": "Lumberjacks Hut" },
+      { "id": "farmer-house", "name": "Farmer Residence" }
+    ],
+    "goods": [{ "id": "fish", "name": "Fish", "amount": 80 }]
+  }
+}
