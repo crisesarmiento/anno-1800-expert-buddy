@@ -17,6 +17,7 @@ import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
 import { DiaryTitleChips } from "@/components/diary-chips";
+import { useHomeSaturatedTip } from "@/components/home-saturated-tip";
 import { SandboxModeChip } from "@/components/sandbox-mode";
 import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
@@ -24,6 +25,7 @@ import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
 import { SessionDeskSurface } from "@/components/session-desk-surface";
 import { Stamp, buildingStamp } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
+import { HOME_SATURATED_TIP_MS } from "@/lib/home-saturated-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -302,6 +304,7 @@ function Welcome() {
   const missionId = useHarbor((s) => s.missionId);
   const completed = useHarbor((s) => s.completed);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
+  const saturatedTip = useHomeSaturatedTip(snapshot);
   const t = useT();
 
   return (
@@ -317,11 +320,15 @@ function Welcome() {
         </h1>
         <p
           data-esto-ahora-item=""
-          data-campaign-tip-family={campaignTip?.family ?? ""}
-          data-campaign-tip-kind={campaignTip?.kind ?? "idle"}
+          data-campaign-tip-family={saturatedTip ? "brake" : (campaignTip?.family ?? "")}
+          data-campaign-tip-kind={saturatedTip ? "esto-ahora" : (campaignTip?.kind ?? "idle")}
           className="mt-4 max-w-prose text-lg leading-relaxed"
         >
-          {campaignTip?.kind === "chip" ? (
+          {saturatedTip ? (
+            <span data-home-saturated-tip="" data-home-saturated-tip-ms={HOME_SATURATED_TIP_MS}>
+              {saturatedTip}
+            </span>
+          ) : campaignTip?.kind === "chip" ? (
             <span data-campaign-tip-chip="">{campaignTip.line}</span>
           ) : (
             (campaignTip?.line ?? ESTO_AHORA_IDLE)
