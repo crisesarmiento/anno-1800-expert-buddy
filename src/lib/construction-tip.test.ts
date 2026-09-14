@@ -64,7 +64,7 @@ describe("session desk prefers the construction tip over a non-urgent campaign t
     assert.match(desk, /family === "coins" \|\| campaignTip\.family === "brake"/);
     assert.match(
       desk,
-      /constructionTip = urgentCampaignTip \? null : constructionTipLine\(islandId\)/,
+      /constructionTip = urgentCampaignTip \|\| saturatedTip \? null : constructionTipLine\(islandId\)/,
     );
   });
 

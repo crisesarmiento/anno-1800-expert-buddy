@@ -186,8 +186,12 @@ describe("Campaign Home: un solo tip de freno durante diez segundos", () => {
     assert.match(home, /:\s*campaignTip\?\.kind === "chip"/);
   });
 
-  it("no muestra el tip saturado fuera de Campaign Home", () => {
-    const permitidos = new Set(["components/harbor-app.tsx", "components/home-saturated-tip.tsx"]);
+  it("no muestra el tip saturado fuera de Campaign Home o Esto ahora del desk", () => {
+    const permitidos = new Set([
+      "components/harbor-app.tsx",
+      "components/home-saturated-tip.tsx",
+      "components/session-desk.tsx",
+    ]);
     for (const path of [...archivosTsx(componentDir), ...archivosTsx(routeDir)]) {
       const name = relative(srcDir, path);
       if (permitidos.has(name)) continue;
