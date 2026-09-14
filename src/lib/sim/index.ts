@@ -27,6 +27,16 @@ export {
 } from "./compute.ts";
 export { GOOD_NAME_ES, goodNameEs } from "./goods.ts";
 export {
+  GUID_TO_FACTORY,
+  GUID_TO_HOUSE,
+  mapSaveCountsToCitySeed,
+  type SaveCountDegraded,
+  type SaveCountFill,
+  type SaveCountMapInput,
+  type SaveCountMapResult,
+  type SaveCountMapped,
+} from "./save-count-seed.ts";
+export {
   ARTISAN_NEEDS,
   ENGINEER_NEEDS,
   FARMER_NEEDS,
