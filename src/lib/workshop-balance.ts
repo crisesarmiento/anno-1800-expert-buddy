@@ -116,3 +116,14 @@ export function workshopSaturatedSignal(
   if (pulseHintIsUnknown(pulseHint)) return false;
   return rows.some((row) => row.status === "saturado");
 }
+
+/** Per-good paint for /taller. Unknown pulseHint never paints saturado red. */
+export type WorkshopGoodPaint = WorkshopGoodStatus | "none";
+
+export function workshopGoodPaint(
+  status: WorkshopGoodStatus,
+  pulseHint: LivePulseHint | undefined | null,
+): WorkshopGoodPaint {
+  if (status === "saturado" && pulseHintIsUnknown(pulseHint)) return "none";
+  return status;
+}
