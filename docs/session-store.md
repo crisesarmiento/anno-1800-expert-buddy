@@ -23,6 +23,8 @@ One JSON document per session key:
   stamps: string[]            // applied stamp / layout ids
   calm: "session" | "overwhelmed" | "broke"
   pulse: { coins, houses, looking }
+  overbuildBrake: { active: boolean }
+  activeIslandId: string | null  // focused colony for Home's "Esto, ahora"
 }
 ```
 

@@ -17,6 +17,7 @@ import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
 import { DiaryTitleChips } from "@/components/diary-chips";
 import { useHomeSaturatedTip } from "@/components/home-saturated-tip";
+import { IslandFocusChips } from "@/components/island-focus";
 import { SandboxModeChip } from "@/components/sandbox-mode";
 import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
@@ -26,6 +27,7 @@ import { Stamp } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { HOME_SATURATED_TIP_MS } from "@/lib/home-saturated-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
+import { resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -301,9 +303,19 @@ function Welcome() {
   const stamps = useHarbor((s) => s.stamps);
   const missionId = useHarbor((s) => s.missionId);
   const completed = useHarbor((s) => s.completed);
+  const activeIslandId = useHarbor((s) => s.activeIslandId);
+  const setActiveIslandId = useHarbor((s) => s.setActiveIslandId);
+  const islandId = resolveIslandFocusId(activeIslandId);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
   const saturatedTip = useHomeSaturatedTip(snapshot);
   const t = useT();
+
+  const rawLine = saturatedTip
+    ? saturatedTip
+    : campaignTip?.kind === "chip"
+      ? campaignTip.line
+      : (campaignTip?.line ?? ESTO_AHORA_IDLE);
+  const scopedLine = scopeEstoAhoraLine(islandId, rawLine);
 
   return (
     <div data-welcome="" className="stagger-in mx-auto flex max-w-2xl flex-col gap-8">
@@ -313,23 +325,27 @@ function Welcome() {
         className="hero-orla rounded-xl p-5 sm:p-7"
       >
         <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.welcome.kicker}</p>
+        <div className="mt-3" data-welcome-primary="island-focus">
+          <IslandFocusChips activeId={islandId} onPick={setActiveIslandId} />
+        </div>
         <h1 className="mt-3 font-display text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
           Esto, ahora
         </h1>
         <p
           data-esto-ahora-item=""
+          data-island-focus={islandId}
           data-campaign-tip-family={saturatedTip ? "brake" : (campaignTip?.family ?? "")}
           data-campaign-tip-kind={saturatedTip ? "esto-ahora" : (campaignTip?.kind ?? "idle")}
           className="mt-4 max-w-prose text-lg leading-relaxed"
         >
           {saturatedTip ? (
             <span data-home-saturated-tip="" data-home-saturated-tip-ms={HOME_SATURATED_TIP_MS}>
-              {saturatedTip}
+              {scopedLine}
             </span>
           ) : campaignTip?.kind === "chip" ? (
-            <span data-campaign-tip-chip="">{campaignTip.line}</span>
+            <span data-campaign-tip-chip="">{scopedLine}</span>
           ) : (
-            (campaignTip?.line ?? ESTO_AHORA_IDLE)
+            scopedLine
           )}
         </p>
       </article>

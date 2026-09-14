@@ -84,6 +84,7 @@ function sessionSnap(over: Partial<SessionSnapshot> = {}): SessionSnapshot {
     calm: "overwhelmed",
     pulse: { ...defaultPulse, coins: "down", houses: "yellow" },
     overbuildBrake: { active: true },
+    activeIslandId: null,
     ...over,
   };
 }
