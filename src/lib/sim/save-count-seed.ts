@@ -206,14 +206,18 @@ export function mapSaveCountsToCitySeed(input: SaveCountMapInput): SaveCountMapR
     if (count === undefined) continue;
     const house = houseFor(hit.guid, hit.id);
     if (house) {
-      usable = true;
-      if (sandbox || chapterAllowsHouse(seen, house)) add(housesAcc, house, count);
+      if (sandbox || chapterAllowsHouse(seen, house)) {
+        add(housesAcc, house, count);
+        usable = true;
+      }
       continue;
     }
     const factory = factoryFor(hit.guid, hit.id);
     if (!factory) continue;
-    usable = true;
-    if (sandbox || chapterAllowsBuilding(seen, factory)) add(buildingsAcc, factory, count);
+    if (sandbox || chapterAllowsBuilding(seen, factory)) {
+      add(buildingsAcc, factory, count);
+      usable = true;
+    }
   }
 
   if (!usable) return degrade();

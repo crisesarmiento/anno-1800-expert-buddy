@@ -117,6 +117,26 @@ describe("mapSaveCountsToCitySeed", () => {
     assert.equal(result.buildings.sawmill, 3);
   });
 
+  it("degrades when campaign counts are known but all chapter-gated", () => {
+    const result = mapSaveCountsToCitySeed({
+      fill: "campaign",
+      chapterId: "ch1",
+      counts: [
+        { guid: 1010298, count: 2 },
+        { guid: 101255, count: 6 },
+        { id: "rum-distillery", count: 1 },
+      ],
+      manualSeed: MANUAL,
+    });
+    assert.equal(result.degraded, true);
+    if (!result.degraded) return;
+    assert.equal(result.keepManualSeed, true);
+    assert.equal(result.reason, "missing-counts");
+    assert.equal("houses" in result, false);
+    assert.equal("buildings" in result, false);
+    assert.equal(MANUAL.islands[0]?.houses.farmer, 10);
+  });
+
   it("campaign chapter gate drops buildings the chapter has not unlocked", () => {
     const result = mapSaveCountsToCitySeed({
       fill: "campaign",

@@ -84,6 +84,25 @@ describe("applySaveCountsChip", () => {
     assert.deepEqual(MANUAL, before);
   });
 
+  it("keeps the manual seed when campaign counts are all chapter-gated", () => {
+    const before = structuredClone(MANUAL);
+    const result = applySaveCountsChip({
+      seed: MANUAL,
+      fill: "campaign",
+      counts: [
+        { guid: 1010298, count: 2 },
+        { guid: 101255, count: 6 },
+        { id: "rum-distillery", count: 1 },
+      ],
+    });
+    assert.equal(result.applied, false);
+    assert.equal(result.seed, MANUAL);
+    assert.equal(result.message, SAVE_COUNT_DEGRADE_ES);
+    assert.equal(result.seed.islands[0]?.houses.farmer, 10);
+    assert.equal(result.seed.islands[0]?.buildings.marketplace, 1);
+    assert.deepEqual(MANUAL, before);
+  });
+
   it("wires campaign vs sandbox fill from the mapper, not the view", () => {
     assert.equal(fillFromSimMode("campaign"), "campaign");
     assert.equal(fillFromSimMode("perfect"), "sandbox");
