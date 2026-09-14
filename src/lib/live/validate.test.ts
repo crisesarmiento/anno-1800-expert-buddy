@@ -44,13 +44,24 @@ describe("harbor-live ingest", () => {
   it("keeps schema required keys and strips refused extras", () => {
     const schema = JSON.parse(
       readFileSync(new URL("../../../docs/harbor-live.schema.json", import.meta.url), "utf8"),
-    ) as { required: string[]; properties: Record<string, unknown> };
+    ) as {
+      required: string[];
+      properties: Record<string, unknown>;
+      $defs: {
+        buildingHits: { items: { properties: { count?: { type?: string }; id?: unknown; name?: unknown } } };
+        namedHits: { items: { properties: { count?: unknown } } };
+      };
+    };
     assert.deepEqual(schema.required, ["schema", "source", "updatedAt", "game", "quests"]);
     assert.ok(schema.properties.sessionName);
     assert.ok(schema.properties.islandName);
     assert.ok(schema.properties.savedAt);
     assert.ok(schema.properties.workforce);
     assert.ok((schema.properties.telemetry as { properties?: { goods?: unknown } }).properties?.goods);
+    assert.equal(schema.$defs.buildingHits.items.properties.count?.type, "integer");
+    assert.ok(schema.$defs.buildingHits.items.properties.id);
+    assert.ok(schema.$defs.buildingHits.items.properties.name);
+    assert.equal(schema.$defs.namedHits.items.properties.count, undefined);
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);
@@ -166,5 +177,59 @@ describe("harbor-live ingest", () => {
     assert.equal(result.ok, false);
     if (result.ok) return;
     assert.equal(result.message, LIVE_MSG.game);
+  });
+
+  it("accepts optional building count without inventing it when missing", () => {
+    const withCount = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "telemetry",
+      updatedAt: "2026-09-14T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        buildings: [
+          { id: "lumberjack", name: "Lumberjack's Hut", count: 3 },
+          { id: "marketplace", name: "Marketplace" },
+        ],
+        people: [{ id: "hannah", name: "Hannah Goode", count: 9 }],
+      },
+    });
+    assert.equal(withCount.ok, true);
+    if (!withCount.ok) return;
+    assert.equal(withCount.snapshot.telemetry?.buildings?.[0]?.count, 3);
+    assert.equal("count" in (withCount.snapshot.telemetry?.buildings?.[1] ?? {}), false);
+    assert.equal(withCount.snapshot.telemetry?.buildings?.[1]?.count, undefined);
+    assert.equal("count" in (withCount.snapshot.telemetry?.people?.[0] ?? {}), false);
+
+    const presenceOnly = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "file",
+      updatedAt: "2026-09-14T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        buildings: [{ id: "lumberjack", name: "Cabaña de leñador" }],
+      },
+    });
+    assert.equal(presenceOnly.ok, true);
+    if (!presenceOnly.ok) return;
+    assert.deepEqual(presenceOnly.snapshot.telemetry?.buildings, [
+      { id: "lumberjack", name: "Cabaña de leñador" },
+    ]);
+    assert.equal("count" in (presenceOnly.snapshot.telemetry?.buildings?.[0] ?? {}), false);
+
+    const badCount = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "file",
+      updatedAt: "2026-09-14T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        buildings: [{ id: "sawmill", name: "Sawmill", count: 1.5 }],
+      },
+    });
+    assert.equal(badCount.ok, true);
+    if (!badCount.ok) return;
+    assert.equal("count" in (badCount.snapshot.telemetry?.buildings?.[0] ?? {}), false);
   });
 });

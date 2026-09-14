@@ -7,6 +7,7 @@ import {
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
   LIVE_WORKFORCE_TIERS,
+  type LiveBuildingHit,
   type LiveIngestResult,
   type LiveNamedHit,
   type LivePulseHint,
@@ -79,6 +80,10 @@ function clipName(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function optionalIntegerCount(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
+}
+
 function normalizeHits(value: unknown, maxItems: number): LiveNamedHit[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const hits: LiveNamedHit[] = [];
@@ -92,10 +97,26 @@ function normalizeHits(value: unknown, maxItems: number): LiveNamedHit[] | undef
   return hits.length ? hits : undefined;
 }
 
+function normalizeBuildingHits(value: unknown, maxItems: number): LiveBuildingHit[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const hits: LiveBuildingHit[] = [];
+  for (const item of value.slice(0, maxItems)) {
+    if (!asRecord(item)) continue;
+    const id = clipName(item.id, 48);
+    const name = clipName(item.name, 80);
+    if (!id || !name) continue;
+    const hit: LiveBuildingHit = { id, name };
+    const count = optionalIntegerCount(item.count);
+    if (count !== undefined) hit.count = count;
+    hits.push(hit);
+  }
+  return hits.length ? hits : undefined;
+}
+
 function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
   if (!asRecord(value)) return undefined;
   const telemetry: LiveTelemetry = {};
-  const buildings = normalizeHits(value.buildings, 80);
+  const buildings = normalizeBuildingHits(value.buildings, 80);
   const people = normalizeHits(value.people, 24);
   const chains = normalizeHits(value.chains, 20);
   const islands = normalizeHits(value.islands, 20);

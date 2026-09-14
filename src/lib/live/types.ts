@@ -25,6 +25,11 @@ export type LiveNamedHit = {
   name: string;
 };
 
+/** Buildings may carry CountsPerGUID. Omit when unknown — never synthesize 0/1. */
+export type LiveBuildingHit = LiveNamedHit & {
+  count?: number;
+};
+
 export type LiveGoodHit = {
   id: string;
   name: string;
@@ -32,7 +37,7 @@ export type LiveGoodHit = {
 };
 
 export type LiveTelemetry = {
-  buildings?: LiveNamedHit[];
+  buildings?: LiveBuildingHit[];
   people?: LiveNamedHit[];
   chains?: LiveNamedHit[];
   islands?: LiveNamedHit[];

@@ -51,7 +51,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "buildings": { "$ref": "#/$defs/namedHits" },
+        "buildings": { "$ref": "#/$defs/buildingHits" },
         "people": { "$ref": "#/$defs/namedHits" },
         "chains": { "$ref": "#/$defs/namedHits" },
         "islands": { "$ref": "#/$defs/namedHits" },
@@ -87,6 +87,19 @@
         "properties": {
           "id": { "type": "string", "minLength": 1, "maxLength": 48 },
           "name": { "type": "string", "minLength": 1, "maxLength": 80 }
+        }
+      }
+    },
+    "buildingHits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "count": { "type": "integer" }
         }
       }
     }

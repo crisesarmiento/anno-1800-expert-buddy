@@ -19,7 +19,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `quests[]` | GUID de quest mapeado (tabla chica) | `title` en el idioma del juego + `state`. Crece cuando aparece un GUID nuevo. |
 | `pulseHint` | `coins` desde el delta de dinero contra el escaneo anterior; `houses` desde presencia (residencias, mercado, pescadería/stock de pescado) | Sin señal clara, queda `unknown`. Nunca adivina `down`/`empty`. |
 | `workforce` | hints `farmers` / `workers` / `artisans` / `engineers` | **Presencia** (`true`). Sin números. |
-| `telemetry.buildings` | `CountsPerGUID` → tabla GUID | Presencia. Nombres en inglés si el juego está en inglés. |
+| `telemetry.buildings` | `CountsPerGUID` → tabla GUID | Presencia (`id`+`name`). `count` es integer opcional; si falta, se deja ausente (no se inventa 0/1). Nombres en inglés si el juego está en inglés. |
 | `telemetry.people` | GUIDs NPC mapeados | NPCs como hit, no rutas. |
 | `telemetry.chains` | si hay edificios de esa cadena | |
 | `telemetry.islands` | GUIDs de sesión (Europe / New World / …) | |
