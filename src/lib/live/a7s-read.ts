@@ -200,6 +200,63 @@ export function walkFileDb(buf: Buffer, opts?: { maxLeaves?: number }): FileDbWa
   return { tags, attrs, leaves };
 }
 
+export type FileDbNode = {
+  tag: string;
+  leaves: { attr: string; bytes: Buffer }[];
+  children: FileDbNode[];
+};
+
+/** True if a leaf's payload is itself a FileDB stream (has the trailer magic). */
+export function isNestedFileDb(bytes: Buffer): boolean {
+  return bytes.length > 20 && bytes.readUInt32LE(bytes.length - 4) === FILEDB_MAGIC;
+}
+
+/**
+ * Like visitFileDb but builds a tree instead of a flat callback, and
+ * transparently re-enters any leaf whose payload is itself a FileDB stream
+ * (e.g. SessionData/BinaryData) as a child node named after that leaf's
+ * attr. Flat tagPath strings can't tell repeated sibling records apart
+ * (they all share the same tag name/id); the tree does, via children[].
+ */
+export function parseNestedFileDbTree(buf: Buffer): FileDbNode | null {
+  const trailer = findTrailer(buf);
+  if (!trailer) return null;
+  const tags = readDict(buf, trailer.tagOff);
+  const attrs = readDict(buf, trailer.attrOff);
+
+  const root: FileDbNode = { tag: "root", leaves: [], children: [] };
+  const stack: FileDbNode[] = [root];
+  let pos = 0;
+  const end = trailer.nodeEnd;
+  while (pos + 8 <= end) {
+    const size = u32(buf, pos);
+    const id = buf.readUInt16LE(pos + 4);
+    pos += 8;
+    if (id === 0) {
+      if (stack.length > 1) stack.pop();
+      continue;
+    }
+    if (id & 0x8000) {
+      const payload = size > 0 ? buf.subarray(pos, Math.min(pos + size, end)) : Buffer.alloc(0);
+      const pad = (8 - (size % 8)) % 8;
+      pos += size + pad;
+      const attr = attrs.get(id) ?? attrs.get(id & 0x7fff) ?? (id === 0x8000 ? "None" : `attr_${id}`);
+      const bytes = Buffer.from(payload);
+      const current = stack[stack.length - 1];
+      current.leaves.push({ attr, bytes });
+      if (isNestedFileDb(bytes)) {
+        const nested = parseNestedFileDbTree(bytes);
+        if (nested) current.children.push({ tag: attr, leaves: [], children: nested.children });
+      }
+      continue;
+    }
+    const node: FileDbNode = { tag: tags.get(id) ?? `tag_${id}`, leaves: [], children: [] };
+    stack[stack.length - 1].children.push(node);
+    stack.push(node);
+  }
+  return root;
+}
+
 export function leafI32(bytes: Buffer): number | null {
   if (bytes.length === 4) return bytes.readInt32LE(0);
   if (bytes.length === 2) return bytes.readUInt16LE(0);
