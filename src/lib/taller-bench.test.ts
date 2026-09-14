@@ -10,6 +10,8 @@ const app = readFileSync(new URL("../components/harbor-app.tsx", import.meta.url
 const desk = readFileSync(new URL("../components/session-desk.tsx", import.meta.url), "utf8");
 const ahora = readFileSync(new URL("../components/esto-ahora.tsx", import.meta.url), "utf8");
 const city = readFileSync(new URL("../components/taller-city.tsx", import.meta.url), "utf8");
+const seen = readFileSync(new URL("../components/taller-goods-balance.tsx", import.meta.url), "utf8");
+const routes = readFileSync(new URL("../routeTree.gen.ts", import.meta.url), "utf8");
 
 function sliceFn(src: string, name: string) {
   const start = src.indexOf(`function ${name}(`);
@@ -70,6 +72,38 @@ describe("Taller opt-in workbench", () => {
     assert.doesNotMatch(app, /goodStamp|goodNameEs|data-taller-good/);
     assert.doesNotMatch(ahora, /goodStamp|goodNameEs|data-taller-good/);
     assert.doesNotMatch(desk, /goodStamp|goodNameEs|data-taller-good/);
+  });
+
+  it("lista falta/alcanza/saturado solo para bienes vistos, en /taller", () => {
+    assert.match(bench, /TallerGoodsBalance/);
+    assert.match(seen, /classifyWorkshopGoods/);
+    assert.match(seen, /data-taller-seen-goods/);
+    assert.match(seen, /data-taller-seen-good=/);
+    assert.match(seen, /data-taller-seen-status=/);
+    assert.match(seen, /workshopGoodPaint/);
+    assert.match(seen, /Falta/);
+    assert.match(seen, /Alcanza/);
+    assert.match(seen, /Saturado/);
+    assert.match(seen, /Bienes vistos/);
+    assert.match(seen, /rows\.length === 0\) return null/);
+    assert.doesNotMatch(seen, /<img\b/);
+    assert.doesNotMatch(seen, /t\/min|por minuto|goods-grid|solver|\bprices?\b|\btrader|\bfiledb\b|\btradeRoute\b/i);
+    const welcome = sliceFn(app, "Welcome");
+    assert.doesNotMatch(welcome, /TallerGoodsBalance|data-taller-seen-goods|data-taller-seen-good/);
+    assert.doesNotMatch(app, /TallerGoodsBalance|data-taller-seen-goods/);
+    assert.doesNotMatch(ahora, /TallerGoodsBalance|data-taller-seen-goods|data-taller-seen-good/);
+    assert.doesNotMatch(desk, /TallerGoodsBalance|data-taller-seen-goods|data-taller-seen-good/);
+  });
+
+  it("keeps Chip Comercio on Taller and never paints unknown pulseHint red", () => {
+    assert.equal(TALLER_LINK.href, "/taller");
+    assert.match(desk, /to=\/taller|to="\/taller"|TALLER_LINK/);
+    assert.doesNotMatch(seen, /\/comercio|createFileRoute\("\/comercio"\)/);
+    assert.doesNotMatch(routes, /['"]\/comercio['"]/);
+    assert.doesNotMatch(bench, /['"]\/comercio['"]/);
+    assert.match(seen, /paint === "saturado"/);
+    assert.match(seen, /tone=\{tone\}/);
+    assert.match(seen, /paint === "saturado" \? "saturado" : "ink"/);
   });
 
   it("renders one card per island with Estadísticas-style Spanish sections", () => {
