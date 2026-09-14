@@ -6,6 +6,7 @@ import campaignCh1 from "./sim/fixtures/campaign-ch1.json" with { type: "json" }
 import type { LiveSnapshot } from "./live/types.ts";
 import {
   classifyWorkshopGoods,
+  workshopGoodPaint,
   workshopSaturatedSignal,
 } from "./workshop-balance.ts";
 
@@ -143,6 +144,19 @@ describe("señal roja / saturado para tips", () => {
       stats,
     });
     assert.equal(workshopSaturatedSignal(rows, { coins: "up", houses: "ok" }), true);
+  });
+});
+
+describe("pintura por bien en taller", () => {
+  it("no pinta saturado de rojo si pulseHint es unknown o falta", () => {
+    assert.equal(workshopGoodPaint("saturado", undefined), "none");
+    assert.equal(workshopGoodPaint("saturado", { coins: "unknown", houses: "ok" }), "none");
+    assert.equal(workshopGoodPaint("falta", { coins: "unknown", houses: "unknown" }), "falta");
+    assert.equal(workshopGoodPaint("alcanza", undefined), "alcanza");
+  });
+
+  it("pinta saturado solo con pulse conocido", () => {
+    assert.equal(workshopGoodPaint("saturado", { coins: "up", houses: "ok" }), "saturado");
   });
 });
 
