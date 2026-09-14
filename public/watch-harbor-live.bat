@@ -198,6 +198,58 @@ function Get-HousesPulse($scan, $buildings, $goods) {
   return "ok"
 }
 
+function Get-CoinsLabel([string]$coins) {
+  if ($coins -eq "up") { return "suben" }
+  if ($coins -eq "down") { return "bajan" }
+  return "sin dato"
+}
+
+function Get-HousesLabel([string]$houses) {
+  if ($houses -eq "ok") { return "contentas" }
+  if ($houses -eq "yellow") { return "amarillas" }
+  if ($houses -eq "empty") { return "vacías" }
+  return "sin dato"
+}
+
+# Spanish label when the catalog has one for this id; falls back to the GUID-table name (often English).
+function Get-BuildingLabel([string]$id, [string]$fallback, $catalog) {
+  if ($catalog -and $catalog.buildings) {
+    $match = @($catalog.buildings) | Where-Object { $_.id -eq $id } | Select-Object -First 1
+    if ($match -and $match.names) {
+      $first = @($match.names)[0]
+      if ($first) { return [string]$first }
+    }
+  }
+  return $fallback
+}
+
+# Console-only summary: names + top goods, never the raw GUID table.
+# @(...) wraps the Sort-Object output so a single-item result stays an array (PS collapses 1-item pipelines to a scalar).
+# Sort-Object -Property "<name>" does not compare [ordered]@{}/Hashtable values correctly (it silently no-ops);
+# a scriptblock with bracket indexing (`$_['count']`) reads the real value and sorts as expected.
+function Get-BuildingsLogLine($buildings, $catalog, [int]$maxNames) {
+  $sorted = @(@($buildings) | Sort-Object -Property { $_["count"] } -Descending)
+  $parts = @()
+  $shown = 0
+  foreach ($b in $sorted) {
+    if ($shown -ge $maxNames) { break }
+    $label = Get-BuildingLabel ([string]$b.id) ([string]$b.name) $catalog
+    $parts += "$label×$([int]$b.count)"
+    $shown++
+  }
+  $line = $parts -join ", "
+  $extra = $sorted.Count - $shown
+  if ($extra -gt 0) { $line = "$line, +$extra más" }
+  return $line
+}
+
+function Get-GoodsLogLine($goods, [int]$maxGoods) {
+  $sorted = @(@($goods) | Sort-Object -Property { $_["amount"] } -Descending | Select-Object -First $maxGoods)
+  $parts = @()
+  foreach ($g in $sorted) { $parts += "$($g.name) $([int]$g.amount)" }
+  return ($parts -join ", ")
+}
+
 function Get-InflatedText([byte[]]$bytes) {
   Add-Type -AssemblyName System.IO.Compression -ErrorAction SilentlyContinue
   $chunks = New-Object System.Collections.Generic.List[string]
@@ -1279,6 +1331,7 @@ namespace HarborBuddy {
       var guids = ParseGuids(guidJson);
       var files = Unpack(buf);
       var buildings = new Dictionary<string, string>();
+      var buildingCounts = new Dictionary<string, int>();
       var goods = new Dictionary<string, int>();
       var islands = new Dictionary<string, string>();
       int? money = null;
@@ -1310,6 +1363,8 @@ namespace HarborBuddy {
               GuidRow row;
               if (guids.TryGetValue(pending.Value, out row) && row.kind == "building" && v.Value > 0) {
                 buildings[row.id] = row.name;
+                int prevCount;
+                buildingCounts[row.id] = (buildingCounts.TryGetValue(row.id, out prevCount) ? prevCount : 0) + v.Value;
                 if (row.id == "farmer-house") farmers = true;
                 if (row.id == "worker-house") workers = true;
                 if (row.id == "artisan-house") artisans = true;
@@ -1348,7 +1403,9 @@ namespace HarborBuddy {
       foreach (var kv in buildings) {
         if (!first) sb.Append(",");
         first = false;
-        sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\"}");
+        int count;
+        buildingCounts.TryGetValue(kv.Key, out count);
+        sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\",\"count\":").Append(count).Append("}");
       }
       sb.Append("],\"goods\":[");
       first = true;
@@ -1534,6 +1591,8 @@ namespace HarborBuddy {
 '@
 Add-Type -TypeDefinition $scanCs -ReferencedAssemblies @("System.IO.Compression")
 $outJson = Join-Path $anno "harbor-live.json"
+# Internal only: last scanned money, for the coins delta. Never read by the browser/UI, never part of the harbor-live-v1 schema.
+$moneyStatePath = Join-Path $anno "harbor-live.money.json"
 $utf8Enc = [System.Text.Encoding]::UTF8
 $utf16Enc = [System.Text.Encoding]::Unicode
 
@@ -1595,10 +1654,10 @@ while ($true) {
     $bytes = [System.IO.File]::ReadAllBytes($save.FullName)
     $scan = [HarborBuddy.A7sScan]::Run($bytes, $guidJson) | ConvertFrom-Json
     $prevMoney = $null
-    if (Test-Path -LiteralPath $outJson) {
+    if (Test-Path -LiteralPath $moneyStatePath) {
       try {
-        $prev = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($prev.PSObject.Properties.Name -contains "money") { $prevMoney = [int]$prev.money }
+        $moneyState = Get-Content -LiteralPath $moneyStatePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($moneyState.PSObject.Properties.Name -contains "money") { $prevMoney = [int]$moneyState.money }
       } catch { }
     }
 
@@ -1608,7 +1667,7 @@ while ($true) {
 
     $buildings = @()
     foreach ($hit in @($scan.buildings)) {
-      if ($hit.id -and $hit.name) { $buildings += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name } }
+      if ($hit.id -and $hit.name) { $buildings += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; count = [int]$hit.count } }
     }
     $goods = @()
     foreach ($hit in @($scan.goods)) {
@@ -1645,6 +1704,10 @@ while ($true) {
       elseif ($prevMoney -ne $null -and $money -ne $prevMoney) {
         $coins = if ($money -ge $prevMoney) { "up" } else { "down" }
       }
+      try {
+        $moneyJson = ([ordered]@{ money = $money } | ConvertTo-Json -Compress)
+        [System.IO.File]::WriteAllText($moneyStatePath, $moneyJson, $utf8)
+      } catch { }
     }
     $houses = Get-HousesPulse $scan $buildings $goods
     $pulseHint = [ordered]@{ coins = $coins; houses = $houses }
@@ -1678,7 +1741,13 @@ while ($true) {
     Write-HarborLiveCrashSafe $outJson ($json + "`n")
     $bCount = @($telemetry.buildings).Count
     $gCount = @($goods).Count
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount edificios / $gCount bienes"
+    $coinsLabel = Get-CoinsLabel $coins
+    $housesLabel = Get-HousesLabel $houses
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount edificios / $gCount bienes | Monedas: $coinsLabel | Casas: $housesLabel"
+    $namesLine = Get-BuildingsLogLine $buildings $catalog 10
+    if ($namesLine) { Write-Host "  Edificios: $namesLine" }
+    $goodsLine = Get-GoodsLogLine $goods 6
+    if ($goodsLine) { Write-Host "  Bienes: $goodsLine" }
   } catch {
     Write-Host "$(Get-Date -Format HH:mm:ss) error: $($_.Exception.Message)"
   }

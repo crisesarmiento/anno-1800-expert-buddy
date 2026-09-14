@@ -17,9 +17,9 @@ Schema: `docs/harbor-live.schema.json`.
 | `sessionName` | basename del `.a7s` | p.ej. `Autosave`. No es el título interno de sesión. |
 | `islandName` | primer hit `catalog.islands` | Igual que `telemetry.islands[0].name`. |
 | `quests[]` | GUID de quest mapeado (tabla chica) | `title` en el idioma del juego + `state`. Crece cuando aparece un GUID nuevo. |
-| `pulseHint` | `coins` desde el delta de dinero contra el escaneo anterior; `houses` desde presencia (residencias, mercado, pescadería/stock de pescado) | Sin señal clara, queda `unknown`. Nunca adivina `down`/`empty`. |
+| `pulseHint` | `coins` desde el delta de dinero contra el escaneo anterior; `houses` desde presencia (residencias, mercado, pescadería/stock de pescado) | Sin señal clara, queda `unknown`. Nunca adivina `down`/`empty`. El dinero del escaneo anterior se guarda aparte, en `harbor-live.money.json` (mismo directorio) — nunca dentro de `harbor-live.json` ni leído por el navegador/UI. Si falta o está roto, `coins` vuelve a `unknown`, nunca inventa. |
 | `workforce` | hints `farmers` / `workers` / `artisans` / `engineers` | **Presencia** (`true`). Sin números. |
-| `telemetry.buildings` | `CountsPerGUID` → tabla GUID | Presencia. Nombres en inglés si el juego está en inglés. |
+| `telemetry.buildings` | `CountsPerGUID` → tabla GUID | Presencia. Nombres en inglés si el juego está en inglés. `count` (entero > 0) es opcional: cuántas veces aparece ese GUID. Home/diario nunca lo pinta como grilla, cadena, ni `nextBuild`; JSON sin `count` sigue siendo válido. |
 | `telemetry.people` | GUIDs NPC mapeados | NPCs como hit, no rutas. |
 | `telemetry.chains` | si hay edificios de esa cadena | |
 | `telemetry.islands` | GUIDs de sesión (Europe / New World / …) | |

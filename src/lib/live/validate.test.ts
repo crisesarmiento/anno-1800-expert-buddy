@@ -83,6 +83,47 @@ describe("harbor-live ingest", () => {
     assert.equal("tradeRoutes" in result.snapshot, false);
   });
 
+  it("preserves an optional building count, and drops a bad one without failing", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-10T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        buildings: [
+          { id: "fishery", name: "Pescadería", count: 2 },
+          { id: "marketplace", name: "Mercado", count: 0 },
+          { id: "lumberjack", name: "Cabaña de leñador", count: -1 },
+          { id: "sawmill", name: "Aserradero" },
+        ],
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    const buildings = result.snapshot.telemetry?.buildings ?? [];
+    assert.equal(buildings.find((row) => row.id === "fishery")?.count, 2);
+    assert.equal("count" in (buildings.find((row) => row.id === "marketplace") ?? {}), false);
+    assert.equal("count" in (buildings.find((row) => row.id === "lumberjack") ?? {}), false);
+    assert.equal("count" in (buildings.find((row) => row.id === "sawmill") ?? {}), false);
+  });
+
+  it("still validates presence-only telemetry.buildings (no count at all)", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "file",
+      updatedAt: "2026-09-10T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        buildings: [{ id: "marketplace", name: "Mercado" }],
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.deepEqual(result.snapshot.telemetry?.buildings, [{ id: "marketplace", name: "Mercado" }]);
+  });
+
   it("rejects a bad schema", () => {
     const result = ingestLiveJsonText(
       JSON.stringify({

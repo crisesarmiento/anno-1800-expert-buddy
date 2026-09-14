@@ -36,12 +36,15 @@ describe("GUID table and FileDB snapshot", () => {
     assert.equal(snap.pulseHint?.houses, "yellow");
     assert.equal(snap.workforce?.farmers, true);
     assert.equal(snap.telemetry?.buildings?.some((row) => row.id === "lumberjack"), true);
+    assert.equal(snap.telemetry?.buildings?.find((row) => row.id === "lumberjack")?.count, 3);
+    assert.equal(snap.telemetry?.buildings?.find((row) => row.id === "marketplace")?.count, 1);
     assert.equal(snap.telemetry?.goods?.[0]?.amount, 42);
     const ingested = ingestLiveJsonText(JSON.stringify(snap));
     assert.equal(ingested.ok, true);
     if (!ingested.ok) return;
     assert.equal(ingested.snapshot.telemetry?.goods?.[0]?.id, "wood");
     assert.equal(ingested.snapshot.pulseHint?.houses, "yellow");
+    assert.equal(ingested.snapshot.telemetry?.buildings?.find((row) => row.id === "lumberjack")?.count, 3);
   });
 });
 

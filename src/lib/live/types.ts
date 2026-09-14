@@ -25,6 +25,11 @@ export type LiveNamedHit = {
   name: string;
 };
 
+/** Building hit with an optional presence count. Count is never used to paint grids/chains — see docs/harbor-live-fields.md. */
+export type LiveBuildingHit = LiveNamedHit & {
+  count?: number;
+};
+
 export type LiveGoodHit = {
   id: string;
   name: string;
@@ -32,7 +37,7 @@ export type LiveGoodHit = {
 };
 
 export type LiveTelemetry = {
-  buildings?: LiveNamedHit[];
+  buildings?: LiveBuildingHit[];
   people?: LiveNamedHit[];
   chains?: LiveNamedHit[];
   islands?: LiveNamedHit[];

@@ -10,6 +10,7 @@ namespace HarborBuddy {
       var guids = ParseGuids(guidJson);
       var files = Unpack(buf);
       var buildings = new Dictionary<string, string>();
+      var buildingCounts = new Dictionary<string, int>();
       var goods = new Dictionary<string, int>();
       var islands = new Dictionary<string, string>();
       int? money = null;
@@ -41,6 +42,8 @@ namespace HarborBuddy {
               GuidRow row;
               if (guids.TryGetValue(pending.Value, out row) && row.kind == "building" && v.Value > 0) {
                 buildings[row.id] = row.name;
+                int prevCount;
+                buildingCounts[row.id] = (buildingCounts.TryGetValue(row.id, out prevCount) ? prevCount : 0) + v.Value;
                 if (row.id == "farmer-house") farmers = true;
                 if (row.id == "worker-house") workers = true;
                 if (row.id == "artisan-house") artisans = true;
@@ -79,7 +82,9 @@ namespace HarborBuddy {
       foreach (var kv in buildings) {
         if (!first) sb.Append(",");
         first = false;
-        sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\"}");
+        int count;
+        buildingCounts.TryGetValue(kv.Key, out count);
+        sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\",\"count\":").Append(count).Append("}");
       }
       sb.Append("],\"goods\":[");
       first = true;
