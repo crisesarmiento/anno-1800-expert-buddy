@@ -31,3 +31,7 @@ Comunidad: editores de plata, inject de Python y el loader Python de mods **tira
 - Python inject / mod-loader python.
 - Cargar Lua desde el pack.
 - Pedir el mod para que el vigilante funcione.
+
+## Spike FileDB: islas + rutas (2026-09-14)
+
+El walker de primer nivel **no** lee el rename de isla ni las rutas. Esos datos, si existen, viven en `SessionData/BinaryData` (FileDB anidado). Probe en vivo: **NOT FOUND** (no hay `.a7s` de sesión en esta Mac). Hasta un follow-up con save real: **Comercio = tips / wiki**, sin `tradeRoutes` inventados. Hallazgos: `docs/filedb-spike-routes.md`.
