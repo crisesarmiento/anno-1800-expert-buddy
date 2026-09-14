@@ -3,3 +3,42 @@ node_modules/
 .github_repo
 .env
 .env.*
+
+# build / tooling
+dist/
+.output/
+.vite/
+coverage/
+*.tsbuildinfo
+.turbo/
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# local Anno saves / live dumps (never commit)
+*.a7s
+tmp-saves/
+harbor-live.json
+harbor-live.*.json
+
+# local scratch scripts / dumps on Desktop clones
+tmp/
+tmp-*
+/tmp-*.mjs
+/tmp-*.js
+/tmp-*.ts
+
+# local-only prompts (committed prompts keep their fixed names in repo)
+prompts/PROMPT-CLAUDE-LEFTOVERS.md
+prompts/PROMPT-FILEDB-PROBE.md
+prompts/PROMPT-LOCAL-*.md
+
+# local screenshot experiments (tracked screenshots/ stay)
+screenshots/instalar-hydrate.png
+screenshots/*-local.png
