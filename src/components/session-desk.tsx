@@ -4,6 +4,7 @@ import { IslandFocusChips } from "@/components/island-focus";
 import { PowerUpSection } from "@/components/live-panel";
 import { InkSeal } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
+import { constructionTipLine } from "@/lib/construction-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
 import { resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
 import { deskCalmUmbral, sessionEstoAhora } from "@/lib/session-desk";
@@ -28,6 +29,12 @@ export function SessionDesk() {
   const islandId = resolveIslandFocusId(activeIslandId);
   const resolved = resolveMission(missionId);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
+  const urgentCampaignTip =
+    campaignTip?.kind === "esto-ahora" &&
+    (campaignTip.family === "coins" || campaignTip.family === "brake")
+      ? campaignTip
+      : null;
+  const constructionTip = urgentCampaignTip ? null : constructionTipLine(islandId);
 
   if (!resolved) return null;
 
@@ -39,7 +46,9 @@ export function SessionDesk() {
   const now = items.find((item) => !item.done) ?? items[0];
   const nowIndex = Math.max(0, items.indexOf(now));
   const { saturado, rojo, umbral, alarm, taller } = deskCalmUmbral(pulse, calm);
-  const scopedLine = scopeEstoAhoraLine(islandId, campaignTip?.line ?? now?.text ?? ESTO_AHORA_IDLE);
+  const activeLine =
+    urgentCampaignTip?.line ?? constructionTip ?? campaignTip?.line ?? now?.text ?? ESTO_AHORA_IDLE;
+  const scopedLine = scopeEstoAhoraLine(islandId, activeLine);
 
   function commit(kind: Parameters<typeof commitDeskMutation>[1]) {
     commitDeskMutation(getDeskHost(), kind);
@@ -104,9 +113,12 @@ export function SessionDesk() {
           data-island-focus={islandId}
           data-campaign-tip-family={campaignTip?.family ?? ""}
           data-campaign-tip-kind={campaignTip?.kind ?? "idle"}
+          data-construction-tip={constructionTip ? "true" : "false"}
           className="mt-6 text-lg leading-relaxed"
         >
-          {campaignTip?.kind === "chip" ? (
+          {constructionTip ? (
+            <span data-construction-tip-line="">{scopedLine}</span>
+          ) : campaignTip?.kind === "chip" ? (
             <span data-campaign-tip-chip="">{scopedLine}</span>
           ) : (
             <button
