@@ -15,7 +15,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `savedAt` | mtime UTC del `.a7s` | Filesystem. No parsea el binario. |
 | `game` | fijo `anno-1800` | |
 | `sessionName` | basename del `.a7s` | p.ej. `Autosave`. No es el título interno de sesión. |
-| `islandName` | primer hit `catalog.islands` | Igual que `telemetry.islands[0].name`. |
+| `islandName` | primer hit `catalog.islands` | Igual que `telemetry.islands[0].name`. Es la **región** (Old World / …), no el rename del jugador (La Inapetente). Spike: `docs/filedb-spike-routes.md`. |
 | `quests[]` | GUID de quest mapeado (tabla chica) | `title` en el idioma del juego + `state`. Crece cuando aparece un GUID nuevo. |
 | `pulseHint` | `coins` desde el delta de dinero contra el escaneo anterior; `houses` desde presencia (residencias, mercado, pescadería/stock de pescado) | Sin señal clara, queda `unknown`. Nunca adivina `down`/`empty`. El dinero del escaneo anterior se guarda aparte, en `harbor-live.money.json` (mismo directorio) — nunca dentro de `harbor-live.json` ni leído por el navegador/UI. Si falta o está roto, `coins` vuelve a `unknown`, nunca inventa. |
 | `workforce` | hints `farmers` / `workers` / `artisans` / `engineers` | **Presencia** (`true`). Sin números. |
@@ -33,7 +33,7 @@ El dump Lua (`tools/harbor-buddy-telemetry/dump_live.lua`) **no va en el zip**. 
 No se agregan aunque el `.a7s` “los tenga” por dentro:
 
 - Conteos de población por casa (sí hay residencias y `goods`; no hay barra amarilla de necesidad todavía).
-- Rutas NPC y colas de fábrica hasta que el walker vea el path en un save.
+- Rutas NPC y colas de fábrica hasta que el walker vea el path en un save. Spike 2026-09-14: paths comunitarios en FileDB anidado; **no** confirmados en un `.a7s` local. Hasta entonces Comercio = tips / wiki (`docs/filedb-spike-routes.md`).
 - Spoilers de diario más allá de GUIDs de quest mapeados.
 - Inject: Lua en el pack, parche de GUID, `ModOps` sobre assets vanilla.
 - Write al `.a7s`.
