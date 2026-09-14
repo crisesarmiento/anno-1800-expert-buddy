@@ -31,6 +31,7 @@ export type SessionSnapshot = {
   calm: SessionCalm;
   pulse: Pulse;
   overbuildBrake: { active: boolean };
+  activeIslandId: string | null;
 };
 
 export type DurableKv = {
@@ -151,6 +152,7 @@ export function parseSessionSnapshot(raw: string | null | undefined): SessionSna
     calm,
     pulse,
     overbuildBrake: parseOverbuildBrake(rec.overbuildBrake),
+    activeIslandId: parseActiveIslandId(rec.activeIslandId),
   };
 }
 
@@ -208,6 +210,11 @@ function parseOverbuildBrake(value: unknown): { active: boolean } {
   return { active: (value as { active?: unknown }).active === true };
 }
 
+/** Missing/invalid on old snapshots → null, same as an unset focus. */
+function parseActiveIslandId(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+
 export function emptySessionSnapshot(sessionKey = LAST_SESSION_KEY, now = Date.now()): SessionSnapshot {
   return {
     version: SESSION_STORE_VERSION,
@@ -220,6 +227,7 @@ export function emptySessionSnapshot(sessionKey = LAST_SESSION_KEY, now = Date.n
     calm: "session",
     pulse: defaultPulse,
     overbuildBrake: { active: false },
+    activeIslandId: null,
   };
 }
 
@@ -261,6 +269,7 @@ export function migrateLegacyHarborBuddy(kv: DurableKv, raw: string | null): Ses
     calm: "session",
     pulse,
     overbuildBrake: parseOverbuildBrake(state.overbuildBrake),
+    activeIslandId: null,
   };
   writeSnapshot(kv, snap);
   return snap;

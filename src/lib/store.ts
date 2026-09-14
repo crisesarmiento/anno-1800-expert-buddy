@@ -48,6 +48,7 @@ type HarborState = {
   liveBannerFailed: boolean;
   locale: Locale;
   samples: PulseSample[];
+  activeIslandId: string | null;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -64,6 +65,7 @@ type HarborState = {
   setLiveEnabled: (value: boolean) => void;
   setLiveBanner: (text: string | null, failed?: boolean) => void;
   setLocale: (value: Locale) => void;
+  setActiveIslandId: (id: string | null) => void;
 };
 
 export function isLiveLocked(state: {
@@ -97,6 +99,7 @@ export const useHarbor = create<HarborState>()(
       liveBannerFailed: false,
       locale: DEFAULT_LOCALE,
       samples: [],
+      activeIslandId: null,
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         const prev = get().missionId;
@@ -199,6 +202,7 @@ export const useHarbor = create<HarborState>()(
           lastImportedAt: null,
           liveBanner: null,
           liveBannerFailed: false,
+          activeIslandId: null,
           overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "sessionLifecycle" }),
         }),
       applyLiveSnapshot: (snapshot, fileName) => {
@@ -273,6 +277,7 @@ export const useHarbor = create<HarborState>()(
           get().applyLiveSnapshot(snapshot, get().liveFileName);
         }
       },
+      setActiveIslandId: (id) => set({ activeIslandId: id }),
     }),
     {
       name: "harbor-buddy-es",
@@ -298,6 +303,7 @@ export const useHarbor = create<HarborState>()(
         liveBannerFailed: state.liveBannerFailed,
         locale: state.locale,
         samples: state.samples,
+        activeIslandId: state.activeIslandId,
       }),
     },
   ),
