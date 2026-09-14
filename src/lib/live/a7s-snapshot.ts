@@ -1,6 +1,14 @@
 import { lookupGuid } from "../data/guids.ts";
 import { unpackA7s, visitFileDb, leafI32, leafText } from "./a7s-read.ts";
-import type { LiveNamedHit, LivePulseHint, LiveQuest, LiveSnapshot, LiveTelemetry, LiveWorkforce } from "./types.ts";
+import type {
+  LiveBuildingHit,
+  LiveNamedHit,
+  LivePulseHint,
+  LiveQuest,
+  LiveSnapshot,
+  LiveTelemetry,
+  LiveWorkforce,
+} from "./types.ts";
 
 const MONEY_GUID = 1010017;
 
@@ -129,10 +137,10 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
   return scan;
 }
 
-function namedHits(map: Map<string, { name: string; count?: number; amount?: number }>): LiveNamedHit[] {
+function buildingHits(map: Map<string, { name: string; count: number }>): LiveBuildingHit[] {
   return [...map.entries()]
-    .filter(([, row]) => (row.count ?? 1) > 0)
-    .map(([id, row]) => ({ id, name: row.name }))
+    .filter(([, row]) => row.count > 0)
+    .map(([id, row]) => ({ id, name: row.name, count: row.count }))
     .slice(0, 80);
 }
 
@@ -169,7 +177,7 @@ export function snapshotFromScan(
   scan: SaveScan,
   opts: { previousMoney?: number | null; savedAt?: string; sessionName?: string },
 ): LiveSnapshot {
-  const buildings = namedHits(scan.buildingCounts);
+  const buildings = buildingHits(scan.buildingCounts);
   const goodsHits = [...scan.goods.entries()]
     .filter(([, row]) => row.amount !== 0)
     .slice(0, 40)
