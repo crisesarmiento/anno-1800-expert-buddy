@@ -1,8 +1,8 @@
 # Spike FileDB: nombres de isla + tradeRoutes
 
-Read-only. Docs + findings. **No** UI, **no** merge de schema, **no** rutas inventadas, **no** Lua/DLL, **no** write a `.a7s`.
+Read-only. Docs + reader utilitario + tests. **No** UI, **no** merge de schema, **no** rutas inventadas, **no** Lua/DLL, **no** write a `.a7s`.
 
-Fecha: 2026-09-14. Card: `t_406205df`.
+Fecha: 2026-09-14 (abierta) → 2026-09-14 (cerrada contra save real). Card: `t_406205df`.
 
 ## Preguntas
 
@@ -12,13 +12,14 @@ Fecha: 2026-09-14. Card: `t_406205df`.
 ## Método
 
 - Walker propio: `src/lib/live/a7s-read.ts` + `a7s-snapshot.ts` (RDA V2.2 → FileDB, un nivel).
+- Probe nuevo (este PR): `scripts/filedb-probe.ts` — reentra cualquier leaf cuyo payload sea a su vez un FileDB (trailer `0xfffffffd`), no solo los que se llaman literalmente `BinaryData`.
 - Notas previas: `docs/telemetry-ceiling.md`, `docs/harbor-live-fields.md`, `tools/save-parse/README.md`.
 - Parser comunitario 1800 (no 117): NiHoel `Anno1800SavegameVisualizer` `tools/a7s_model.py`.
-- Save local: se buscó `Documents/Anno 1800`, OneDrive, Steam, Projects, DATA, workspaces Hermes. **Ningún `.a7s` de sesión en esta Mac.**
+- Save real usado para cerrar el loop: `tmp-saves/Cristian-Sarmien17.a7s` (copia read-only, **no** commiteada — ver `.gitignore`).
 
 ## Lo que el walker de Harbor ya ve (código, origin/main)
 
-`scanSaveBytes` recorre **solo** el FileDB de primer nivel de `meta.a7s` y `data.a7s`. No entra a blobs anidados.
+`scanSaveBytes` recorre **solo** el FileDB de primer nivel de `meta.a7s` y `data.a7s`. No entra a blobs anidados. Esto sigue igual — este PR agrega un reader nuevo y separado (`a7s-trade-routes.ts`), no toca `scanSaveBytes`.
 
 | Attr / path | Qué hace hoy | Es el nombre de isla del jugador? |
 |---|---|---|
@@ -31,103 +32,89 @@ Fecha: 2026-09-14. Card: `t_406205df`.
 
 `docs/harbor-live-fields.md` ya dice: `islandName` = primer hit de catálogo; `tradeRoutes` en el JSON **se tira** en ingest.
 
-## Paths esperados (comunidad 1800) — no confirmados en un `.a7s` de Cristian
+## Probe contra save real (`Cristian-Sarmien17.a7s`)
 
-NiHoel parsea XML FileDB **después** de unpack RDA + decompress + FileDBReader. Los nombres de isla y las rutas **no** viven en el stream plano que Harbor camina hoy: están dentro de `SessionData/BinaryData` (otro FileDB).
+RDA: `meta.a7s, header.a7s, gamesetup.a7s, data.a7s`. Reentrada nested FileDB: **3 blobs**, profundidad máx. 1 (un solo nivel de `BinaryData` anidado en este save).
 
-### Nombres de isla (display / rename)
+### Nombres de isla (`CityName` / `CityNameGuid`) — CONFIRMADO parcial
+
+El path predicho por la comunidad **se confirma exacto**:
 
 ```
 data.a7s
   MetaGameManager
-    GameSessions / None
-      SessionDesc / SessionGUID          → GUID de sesión (región)
-      SessionData / BinaryData / Content / GameSessionManager
-        AreaInfo / None                  → AreaID (alterna id / bloque)
-          Owner/id                       → < 4 = jugador (mismo umbral que NiHoel)
-          CityName                       → utf16  ← rename del jugador
-          CityNameGuid                   → fallback loca si CityName vacío
-        AreaManagers / Area_{id}         → edificios de esa isla
+    GameSessions / tag_1
+      SessionData [BinaryData → reentra FileDB anidado]
+        GameSessionManager
+          AreaInfo / tag_1        ← 67 registros en este save
+            CityNameGuid          → CONFIRMADO: presente, int32 (guid loca)
+            Owner / id            → CONFIRMADO: sibling, int32
+            CityName              → NOT FOUND (ni como attr, ni en el dict de nombres)
 ```
 
-`CityName` es el campo que correspondería a “La Inapetente”. `CityNameGuid` es el nombre generado si nadie lo tocó.
+- `CityNameGuid`: **67 hits**, todos en profundidad 1 dentro del `BinaryData` de `SessionData`, exactamente donde la comunidad predijo.
+- `CityName`: **ausente por completo** — ni un solo leaf, y el nombre `CityName` ni siquiera aparece en el diccionario de tags/attrs del FileDB (que sí lista nombres no usados activamente cuando el save los serializó alguna vez). Lectura más simple: **este jugador nunca renombró una isla** en esta partida, así que el juego nunca escribió el attr. Esto **no invalida** el tag (NiHoel lo documenta para 1800), pero tampoco lo confirma con datos reales — sigue sin verse un `CityName` poblado.
+- **Producto:** sin un save con al menos una isla renombrada, no se puede confirmar el formato de `CityName` poblado. `islands[].name` sigue sin mergear al schema.
 
-**Anno 117** usa `CustomIslandName` en su analyzer. **No** usar ese tag como evidencia 1800.
+### Rutas / estaciones (jugador) — CONFIRMADO, con una corrección al doc original
 
-### Rutas / estaciones (jugador)
+**Corrección:** el doc original asumía que `SessionTradeRouteManager` vivía anidado en `BinaryData` junto a `CityName`. **Es falso** — en el save real, `SessionTradeRouteManager/RouteMap` vive en el **nivel superior** de `data.a7s` (profundidad 0), sin reentrar ningún `BinaryData`:
 
 ```
 data.a7s
   MetaGameManager
     SessionTradeRouteManager
-      RouteMap / None                    (saltar hojas id; Owner/id < 4 = no NPC)
-        ID
-        Name                             → utf16 (nombre de ruta)
-        Owner / id
-        Ships                            → lista int64 (ids de barco)
-        Stations / None
-          StationID
-          AreaID                         → isla
-          GoodInfos / None
-            ProductGUID
-            Amount
+      RouteMap / (57 registros en este save)
+        ID                    → CONFIRMADO int32
+        Name                  → CONFIRMADO utf16 (ver nombres reales abajo)
+        IsDefaultName         → CONFIRMADO bool (los 57 = true en este save)
+        Owner / id            → CONFIRMADO int32
+        Ships                 → CONFIRMADO: array int64 packed (ids de barco, p.ej. [113, 273])
+        Stations / (N por ruta)
+          AreaID              → CONFIRMADO int32 (isla real)
+          GoodInfos / (M por estación)
+            ProductGUID       → CONFIRMADO int32
+            Amount            → CONFIRMADO int32
 ```
 
-Barcos (para atar buque ↔ ruta), también anidados:
+- 57 rutas leídas. Nombres reales encontrados (no inventados): *"Noz - Hot"*, *"Pra - Str"*, *"Ron Tri - Por"*, *"Caña de azúcar Tri - Por"*, *"Lúpulo Les - La"*, *"Pescado Pra - Wan"*, etc. Son nombres **automáticos** del juego (abreviatura de isla origen/destino, a veces con el bien principal) — `IsDefaultName` es `true` en las 57, es decir, **el jugador tampoco renombró manualmente ninguna ruta** en este save. Son reales y útiles para mostrar, pero no son "nombres puestos por el jugador"; no confundir con lo que pediría la pregunta 1 para islas.
+- 25/57 rutas tienen `GoodInfos` poblado con guid/amount reales; el resto son rutas nuevas/incompletas (plantilla, sin bienes asignados todavía).
+- `Ships` decodificado y verificado con hex dump manual contra el buffer crudo (no solo con el parser) antes de confiar en el reader.
+
+Barcos (para atar buque ↔ ruta), también anidados — **CONFIRMADO**, path exacto:
 
 ```
-GameSessionManager / AreaManagers/*/AreaObjectManager/GameObject/objects/None
-  guid
-  MetaPersistent / MetaID
-  Nameable / VehicleName                 → utf16
+GameSessionManager / AreaManagers/AreaManager_3/AreaObjectManager/GameObject/objects/tag_1
+  Nameable / VehicleName        → utf16, CONFIRMADO. 72 hits reales: "Empresa", "Gorgona", "Campeón", "Ventolera", "Salvaje", "Olimpia", "Heraldo", "Cangrejo Sucio", "Conflicto", "Tiburón Tosco", …
 ```
 
-Historia pasiva (no es la ruta activa): `PassiveTrade/History/TradeRouteEntries` (`RouteID`, `TraderShip`, `GoodGuid`, `GoodAmount`). No es el menú de rutas.
+Historia pasiva (no es la ruta activa): `PassiveTrade/History/TradeRouteEntries` — no se re-probó, sigue fuera de scope (no es el menú de rutas).
 
 Lua in-game (`ts.TradeRoute.GetRoute`) **queda fuera de techo**. No es path FileDB.
 
-## Probe en vivo (esta máquina)
+## Reader agregado en este PR (gateado, sin schema/UI)
 
-| Qué | Resultado |
-|---|---|
-| `.a7s` de sesión (no `accountdata.a7s`) | **NOT FOUND** |
-| Attr `CityName` / `CityNameGuid` en walker Harbor | **NOT FOUND** (el scanner no los lee; no hay save para listar dicts) |
-| Attr `SessionTradeRouteManager` / `RouteMap` / `Stations` en walker Harbor | **NOT FOUND** (igual) |
-| Recursión a `BinaryData` | **NOT FOUND** — `visitFileDb` no reentra |
+- `src/lib/live/a7s-read.ts`: `parseNestedFileDbTree` + `isNestedFileDb` — generaliza `visitFileDb` a un árbol real (en vez de un callback plano) y reentra automáticamente cualquier leaf cuyo payload sea un FileDB anidado. Necesario porque el path plano (string) no distingue registros hermanos repetidos (todos comparten el mismo tag id) — el árbol sí, vía `children[]`.
+- `src/lib/live/a7s-trade-routes.ts`: `extractTradeRoutes(dataBytes)` — usa el árbol para devolver `{ id, name, isDefaultName, ownerId, shipIds, stations: [{ areaId, goods: [{ guid, amount }] }] }[]`. Verificado manualmente contra `tmp-saves/Cristian-Sarmien17.a7s` (57 rutas, matchea el probe) — ese chequeo fue manual/descartable, **no** vive en el repo como test (no se puede depender de un save real committeado).
+- Tests: `src/lib/live/a7s-nested.test.ts`, `src/lib/live/a7s-trade-routes.test.ts` — fixtures FileDB armados a mano (encoder mínimo dentro del test), **no** el save completo.
+- **Deliberadamente no wireado** a `a7s-snapshot.ts` / `LiveSnapshot` / UI / `harbor-live.schema.json`. Motivo: aunque `tradeRoutes` está confirmado y leíble, todavía no hay decisión de producto sobre cómo presentarlo (nombres son auto-generados, no del jugador; falta manejar `Owner/id` real de jugador vs NPC con datos reales — ver abajo). Eso es el follow-up.
 
-Sin save no se puede afirmar que el dict FileDB de Cristian tenga o no esos tags. Sí se puede afirmar: **con el walker actual, Harbor no puede pintar La Inapetente ni rutas reales.**
+## Pendiente para el follow-up (no en este PR)
 
-## Decisión (producto)
-
-Hasta que un follow-up confirme `CityName` y `RouteMap` en un `.a7s` de sesión real, **no** se mergean `tradeRoutes` ni `islands[].name` al schema.
-
-**Comercio = tips de saturación / link-out wiki** (Decisiones 2026-09-02). No inventar rutas. Ingest sigue tirando `tradeRoutes` extras.
-
-`islandName` sigue siendo GUID de sesión. Copy de campaña puede decir “La Inapetente”; el live no.
-
-## Schema propuesto (solo follow-up, no implementar)
-
-Si el probe anidado confirma los attrs:
-
-```
-telemetry.islands[]: { id: areaId, name: CityName | loca(CityNameGuid) }
-islandName: name de la isla activa (Owner humano + CurrentlyActiveSession), no la región
-tradeRoutes[]: { id, name, ownerId, stations: [{ areaId, goods: [{ guid, amount }] }], shipIds[] }
-```
-
-Filtro: `Owner/id < 4` (jugador). Sin estaciones o sin `Name` → omitir, no rellenar.
+- El umbral `Owner/id < 4 = jugador` (NiHoel) **se sostiene** en este save: `ownerId` distintos van de 0 a 101, y **`0` es el único valor bajo `4`** — con 11 rutas, todas con nombres reales y específicos (`"Lúpulo Les - La"`, `"Jabón Les - La"`, …), vs. el resto de owners (13, 16, 17, 18, 19, 21, 22, 24, 25, 27, 62, 63, 87, 97, 99, 100, 101) que tienen 1–16 rutas cada uno y probablemente son IA/rivales. `0` también matchea la convención ya usada en `a7s-snapshot.ts` (`ParticipantID === 0` = humano). Falta: confirmar esto contra un segundo save (uno solo no prueba el patrón) antes de hardcodear el filtro en el schema.
+- Confirmar `CityName` poblado con un save que tenga al menos una isla renombrada.
+- Recién ahí: `telemetry.islands[].name` y `tradeRoutes[]` al schema (`harbor-live.schema.json`) + UI.
 
 ## Cómo re-probar (read-only)
 
-1. Copiar un `.a7s` de sesión (Ctrl+F5 / Autosave, no `accountdata.a7s`) a un path local.
-2. Unpack RDA; `visitFileDb` en `data.a7s`; si un leaf `BinaryData` empieza con FileDB (`0xfffffffd` en el trailer), **reentrar**.
-3. Listar attrs únicos: `CityName`, `CityNameGuid`, `SessionTradeRouteManager`, `RouteMap`, `Stations`, `AreaID`, `ProductGUID`.
-4. Grep utf16 “Inapetente” / nombres de ruta.
-5. No `xml2a7s`, no pack, no Lua.
+1. Copiar un `.a7s` de sesión (Ctrl+F5 / Autosave, no `accountdata.a7s`) a `tmp-saves/` (gitignored, nunca commitear).
+2. `node --experimental-strip-types scripts/filedb-probe.ts tmp-saves/<archivo>.a7s`.
+3. Revisar hits de `CityName`/`CityNameGuid`/rutas/nombres de barco en la salida.
+4. No `xml2a7s`, no pack, no Lua, no escribir el `.a7s`.
 
-## Verdict: PARTIAL
+## Verdict: PARTIAL → cerrado con datos reales
 
-- **VALIDATED (código):** el techo de primer nivel no tiene nombres de isla ni rutas.
-- **VALIDATED (comunidad 1800):** los paths existen, anidados en `BinaryData`.
-- **INVALIDATED (live):** no hay `.a7s` acá para cerrar el loop.
-- **Producto:** no UI, no fake routes, Comercio = wiki/tips hasta el follow-up.
+- **VALIDATED (código, este save):** reentrada a `BinaryData` funciona; `CityNameGuid` confirmado anidado donde predijo la comunidad; `SessionTradeRouteManager/RouteMap/Stations/GoodInfos` confirmado — pero en el **nivel superior**, no anidado (corrección al doc original); `Ships` y `VehicleName` confirmados.
+- **INVALIDATED (parcial):** el supuesto de que rutas vivían anidadas en `BinaryData` — no, viven en el nivel superior de `data.a7s`.
+- **INCONCLUSO:** `CityName` poblado (rename real de isla) — no aparece en este save porque el jugador nunca renombró una isla; no se puede confirmar su formato de wire sin un save que lo tenga.
+- **Producto:** reader + tests agregados y gateados (no wireados a schema/UI). Comercio sigue siendo tips/link-out wiki hasta que el follow-up resuelva el filtro de `ownerId` real de jugador y un save con `CityName` poblado.
