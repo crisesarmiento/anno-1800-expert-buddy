@@ -1,25 +1,25 @@
-export * from "./types";
-export * from "./layouts";
-export * from "./buildings";
-export * from "./campaign";
-export * from "./harbor-life";
-export * from "./find";
-export * from "./chains";
-export * from "./yellow-bar";
-export * from "./wiki-catalog";
-export * from "./guids";
+export * from "./types.ts";
+export * from "./layouts.ts";
+export * from "./buildings.ts";
+export * from "./campaign.ts";
+export * from "./harbor-life.ts";
+export * from "./find.ts";
+export * from "./chains.ts";
+export * from "./yellow-bar.ts";
+export * from "./wiki-catalog.ts";
+export * from "./guids.ts";
 
-import { buildingsById } from "./buildings";
-import { chapters, chaptersById, missionsById } from "./campaign";
-import { layoutsById } from "./layouts";
+import { buildingsById } from "./buildings.ts";
+import { chapters, chaptersById, missionsById } from "./campaign.ts";
+import { layoutsById } from "./layouts.ts";
 import {
   lifeAsks,
   lifeByChapter,
   peopleForChapter,
   type ChapterLife,
   type HarborPerson,
-} from "./harbor-life";
-import type { Building, Chapter, Layout, Mission } from "./types";
+} from "./harbor-life.ts";
+import type { Building, Chapter, Layout, Mission } from "./types.ts";
 
 export function resolveMission(missionId: string | null): {
   mission: Mission;

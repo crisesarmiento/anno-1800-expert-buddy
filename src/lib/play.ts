@@ -1,4 +1,4 @@
-import { uiFor, type Locale } from "@/lib/i18n";
+import { uiFor, type Locale } from "./i18n.ts";
 
 export type CoinsPulse = "unknown" | "up" | "down";
 export type HousesPulse = "unknown" | "ok" | "yellow" | "empty";

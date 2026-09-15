@@ -13,7 +13,6 @@ function snap(patch: Partial<TallerSnapshot> = {}): TallerSnapshot {
   return {
     balance: "unknown",
     saturation: "unknown",
-    session: { missionId: null, buildingsKnown: false, buildingIds: [] },
     ...patch,
     session: {
       missionId: null,

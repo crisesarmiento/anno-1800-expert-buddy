@@ -59,6 +59,51 @@ function Get-AnnoCandidates {
   return $out
 }
 
+function Get-UbisoftCloudFolders {
+  $folders = New-Object System.Collections.Generic.List[string]
+  foreach ($launcher in @(
+      (Join-Path ${env:ProgramFiles(x86)} "Ubisoft\Ubisoft Game Launcher\savegames"),
+      (Join-Path $env:ProgramFiles "Ubisoft\Ubisoft Game Launcher\savegames"),
+      (Join-Path $env:LOCALAPPDATA "Ubisoft Game Launcher\savegames")
+    )) {
+    if ($launcher -and (Test-Path -LiteralPath $launcher)) {
+      foreach ($account in Get-ChildItem -LiteralPath $launcher -Directory -ErrorAction SilentlyContinue) {
+        foreach ($gameId in @("4553", "4554")) {
+          $candidate = Join-Path $account.FullName $gameId
+          if (Test-Path -LiteralPath $candidate) { Add-UniquePath $folders $candidate }
+        }
+      }
+    }
+  }
+  return $folders
+}
+
+function Test-AnnoArchive($file) {
+  if (-not $file -or -not (Test-Path -LiteralPath $file.FullName)) { return $false }
+  $stream = $null
+  try {
+    $stream = New-Object System.IO.FileStream($file.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    $head = New-Object byte[] ([Math]::Min(256, [int]$stream.Length))
+    $read = $stream.Read($head, 0, $head.Length)
+    if ($read -le 0) { return $false }
+    $text = [System.Text.Encoding]::ASCII.GetString($head, 0, $read)
+    return $text.Contains("Resource File V2.2")
+  } catch {
+    return $false
+  } finally {
+    if ($stream) { $stream.Dispose() }
+  }
+}
+
+function Find-LatestCloudSave {
+  $matches = @()
+  foreach ($folder in Get-UbisoftCloudFolders) {
+    $matches += @(Get-ChildItem -LiteralPath $folder -File -Filter "*.save" -ErrorAction SilentlyContinue |
+      Where-Object { Test-AnnoArchive $_ })
+  }
+  return $matches | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+}
+
 function Find-LatestA7sUnder([string]$accounts) {
   if (-not $accounts) { return $null }
   if (-not (Test-Path -LiteralPath $accounts)) { return $null }
@@ -117,6 +162,15 @@ function Find-AnnoRoot {
       Write-Host "Guardado la última vez: $($bestSave.LastWriteTime)"
       return $root
     }
+  }
+  $cloudSave = Find-LatestCloudSave
+  if ($cloudSave) {
+    $docs = [Environment]::GetFolderPath("MyDocuments")
+    $root = Join-Path $docs "Anno 1800"
+    if (-not (Test-Path -LiteralPath $root)) { [void](New-Item -ItemType Directory -Path $root -Force) }
+    Write-Host "Encontré tu partida cloud más reciente (la leo, nunca la toco): $($cloudSave.Name)"
+    Write-Host "Guardado la última vez: $($cloudSave.LastWriteTime)"
+    return $root
   }
   foreach ($path in Get-AnnoCandidates) {
     if ($path -and (Test-Path -LiteralPath $path)) {
@@ -180,7 +234,9 @@ function Collect-Hits($items, [string]$blob, [bool]$useNeedles) {
 }
 
 function Get-NewestSave([string]$anno) {
-  return Find-LatestA7sUnder (Join-Path $anno "accounts")
+  $local = Find-LatestA7sUnder (Join-Path $anno "accounts")
+  $cloud = Find-LatestCloudSave
+  return @($local, $cloud) | Where-Object { $_ } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
 }
 
 # Houses pulse from presence, same rule as src/lib/live/a7s-snapshot.ts housesHint:
@@ -1330,6 +1386,7 @@ using System.Text;
 namespace HarborBuddy {
   public static class A7sScan {
     public static string Run(byte[] buf, string guidJson) {
+      buf = NormalizeArchive(buf);
       var guids = ParseGuids(guidJson);
       var files = Unpack(buf);
       var buildings = new Dictionary<string, string>();
@@ -1341,6 +1398,7 @@ namespace HarborBuddy {
       var farmers = false; var workers = false; var artisans = false; var engineers = false;
       string session = "";
       byte[] data = null;
+      var routes = new List<RouteRow>();
       foreach (var kv in files) {
         if (kv.Key == "meta.a7s") {
           Visit(kv.Value, (path, attr, payload) => {
@@ -1392,6 +1450,7 @@ namespace HarborBuddy {
             if (guids.TryGetValue(v.Value, out row) && row.kind == "island") islands[row.id] = row.name;
           }
         });
+        routes = ExtractRoutes(data, guids);
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
@@ -1427,11 +1486,58 @@ namespace HarborBuddy {
         first = false;
         sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\"}");
       }
+      sb.Append("],\"routes\":[");
+      first = true;
+      foreach (var route in routes) {
+        if (!first) sb.Append(",");
+        first = false;
+        sb.Append("{\"name\":\"").Append(Esc(route.Name)).Append("\"");
+        if (route.Id.HasValue) sb.Append(",\"id\":").Append(route.Id.Value);
+        if (route.OwnerId.HasValue) sb.Append(",\"ownerId\":").Append(route.OwnerId.Value);
+        sb.Append(",\"shipCount\":").Append(route.ShipCount).Append(",\"stops\":[");
+        bool firstStop = true;
+        foreach (var stop in route.Stops) {
+          if (!firstStop) sb.Append(",");
+          firstStop = false;
+          sb.Append("{");
+          if (stop.AreaId.HasValue) sb.Append("\"areaId\":").Append(stop.AreaId.Value).Append(",");
+          sb.Append("\"goods\":[");
+          bool firstGood = true;
+          foreach (var good in stop.Goods) {
+            if (!firstGood) sb.Append(",");
+            firstGood = false;
+            sb.Append("{\"guid\":").Append(good.Guid)
+              .Append(",\"amount\":").Append(good.Amount);
+            if (!string.IsNullOrEmpty(good.Name)) sb.Append(",\"name\":\"").Append(Esc(good.Name)).Append("\"");
+            sb.Append("}");
+          }
+          sb.Append("]}");
+        }
+        sb.Append("]}");
+      }
       sb.Append("]}");
       return sb.ToString();
     }
 
     struct GuidRow { public string id; public string kind; public string name; }
+    sealed class DbLeaf { public string Attr; public byte[] Bytes; }
+    sealed class DbNode {
+      public string Tag;
+      public readonly List<DbLeaf> Leaves = new List<DbLeaf>();
+      public readonly List<DbNode> Children = new List<DbNode>();
+    }
+    sealed class RouteGood { public int Guid; public int Amount; public string Name; }
+    sealed class RouteStop {
+      public int? AreaId;
+      public readonly List<RouteGood> Goods = new List<RouteGood>();
+    }
+    sealed class RouteRow {
+      public int? Id;
+      public string Name;
+      public int? OwnerId;
+      public int ShipCount;
+      public readonly List<RouteStop> Stops = new List<RouteStop>();
+    }
 
     static Dictionary<int, GuidRow> ParseGuids(string json) {
       var map = new Dictionary<int, GuidRow>();
@@ -1483,6 +1589,133 @@ namespace HarborBuddy {
       return null;
     }
 
+    static byte[] NormalizeArchive(byte[] buf) {
+      if (buf == null) return new byte[0];
+      var magic = Encoding.ASCII.GetBytes("Resource File V2.2");
+      int limit = Math.Min(256, buf.Length - magic.Length);
+      for (int start = 0; start <= limit; start++) {
+        bool match = true;
+        for (int i = 0; i < magic.Length; i++) {
+          if (buf[start + i] != magic[i]) { match = false; break; }
+        }
+        if (match) return start == 0 ? buf : SliceBuf(buf, start, buf.Length - start);
+      }
+      return buf;
+    }
+
+    static DbNode Child(DbNode node, string tag) {
+      if (node == null) return null;
+      foreach (var item in node.Children) if (item.Tag == tag) return item;
+      return null;
+    }
+
+    static byte[] Leaf(DbNode node, string attr) {
+      if (node == null) return null;
+      foreach (var item in node.Leaves) if (item.Attr == attr) return item.Bytes;
+      return null;
+    }
+
+    static int? LeafInt(DbNode node, string attr) { return AsI32(Leaf(node, attr)); }
+
+    static List<RouteRow> ExtractRoutes(byte[] data, Dictionary<int, GuidRow> guids) {
+      var output = new List<RouteRow>();
+      var root = ParseTree(data);
+      var meta = Child(root, "MetaGameManager");
+      var manager = Child(meta, "SessionTradeRouteManager");
+      var routeMap = Child(manager, "RouteMap");
+      if (routeMap == null) return output;
+      foreach (var routeNode in routeMap.Children) {
+        var owner = Child(routeNode, "Owner");
+        var ownerId = LeafInt(owner, "id");
+        if (ownerId.HasValue && ownerId.Value != 0) continue;
+        var id = LeafInt(routeNode, "ID");
+        var nameBytes = Leaf(routeNode, "Name");
+        var name = Utf16(nameBytes);
+        if (string.IsNullOrEmpty(name)) name = id.HasValue ? ("Ruta " + id.Value) : "Ruta comercial";
+        var row = new RouteRow {
+          Id = id,
+          Name = name,
+          OwnerId = ownerId,
+          ShipCount = (Leaf(routeNode, "Ships") ?? new byte[0]).Length / 8
+        };
+        var stations = Child(routeNode, "Stations");
+        if (stations != null) {
+          foreach (var stopNode in stations.Children) {
+            var stop = new RouteStop { AreaId = LeafInt(stopNode, "AreaID") };
+            var goodInfos = Child(stopNode, "GoodInfos");
+            if (goodInfos != null) {
+              foreach (var goodNode in goodInfos.Children) {
+                var guid = LeafInt(goodNode, "ProductGUID");
+                var amount = LeafInt(goodNode, "Amount");
+                if (!guid.HasValue || !amount.HasValue || guid.Value == 0) continue;
+                GuidRow guidRow;
+                stop.Goods.Add(new RouteGood {
+                  Guid = guid.Value,
+                  Amount = amount.Value,
+                  Name = guids.TryGetValue(guid.Value, out guidRow) ? guidRow.name : ""
+                });
+              }
+            }
+            row.Stops.Add(stop);
+          }
+        }
+        output.Add(row);
+      }
+      return output;
+    }
+
+    static DbNode ParseTree(byte[] buf) {
+      int magicAt;
+      int tagOff;
+      int attrOff;
+      if (!FindTrailer(buf, out magicAt, out tagOff, out attrOff)) return null;
+      var tags = ReadDict(buf, tagOff);
+      var attrs = ReadDict(buf, attrOff);
+      var root = new DbNode { Tag = "root" };
+      var stack = new List<DbNode> { root };
+      int pos = 0;
+      int nodeEnd = Math.Min(tagOff, buf.Length);
+      while (pos + 8 <= nodeEnd) {
+        int size = BitConverter.ToInt32(buf, pos);
+        int id = BitConverter.ToUInt16(buf, pos + 4);
+        pos += 8;
+        if (id == 0) {
+          if (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
+          continue;
+        }
+        if ((id & 0x8000) != 0) {
+          byte[] payload = size > 0 ? SliceBuf(buf, pos, Math.Min(size, nodeEnd - pos)) : new byte[0];
+          int pad = (8 - (size % 8)) % 8;
+          pos += size + pad;
+          string attr;
+          if (!attrs.TryGetValue(id, out attr) && !attrs.TryGetValue(id & 0x7FFF, out attr))
+            attr = id == 0x8000 ? "None" : ("attr_" + id);
+          stack[stack.Count - 1].Leaves.Add(new DbLeaf { Attr = attr, Bytes = payload });
+          continue;
+        }
+        string tag;
+        var node = new DbNode { Tag = tags.TryGetValue(id, out tag) ? tag : ("tag_" + id) };
+        stack[stack.Count - 1].Children.Add(node);
+        stack.Add(node);
+      }
+      return root;
+    }
+
+    static bool FindTrailer(byte[] buf, out int magicAt, out int tagOff, out int attrOff) {
+      magicAt = -1; tagOff = -1; attrOff = -1;
+      if (buf == null || buf.Length < 20) return false;
+      for (int end = buf.Length; end >= 20; end--) {
+        if (BitConverter.ToUInt32(buf, end - 4) != 0xFFFFFFFD) continue;
+        if (BitConverter.ToInt32(buf, end - 8) != 8) continue;
+        int candidateTag = BitConverter.ToInt32(buf, end - 16);
+        int candidateAttr = BitConverter.ToInt32(buf, end - 12);
+        if (candidateTag <= 0 || candidateTag >= buf.Length || candidateAttr <= 0 || candidateAttr >= buf.Length) continue;
+        magicAt = end; tagOff = candidateTag; attrOff = candidateAttr;
+        return true;
+      }
+      return false;
+    }
+
     static List<KeyValuePair<string, byte[]>> Unpack(byte[] buf) {
       var files = new List<KeyValuePair<string, byte[]>>();
       if (buf.Length < 0x318) return files;
@@ -1530,17 +1763,10 @@ namespace HarborBuddy {
     }
 
     static void Visit(byte[] buf, Action<string, string, byte[]> onLeaf) {
-      if (buf == null || buf.Length < 20) return;
-      int magicAt = -1;
-      for (int end = buf.Length; end >= 20; end--) {
-        if (BitConverter.ToUInt32(buf, end - 4) != 0xFFFFFFFD) continue;
-        if (BitConverter.ToInt32(buf, end - 8) != 8) continue;
-        magicAt = end;
-        break;
-      }
-      if (magicAt < 0) return;
-      int tagOff = BitConverter.ToInt32(buf, magicAt - 16);
-      int attrOff = BitConverter.ToInt32(buf, magicAt - 12);
+      int magicAt;
+      int tagOff;
+      int attrOff;
+      if (!FindTrailer(buf, out magicAt, out tagOff, out attrOff)) return;
       var tags = ReadDict(buf, tagOff);
       var attrs = ReadDict(buf, attrOff);
       var stack = new List<string>();
@@ -1591,7 +1817,7 @@ namespace HarborBuddy {
   }
 }
 '@
-Add-Type -TypeDefinition $scanCs -ReferencedAssemblies @("System.IO.Compression")
+Add-Type -TypeDefinition $scanCs
 $outJson = Join-Path $anno "harbor-live.json"
 # Internal only: last scanned money, for the coins delta. Never read by the browser/UI, never part of the harbor-live-v1 schema.
 $moneyStatePath = Join-Path $anno "harbor-live.money.json"
@@ -1679,6 +1905,32 @@ while ($true) {
     foreach ($hit in @($scan.islands)) {
       if ($hit.id -and $hit.name) { $islands += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name } }
     }
+    $routes = @()
+    foreach ($route in @($scan.routes)) {
+      if (-not $route.name) { continue }
+      $stops = @()
+      foreach ($stop in @($route.stops)) {
+        $routeGoods = @()
+        foreach ($good in @($stop.goods)) {
+          if ($good.guid) {
+            $routeGood = [ordered]@{ guid = [int]$good.guid; amount = [int]$good.amount }
+            if ($good.name) { $routeGood.name = [string]$good.name }
+            $routeGoods += $routeGood
+          }
+        }
+        $routeStop = [ordered]@{ goods = @($routeGoods) }
+        if ($stop.areaId -ne $null) { $routeStop.areaId = [int]$stop.areaId }
+        $stops += $routeStop
+      }
+      $routeOut = [ordered]@{
+        name      = [string]$route.name
+        shipCount = [int]$route.shipCount
+        stops     = @($stops)
+      }
+      if ($route.id -ne $null) { $routeOut.id = [int]$route.id }
+      if ($route.ownerId -ne $null) { $routeOut.ownerId = [int]$route.ownerId }
+      $routes += $routeOut
+    }
     $chainMap = @{
       lumberjack = "wood"; sawmill = "wood"; fishery = "fish"; sheep = "clothes"; knitters = "clothes"
       potato = "schnapps"; distillery = "schnapps"; sausage = "workers"; bread = "workers"; charcoal = "steel"
@@ -1720,6 +1972,7 @@ while ($true) {
       chains    = @($chains)
       islands   = @($islands)
       hints     = @($hints)
+      routes    = @($routes)
     }
     if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
 
@@ -1730,6 +1983,16 @@ while ($true) {
       savedAt     = $save.LastWriteTimeUtc.ToString("o")
       game        = "anno-1800"
       sessionName = $sessionName
+      connection  = [ordered]@{
+        mode          = $(if ($save.Extension -eq ".save") { "ubisoft-cloud" } else { "documents-save" })
+        fileName      = $save.Name
+        buildingKinds = @($buildings).Count
+        buildingTotal = [int](@($buildings) | Measure-Object -Property count -Sum).Sum
+        goodsKinds    = @($goods).Count
+        routeCount    = @($routes).Count
+        islandCount   = @($islands).Count
+        questCount    = 0
+      }
     }
     $islandName = $null
     if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
@@ -1745,7 +2008,7 @@ while ($true) {
     $gCount = @($goods).Count
     $coinsLabel = Get-CoinsLabel $coins
     $housesLabel = Get-HousesLabel $houses
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount edificios / $gCount bienes | Monedas: $coinsLabel | Casas: $housesLabel"
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount tipos de edificio / $gCount bienes / $(@($routes).Count) rutas | Monedas: $coinsLabel | Casas: $housesLabel"
     $namesLine = Get-BuildingsLogLine $buildings $catalog 10
     if ($namesLine) { Write-Host "  Edificios: $namesLine" }
     $goodsLine = Get-GoodsLogLine $goods 6

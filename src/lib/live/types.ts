@@ -36,6 +36,36 @@ export type LiveGoodHit = {
   amount: number;
 };
 
+export type LiveTradeRouteGood = {
+  guid: number;
+  name?: string;
+  amount: number;
+};
+
+export type LiveTradeRouteStop = {
+  areaId?: number;
+  goods: LiveTradeRouteGood[];
+};
+
+export type LiveTradeRoute = {
+  id?: number;
+  name: string;
+  ownerId?: number;
+  shipCount: number;
+  stops: LiveTradeRouteStop[];
+};
+
+export type LiveConnection = {
+  mode: "documents-save" | "ubisoft-cloud" | "native" | "manual";
+  fileName?: string;
+  buildingKinds?: number;
+  buildingTotal?: number;
+  goodsKinds?: number;
+  routeCount?: number;
+  islandCount?: number;
+  questCount?: number;
+};
+
 export type LiveTelemetry = {
   buildings?: LiveBuildingHit[];
   people?: LiveNamedHit[];
@@ -43,15 +73,11 @@ export type LiveTelemetry = {
   islands?: LiveNamedHit[];
   hints?: string[];
   goods?: LiveGoodHit[];
+  routes?: LiveTradeRoute[];
 };
 
 /** Presencia de estrato (needles del catálogo). Sin conteos. */
-export const LIVE_WORKFORCE_TIERS = [
-  "farmers",
-  "workers",
-  "artisans",
-  "engineers",
-] as const;
+export const LIVE_WORKFORCE_TIERS = ["farmers", "workers", "artisans", "engineers"] as const;
 export type LiveWorkforceTier = (typeof LIVE_WORKFORCE_TIERS)[number];
 export type LiveWorkforce = Partial<Record<LiveWorkforceTier, true>>;
 
@@ -70,6 +96,7 @@ export type LiveSnapshot = {
   /** mtime UTC del .a7s. Distinto de updatedAt (cuándo se escribió el JSON). */
   savedAt?: string;
   workforce?: LiveWorkforce;
+  connection?: LiveConnection;
 };
 
 export type LiveMatch = {

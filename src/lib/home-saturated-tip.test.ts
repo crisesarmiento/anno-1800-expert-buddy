@@ -88,7 +88,10 @@ describe("tip saturado en Campaign Home", () => {
     assert.equal(first, HOME_SATURATED_TIP_LINE);
     const shownAt = stampHomeSaturatedVisit(null, 1000, true);
     assert.equal(shownAt, 1000);
-    assert.equal(pickHomeSaturatedTip({ saturated: true, shownAt, now: 1000 + 9_999 }), HOME_SATURATED_TIP_LINE);
+    assert.equal(
+      pickHomeSaturatedTip({ saturated: true, shownAt, now: 1000 + 9_999 }),
+      HOME_SATURATED_TIP_LINE,
+    );
     assert.equal(pickHomeSaturatedTip({ saturated: true, shownAt, now: 1000 + 10_000 }), null);
     assert.equal(stampHomeSaturatedVisit(shownAt, 20_000, true), shownAt);
     assert.equal(pickHomeSaturatedTip({ saturated: true, shownAt, now: 20_000 }), null);
@@ -102,7 +105,7 @@ describe("Home no es comercio", () => {
     assert.match(home, /pickHomeSaturatedTip|useHomeSaturatedTip/);
     assert.match(home, /data-home-saturated-tip/);
     assert.doesNotMatch(home, /classifyWorkshopGoods\(/);
-    assert.doesNotMatch(home, /status === \"saturado\"/);
+    assert.doesNotMatch(home, /status === "saturado"/);
     assert.doesNotMatch(home, /goods\.map/);
     assert.equal((home.match(/data-esto-ahora-item/g) ?? []).length, 1);
   });
@@ -115,9 +118,9 @@ describe("Home no es comercio", () => {
   });
 
   it("el chip Comercio sigue siendo Taller", () => {
-    assert.match(welcomeApp, /to=\"\/taller\"/);
+    assert.match(welcomeApp, /to="\/taller"/);
     assert.match(welcomeApp, />\s*Taller\s*</);
-    assert.doesNotMatch(welcomeApp, /to=\"\/comercio\"/);
+    assert.doesNotMatch(welcomeApp, /to="\/comercio"/);
     assert.doesNotMatch(chips, /\/comercio|trader|price/i);
   });
 });

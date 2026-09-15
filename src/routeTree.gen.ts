@@ -14,6 +14,7 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as ConectarRouteImport } from './routes/conectar'
 import { Route as InstalarRouteImport } from './routes/instalar'
 import { Route as MapaRouteImport } from './routes/mapa'
+import { Route as RutasRouteImport } from './routes/rutas'
 import { Route as SandboxRouteImport } from './routes/sandbox'
 import { Route as TableroRouteImport } from './routes/tablero'
 import { Route as TallerRouteImport } from './routes/taller'
@@ -43,6 +44,11 @@ const MapaRoute = MapaRouteImport.update({
   path: '/mapa',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RutasRoute = RutasRouteImport.update({
+  id: '/rutas',
+  path: '/rutas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
+  '/rutas': typeof RutasRoute
   '/sandbox': typeof SandboxRoute
   '/tablero': typeof TableroRoute
   '/taller': typeof TallerRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
+  '/rutas': typeof RutasRoute
   '/sandbox': typeof SandboxRoute
   '/tablero': typeof TableroRoute
   '/taller': typeof TallerRoute
@@ -86,16 +94,45 @@ export interface FileRoutesById {
   '/conectar': typeof ConectarRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
+  '/rutas': typeof RutasRoute
   '/sandbox': typeof SandboxRoute
   '/tablero': typeof TableroRoute
   '/taller': typeof TallerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/catalogo' | '/conectar' | '/instalar' | '/mapa' | '/sandbox' | '/tablero' | '/taller'
+  fullPaths:
+    | '/'
+    | '/catalogo'
+    | '/conectar'
+    | '/instalar'
+    | '/mapa'
+    | '/rutas'
+    | '/sandbox'
+    | '/tablero'
+    | '/taller'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/catalogo' | '/conectar' | '/instalar' | '/mapa' | '/sandbox' | '/tablero' | '/taller'
-  id: '__root__' | '/' | '/catalogo' | '/conectar' | '/instalar' | '/mapa' | '/sandbox' | '/tablero' | '/taller'
+  to:
+    | '/'
+    | '/catalogo'
+    | '/conectar'
+    | '/instalar'
+    | '/mapa'
+    | '/rutas'
+    | '/sandbox'
+    | '/tablero'
+    | '/taller'
+  id:
+    | '__root__'
+    | '/'
+    | '/catalogo'
+    | '/conectar'
+    | '/instalar'
+    | '/mapa'
+    | '/rutas'
+    | '/sandbox'
+    | '/tablero'
+    | '/taller'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,6 +141,7 @@ export interface RootRouteChildren {
   ConectarRoute: typeof ConectarRoute
   InstalarRoute: typeof InstalarRoute
   MapaRoute: typeof MapaRoute
+  RutasRoute: typeof RutasRoute
   SandboxRoute: typeof SandboxRoute
   TableroRoute: typeof TableroRoute
   TallerRoute: typeof TallerRoute
@@ -146,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rutas': {
+      id: '/rutas'
+      path: '/rutas'
+      fullPath: '/rutas'
+      preLoaderRoute: typeof RutasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sandbox': {
       id: '/sandbox'
       path: '/sandbox'
@@ -176,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConectarRoute: ConectarRoute,
   InstalarRoute: InstalarRoute,
   MapaRoute: MapaRoute,
+  RutasRoute: RutasRoute,
   SandboxRoute: SandboxRoute,
   TableroRoute: TableroRoute,
   TallerRoute: TallerRoute,

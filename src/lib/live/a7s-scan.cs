@@ -7,6 +7,7 @@ using System.Text;
 namespace HarborBuddy {
   public static class A7sScan {
     public static string Run(byte[] buf, string guidJson) {
+      buf = NormalizeArchive(buf);
       var guids = ParseGuids(guidJson);
       var files = Unpack(buf);
       var buildings = new Dictionary<string, string>();
@@ -18,6 +19,7 @@ namespace HarborBuddy {
       var farmers = false; var workers = false; var artisans = false; var engineers = false;
       string session = "";
       byte[] data = null;
+      var routes = new List<RouteRow>();
       foreach (var kv in files) {
         if (kv.Key == "meta.a7s") {
           Visit(kv.Value, (path, attr, payload) => {
@@ -69,6 +71,7 @@ namespace HarborBuddy {
             if (guids.TryGetValue(v.Value, out row) && row.kind == "island") islands[row.id] = row.name;
           }
         });
+        routes = ExtractRoutes(data, guids);
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
@@ -104,11 +107,58 @@ namespace HarborBuddy {
         first = false;
         sb.Append("{\"id\":\"").Append(Esc(kv.Key)).Append("\",\"name\":\"").Append(Esc(kv.Value)).Append("\"}");
       }
+      sb.Append("],\"routes\":[");
+      first = true;
+      foreach (var route in routes) {
+        if (!first) sb.Append(",");
+        first = false;
+        sb.Append("{\"name\":\"").Append(Esc(route.Name)).Append("\"");
+        if (route.Id.HasValue) sb.Append(",\"id\":").Append(route.Id.Value);
+        if (route.OwnerId.HasValue) sb.Append(",\"ownerId\":").Append(route.OwnerId.Value);
+        sb.Append(",\"shipCount\":").Append(route.ShipCount).Append(",\"stops\":[");
+        bool firstStop = true;
+        foreach (var stop in route.Stops) {
+          if (!firstStop) sb.Append(",");
+          firstStop = false;
+          sb.Append("{");
+          if (stop.AreaId.HasValue) sb.Append("\"areaId\":").Append(stop.AreaId.Value).Append(",");
+          sb.Append("\"goods\":[");
+          bool firstGood = true;
+          foreach (var good in stop.Goods) {
+            if (!firstGood) sb.Append(",");
+            firstGood = false;
+            sb.Append("{\"guid\":").Append(good.Guid)
+              .Append(",\"amount\":").Append(good.Amount);
+            if (!string.IsNullOrEmpty(good.Name)) sb.Append(",\"name\":\"").Append(Esc(good.Name)).Append("\"");
+            sb.Append("}");
+          }
+          sb.Append("]}");
+        }
+        sb.Append("]}");
+      }
       sb.Append("]}");
       return sb.ToString();
     }
 
     struct GuidRow { public string id; public string kind; public string name; }
+    sealed class DbLeaf { public string Attr; public byte[] Bytes; }
+    sealed class DbNode {
+      public string Tag;
+      public readonly List<DbLeaf> Leaves = new List<DbLeaf>();
+      public readonly List<DbNode> Children = new List<DbNode>();
+    }
+    sealed class RouteGood { public int Guid; public int Amount; public string Name; }
+    sealed class RouteStop {
+      public int? AreaId;
+      public readonly List<RouteGood> Goods = new List<RouteGood>();
+    }
+    sealed class RouteRow {
+      public int? Id;
+      public string Name;
+      public int? OwnerId;
+      public int ShipCount;
+      public readonly List<RouteStop> Stops = new List<RouteStop>();
+    }
 
     static Dictionary<int, GuidRow> ParseGuids(string json) {
       var map = new Dictionary<int, GuidRow>();
@@ -160,6 +210,133 @@ namespace HarborBuddy {
       return null;
     }
 
+    static byte[] NormalizeArchive(byte[] buf) {
+      if (buf == null) return new byte[0];
+      var magic = Encoding.ASCII.GetBytes("Resource File V2.2");
+      int limit = Math.Min(256, buf.Length - magic.Length);
+      for (int start = 0; start <= limit; start++) {
+        bool match = true;
+        for (int i = 0; i < magic.Length; i++) {
+          if (buf[start + i] != magic[i]) { match = false; break; }
+        }
+        if (match) return start == 0 ? buf : SliceBuf(buf, start, buf.Length - start);
+      }
+      return buf;
+    }
+
+    static DbNode Child(DbNode node, string tag) {
+      if (node == null) return null;
+      foreach (var item in node.Children) if (item.Tag == tag) return item;
+      return null;
+    }
+
+    static byte[] Leaf(DbNode node, string attr) {
+      if (node == null) return null;
+      foreach (var item in node.Leaves) if (item.Attr == attr) return item.Bytes;
+      return null;
+    }
+
+    static int? LeafInt(DbNode node, string attr) { return AsI32(Leaf(node, attr)); }
+
+    static List<RouteRow> ExtractRoutes(byte[] data, Dictionary<int, GuidRow> guids) {
+      var output = new List<RouteRow>();
+      var root = ParseTree(data);
+      var meta = Child(root, "MetaGameManager");
+      var manager = Child(meta, "SessionTradeRouteManager");
+      var routeMap = Child(manager, "RouteMap");
+      if (routeMap == null) return output;
+      foreach (var routeNode in routeMap.Children) {
+        var owner = Child(routeNode, "Owner");
+        var ownerId = LeafInt(owner, "id");
+        if (ownerId.HasValue && ownerId.Value != 0) continue;
+        var id = LeafInt(routeNode, "ID");
+        var nameBytes = Leaf(routeNode, "Name");
+        var name = Utf16(nameBytes);
+        if (string.IsNullOrEmpty(name)) name = id.HasValue ? ("Ruta " + id.Value) : "Ruta comercial";
+        var row = new RouteRow {
+          Id = id,
+          Name = name,
+          OwnerId = ownerId,
+          ShipCount = (Leaf(routeNode, "Ships") ?? new byte[0]).Length / 8
+        };
+        var stations = Child(routeNode, "Stations");
+        if (stations != null) {
+          foreach (var stopNode in stations.Children) {
+            var stop = new RouteStop { AreaId = LeafInt(stopNode, "AreaID") };
+            var goodInfos = Child(stopNode, "GoodInfos");
+            if (goodInfos != null) {
+              foreach (var goodNode in goodInfos.Children) {
+                var guid = LeafInt(goodNode, "ProductGUID");
+                var amount = LeafInt(goodNode, "Amount");
+                if (!guid.HasValue || !amount.HasValue || guid.Value == 0) continue;
+                GuidRow guidRow;
+                stop.Goods.Add(new RouteGood {
+                  Guid = guid.Value,
+                  Amount = amount.Value,
+                  Name = guids.TryGetValue(guid.Value, out guidRow) ? guidRow.name : ""
+                });
+              }
+            }
+            row.Stops.Add(stop);
+          }
+        }
+        output.Add(row);
+      }
+      return output;
+    }
+
+    static DbNode ParseTree(byte[] buf) {
+      int magicAt;
+      int tagOff;
+      int attrOff;
+      if (!FindTrailer(buf, out magicAt, out tagOff, out attrOff)) return null;
+      var tags = ReadDict(buf, tagOff);
+      var attrs = ReadDict(buf, attrOff);
+      var root = new DbNode { Tag = "root" };
+      var stack = new List<DbNode> { root };
+      int pos = 0;
+      int nodeEnd = Math.Min(tagOff, buf.Length);
+      while (pos + 8 <= nodeEnd) {
+        int size = BitConverter.ToInt32(buf, pos);
+        int id = BitConverter.ToUInt16(buf, pos + 4);
+        pos += 8;
+        if (id == 0) {
+          if (stack.Count > 1) stack.RemoveAt(stack.Count - 1);
+          continue;
+        }
+        if ((id & 0x8000) != 0) {
+          byte[] payload = size > 0 ? SliceBuf(buf, pos, Math.Min(size, nodeEnd - pos)) : new byte[0];
+          int pad = (8 - (size % 8)) % 8;
+          pos += size + pad;
+          string attr;
+          if (!attrs.TryGetValue(id, out attr) && !attrs.TryGetValue(id & 0x7FFF, out attr))
+            attr = id == 0x8000 ? "None" : ("attr_" + id);
+          stack[stack.Count - 1].Leaves.Add(new DbLeaf { Attr = attr, Bytes = payload });
+          continue;
+        }
+        string tag;
+        var node = new DbNode { Tag = tags.TryGetValue(id, out tag) ? tag : ("tag_" + id) };
+        stack[stack.Count - 1].Children.Add(node);
+        stack.Add(node);
+      }
+      return root;
+    }
+
+    static bool FindTrailer(byte[] buf, out int magicAt, out int tagOff, out int attrOff) {
+      magicAt = -1; tagOff = -1; attrOff = -1;
+      if (buf == null || buf.Length < 20) return false;
+      for (int end = buf.Length; end >= 20; end--) {
+        if (BitConverter.ToUInt32(buf, end - 4) != 0xFFFFFFFD) continue;
+        if (BitConverter.ToInt32(buf, end - 8) != 8) continue;
+        int candidateTag = BitConverter.ToInt32(buf, end - 16);
+        int candidateAttr = BitConverter.ToInt32(buf, end - 12);
+        if (candidateTag <= 0 || candidateTag >= buf.Length || candidateAttr <= 0 || candidateAttr >= buf.Length) continue;
+        magicAt = end; tagOff = candidateTag; attrOff = candidateAttr;
+        return true;
+      }
+      return false;
+    }
+
     static List<KeyValuePair<string, byte[]>> Unpack(byte[] buf) {
       var files = new List<KeyValuePair<string, byte[]>>();
       if (buf.Length < 0x318) return files;
@@ -207,17 +384,10 @@ namespace HarborBuddy {
     }
 
     static void Visit(byte[] buf, Action<string, string, byte[]> onLeaf) {
-      if (buf == null || buf.Length < 20) return;
-      int magicAt = -1;
-      for (int end = buf.Length; end >= 20; end--) {
-        if (BitConverter.ToUInt32(buf, end - 4) != 0xFFFFFFFD) continue;
-        if (BitConverter.ToInt32(buf, end - 8) != 8) continue;
-        magicAt = end;
-        break;
-      }
-      if (magicAt < 0) return;
-      int tagOff = BitConverter.ToInt32(buf, magicAt - 16);
-      int attrOff = BitConverter.ToInt32(buf, magicAt - 12);
+      int magicAt;
+      int tagOff;
+      int attrOff;
+      if (!FindTrailer(buf, out magicAt, out tagOff, out attrOff)) return;
       var tags = ReadDict(buf, tagOff);
       var attrs = ReadDict(buf, attrOff);
       var stack = new List<string>();

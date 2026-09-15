@@ -12,7 +12,7 @@ function sliceFn(src: string, name: string) {
   return src.slice(start, next === -1 ? undefined : next);
 }
 
-describe("PowerUpStrip website collapse + install copy", () => {
+describe("PowerUpStrip website collapse + connection copy", () => {
   const power = sliceFn(panel, "PowerUpSection");
 
   it("starts collapsed and is not opened by a live snapshot", () => {
@@ -24,15 +24,17 @@ describe("PowerUpStrip website collapse + install copy", () => {
     assert.match(power, /onToggle=\{\(event\) => setOpen\(event\.currentTarget\.open\)\}/);
   });
 
-  it("shows a short install flow when expanded", () => {
+  it("shows a short watcher flow when expanded", () => {
     assert.match(power, /t\.power\.expand/);
     assert.match(power, /t\.power\.collapse/);
     assert.match(power, /t\.power\.s1/);
     assert.match(power, /t\.power\.s2/);
     assert.match(power, /t\.power\.s3/);
-    assert.match(power, /t\.install\.dlZipBtn/);
+    assert.match(power, /href="\/watch-harbor-live\.bat"/);
+    assert.doesNotMatch(power, /harbor-buddy-telemetry\.zip/);
+    assert.match(power, /<LiveStatus/);
     assert.match(power, /<LivePanel/);
-    assert.match(power, /to="\/instalar"/);
+    assert.match(power, /to="\/conectar"/);
   });
 
   it("stays usable at supported viewports", () => {
@@ -49,13 +51,13 @@ describe("PowerUpStrip website collapse + install copy", () => {
     assert.match(power, /!open && hasFsAccess/);
   });
 
-  it("does not add or edit Windows installer scripts", () => {
+  it("links only the watcher from the primary connection flow", () => {
     assert.doesNotMatch(power, /writeFile|fs\.|spawn\(|exec\(/);
-    assert.match(power, /href="\/install-harbor-buddy\.bat"/);
+    assert.doesNotMatch(power, /href="\/install-harbor-buddy\.bat"/);
     assert.match(power, /href="\/watch-harbor-live\.bat"/);
   });
 
-  it("keeps install copy in every locale", () => {
+  it("keeps connection copy in every locale", () => {
     for (const locale of LOCALES) {
       const dict = UI[locale].power;
       assert.ok(dict.expand.length > 0, locale);

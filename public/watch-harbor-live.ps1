@@ -47,6 +47,51 @@ function Get-AnnoCandidates {
   return $out
 }
 
+function Get-UbisoftCloudFolders {
+  $folders = New-Object System.Collections.Generic.List[string]
+  foreach ($launcher in @(
+      (Join-Path ${env:ProgramFiles(x86)} "Ubisoft\Ubisoft Game Launcher\savegames"),
+      (Join-Path $env:ProgramFiles "Ubisoft\Ubisoft Game Launcher\savegames"),
+      (Join-Path $env:LOCALAPPDATA "Ubisoft Game Launcher\savegames")
+    )) {
+    if ($launcher -and (Test-Path -LiteralPath $launcher)) {
+      foreach ($account in Get-ChildItem -LiteralPath $launcher -Directory -ErrorAction SilentlyContinue) {
+        foreach ($gameId in @("4553", "4554")) {
+          $candidate = Join-Path $account.FullName $gameId
+          if (Test-Path -LiteralPath $candidate) { Add-UniquePath $folders $candidate }
+        }
+      }
+    }
+  }
+  return $folders
+}
+
+function Test-AnnoArchive($file) {
+  if (-not $file -or -not (Test-Path -LiteralPath $file.FullName)) { return $false }
+  $stream = $null
+  try {
+    $stream = New-Object System.IO.FileStream($file.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    $head = New-Object byte[] ([Math]::Min(256, [int]$stream.Length))
+    $read = $stream.Read($head, 0, $head.Length)
+    if ($read -le 0) { return $false }
+    $text = [System.Text.Encoding]::ASCII.GetString($head, 0, $read)
+    return $text.Contains("Resource File V2.2")
+  } catch {
+    return $false
+  } finally {
+    if ($stream) { $stream.Dispose() }
+  }
+}
+
+function Find-LatestCloudSave {
+  $matches = @()
+  foreach ($folder in Get-UbisoftCloudFolders) {
+    $matches += @(Get-ChildItem -LiteralPath $folder -File -Filter "*.save" -ErrorAction SilentlyContinue |
+      Where-Object { Test-AnnoArchive $_ })
+  }
+  return $matches | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+}
+
 function Find-LatestA7sUnder([string]$accounts) {
   if (-not $accounts) { return $null }
   if (-not (Test-Path -LiteralPath $accounts)) { return $null }
@@ -105,6 +150,15 @@ function Find-AnnoRoot {
       Write-Host "Guardado la última vez: $($bestSave.LastWriteTime)"
       return $root
     }
+  }
+  $cloudSave = Find-LatestCloudSave
+  if ($cloudSave) {
+    $docs = [Environment]::GetFolderPath("MyDocuments")
+    $root = Join-Path $docs "Anno 1800"
+    if (-not (Test-Path -LiteralPath $root)) { [void](New-Item -ItemType Directory -Path $root -Force) }
+    Write-Host "Encontré tu partida cloud más reciente (la leo, nunca la toco): $($cloudSave.Name)"
+    Write-Host "Guardado la última vez: $($cloudSave.LastWriteTime)"
+    return $root
   }
   foreach ($path in Get-AnnoCandidates) {
     if ($path -and (Test-Path -LiteralPath $path)) {
@@ -168,7 +222,9 @@ function Collect-Hits($items, [string]$blob, [bool]$useNeedles) {
 }
 
 function Get-NewestSave([string]$anno) {
-  return Find-LatestA7sUnder (Join-Path $anno "accounts")
+  $local = Find-LatestA7sUnder (Join-Path $anno "accounts")
+  $cloud = Find-LatestCloudSave
+  return @($local, $cloud) | Where-Object { $_ } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
 }
 
 # Houses pulse from presence, same rule as src/lib/live/a7s-snapshot.ts housesHint:
@@ -273,7 +329,7 @@ $titlesPath = Find-Catalog
 $catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $guidJson = Get-Content -LiteralPath (Join-Path $PSScriptRoot "harbor-guids.json") -Raw -Encoding UTF8
 $scanCs = Get-Content -LiteralPath (Join-Path $PSScriptRoot "a7s-scan.cs") -Raw -Encoding UTF8
-Add-Type -TypeDefinition $scanCs -ReferencedAssemblies @("System.IO.Compression")
+Add-Type -TypeDefinition $scanCs
 $outJson = Join-Path $anno "harbor-live.json"
 # Internal only: last scanned money, for the coins delta. Never read by the browser/UI, never part of the harbor-live-v1 schema.
 $moneyStatePath = Join-Path $anno "harbor-live.money.json"
@@ -361,6 +417,32 @@ while ($true) {
     foreach ($hit in @($scan.islands)) {
       if ($hit.id -and $hit.name) { $islands += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name } }
     }
+    $routes = @()
+    foreach ($route in @($scan.routes)) {
+      if (-not $route.name) { continue }
+      $stops = @()
+      foreach ($stop in @($route.stops)) {
+        $routeGoods = @()
+        foreach ($good in @($stop.goods)) {
+          if ($good.guid) {
+            $routeGood = [ordered]@{ guid = [int]$good.guid; amount = [int]$good.amount }
+            if ($good.name) { $routeGood.name = [string]$good.name }
+            $routeGoods += $routeGood
+          }
+        }
+        $routeStop = [ordered]@{ goods = @($routeGoods) }
+        if ($stop.areaId -ne $null) { $routeStop.areaId = [int]$stop.areaId }
+        $stops += $routeStop
+      }
+      $routeOut = [ordered]@{
+        name      = [string]$route.name
+        shipCount = [int]$route.shipCount
+        stops     = @($stops)
+      }
+      if ($route.id -ne $null) { $routeOut.id = [int]$route.id }
+      if ($route.ownerId -ne $null) { $routeOut.ownerId = [int]$route.ownerId }
+      $routes += $routeOut
+    }
     $chainMap = @{
       lumberjack = "wood"; sawmill = "wood"; fishery = "fish"; sheep = "clothes"; knitters = "clothes"
       potato = "schnapps"; distillery = "schnapps"; sausage = "workers"; bread = "workers"; charcoal = "steel"
@@ -402,6 +484,7 @@ while ($true) {
       chains    = @($chains)
       islands   = @($islands)
       hints     = @($hints)
+      routes    = @($routes)
     }
     if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
 
@@ -412,6 +495,16 @@ while ($true) {
       savedAt     = $save.LastWriteTimeUtc.ToString("o")
       game        = "anno-1800"
       sessionName = $sessionName
+      connection  = [ordered]@{
+        mode          = $(if ($save.Extension -eq ".save") { "ubisoft-cloud" } else { "documents-save" })
+        fileName      = $save.Name
+        buildingKinds = @($buildings).Count
+        buildingTotal = [int](@($buildings) | Measure-Object -Property count -Sum).Sum
+        goodsKinds    = @($goods).Count
+        routeCount    = @($routes).Count
+        islandCount   = @($islands).Count
+        questCount    = 0
+      }
     }
     $islandName = $null
     if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
@@ -427,7 +520,7 @@ while ($true) {
     $gCount = @($goods).Count
     $coinsLabel = Get-CoinsLabel $coins
     $housesLabel = Get-HousesLabel $houses
-    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount edificios / $gCount bienes | Monedas: $coinsLabel | Casas: $housesLabel"
+    Write-Host "$(Get-Date -Format HH:mm:ss) $($save.Name) -> $bCount tipos de edificio / $gCount bienes / $(@($routes).Count) rutas | Monedas: $coinsLabel | Casas: $housesLabel"
     $namesLine = Get-BuildingsLogLine $buildings $catalog 10
     if ($namesLine) { Write-Host "  Edificios: $namesLine" }
     $goodsLine = Get-GoodsLogLine $goods 6

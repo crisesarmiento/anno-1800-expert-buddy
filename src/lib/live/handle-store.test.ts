@@ -23,7 +23,7 @@ function fakeHandle(opts?: {
   reads?: File[];
 }) {
   let permission: PermissionState = opts?.permission ?? "granted";
-  let lastModified = opts?.lastModified ?? 10;
+  const lastModified = opts?.lastModified ?? 10;
   const reads = opts?.reads ?? [];
   let readCount = 0;
   const handle = {
@@ -133,8 +133,14 @@ describe("Actualizar chip on collapsed PowerUpStrip", () => {
   const panel = readFileSync(new URL("../../components/live-panel.tsx", import.meta.url), "utf8");
   const app = readFileSync(new URL("../../components/harbor-app.tsx", import.meta.url), "utf8");
   const desk = readFileSync(new URL("../../components/session-desk.tsx", import.meta.url), "utf8");
-  const bat = readFileSync(new URL("../../../public/watch-harbor-live.bat", import.meta.url), "utf8");
-  const ps1 = readFileSync(new URL("../../../public/watch-harbor-live.ps1", import.meta.url), "utf8");
+  const bat = readFileSync(
+    new URL("../../../public/watch-harbor-live.bat", import.meta.url),
+    "utf8",
+  );
+  const ps1 = readFileSync(
+    new URL("../../../public/watch-harbor-live.ps1", import.meta.url),
+    "utf8",
+  );
 
   it("puts a paper/ink stamp chip on the collapsed strip summary, not a brass Button", () => {
     const power = sliceFn(panel, "PowerUpSection");

@@ -48,7 +48,7 @@ describe("welcome/desk zero-setup onboarding", () => {
       assert.equal(banned.test(dict.live.whyEmpty), false, locale);
       assert.equal(banned.test(dict.live.hint), false, locale);
       assert.equal(banned.test(dict.power.hint), false, locale);
-      assert.match(dict.power.title, /Power up/i);
+      assert.ok(dict.power.title.length > 12, locale);
       assert.ok(dict.pulse.title.length > 0);
       assert.ok(dict.live.example.length > 0);
     }

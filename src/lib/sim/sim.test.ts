@@ -2,12 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import { BUILDINGS, MISSING_WIKI, chainByGood, chainLinks, chainOutputTMin } from "./chains.ts";
-import {
-  compute,
-  goodBalance,
-  housesSupportedFish,
-  parseCitySeed,
-} from "./compute.ts";
+import { compute, goodBalance, housesSupportedFish, parseCitySeed } from "./compute.ts";
 import {
   FARMER_NEEDS,
   HOUSE_CAPACITY,
@@ -24,10 +19,7 @@ const fixture = JSON.parse(
 ) as unknown;
 
 function close(actual: number, expected: number, eps = 1e-6) {
-  assert.ok(
-    Math.abs(actual - expected) < eps,
-    `expected ${expected}, got ${actual}`,
-  );
+  assert.ok(Math.abs(actual - expected) < eps, `expected ${expected}, got ${actual}`);
 }
 
 function farmerNeed(good: string) {
@@ -160,10 +152,7 @@ describe("campaign-ch1 fixture", () => {
       /0 pescaderías/,
     );
     assert.ok(island.alerts.some((row) => row.id === "clothes-soon"));
-    assert.match(
-      island.alerts.find((row) => row.id === "clothes-soon")?.line ?? "",
-      /0 telares/,
-    );
+    assert.match(island.alerts.find((row) => row.id === "clothes-soon")?.line ?? "", /0 telares/);
     assert.equal(
       island.alerts.some((row) => row.good === "schnapps" || /schnapps/i.test(row.line)),
       false,
@@ -214,7 +203,10 @@ describe("presence confidence", () => {
   });
 });
 
-function ch1Fed(island: CitySeed["islands"][number], extra: CitySeed["islands"][number]["buildings"]) {
+function ch1Fed(
+  island: CitySeed["islands"][number],
+  extra: CitySeed["islands"][number]["buildings"],
+) {
   return {
     ...island,
     buildings: {
@@ -240,8 +232,6 @@ describe("sim gate: chapter already seen + perfect copy", () => {
     };
     const stats = compute(seed);
     assert.equal(stats.nextBuild, null);
-    assert.notEqual(stats.nextBuild?.buildingId, "charcoal");
-    assert.notEqual(stats.nextBuild?.buildingId, "kitchen");
     assert.equal(
       stats.alerts.some((row) => /acería|plátanos|nuevo mundo/i.test(row.line)),
       false,
@@ -367,17 +357,17 @@ describe("workforce warning when buildings outdemand houses", () => {
     assert.equal(first.workforce?.farmer, 125);
     assert.equal(first.housesMax.farmer, 100);
     assert.ok(first.alerts.some((row) => row.id === "workforce-farmer"));
-    assert.match(
-      first.alerts.find((row) => row.id === "workforce-farmer")?.line ?? "",
-      /125.*100/,
-    );
+    assert.match(first.alerts.find((row) => row.id === "workforce-farmer")?.line ?? "", /125.*100/);
   });
 
   it("does not warn when the houses cover the workforce the fisheries need", () => {
     const base = parseCitySeed(fixture);
     const stats = compute({ ...base, islands: [fisheryOnlyIsland(1)] });
     const first = stats.islands[0]!;
-    assert.equal(first.alerts.some((row) => row.id === "workforce-farmer"), false);
+    assert.equal(
+      first.alerts.some((row) => row.id === "workforce-farmer"),
+      false,
+    );
   });
 });
 

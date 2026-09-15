@@ -6,6 +6,8 @@ import type { LiveSnapshot } from "./live/types.ts";
 import { defaultPulse, type Pulse } from "./play.ts";
 import type { CalmMode } from "./store.ts";
 
+export type { Pulse } from "./play.ts";
+
 export const DO_NOW_VISIBLE = 3;
 export const DO_NOW_BAG_CAP = 5;
 
@@ -38,8 +40,7 @@ export function saturadoRojo(
   calm: CalmMode = "session",
 ): { saturado: boolean; rojo: boolean } {
   const rojo = pulse.coins === "down" || calm === "broke";
-  const saturado =
-    calm === "overwhelmed" || pulse.houses === "yellow" || pulse.houses === "empty";
+  const saturado = calm === "overwhelmed" || pulse.houses === "yellow" || pulse.houses === "empty";
   return { saturado, rojo };
 }
 
@@ -83,12 +84,16 @@ function tie(id: string): number {
   if (id === "pulse:houses-empty") return 1;
   if (id === "pulse:houses-yellow") return 2;
   if (id.startsWith("live:missing:")) return 3;
-  if (id.startsWith("mission:do:")) return 4;
-  if (id === "pulse:quest") return 5;
+  if (id === "pulse:quest") return 4;
+  if (id.startsWith("mission:do:")) return 5;
   return 9;
 }
 
-function sortBag(rows: DoNowRow[], samples: PulseSample[], snapshot: LiveSnapshot | null): DoNowRow[] {
+function sortBag(
+  rows: DoNowRow[],
+  samples: PulseSample[],
+  snapshot: LiveSnapshot | null,
+): DoNowRow[] {
   return [...rows].sort((a, b) => {
     const band = BAND_RANK[b.band] - BAND_RANK[a.band];
     if (band) return band;

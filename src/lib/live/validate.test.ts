@@ -5,6 +5,7 @@ import { applyLiveToProgress } from "./apply.ts";
 import { matchLiveQuests } from "./match.ts";
 import { LIVE_MSG } from "./messages.ts";
 import { ingestLiveBytes, ingestLiveJsonText, normalizeSnapshot } from "./validate.ts";
+import { tradeRouteIssue, uniqueTradeGoods } from "../trade-route-health.ts";
 
 const fixture = JSON.parse(
   readFileSync(new URL("./fixture.json", import.meta.url), "utf8"),
@@ -39,6 +40,9 @@ describe("harbor-live ingest", () => {
     assert.equal(result.snapshot.islandName, "Bright Sands");
     assert.equal(result.snapshot.savedAt, "2026-08-31T23:50:00.000Z");
     assert.equal(result.snapshot.workforce?.farmers, true);
+    assert.equal(result.snapshot.connection?.routeCount, 2);
+    assert.equal(result.snapshot.telemetry?.routes?.[0]?.name, "Tablones La - Les");
+    assert.equal(result.snapshot.telemetry?.routes?.[1]?.shipCount, 0);
   });
 
   it("keeps schema required keys and strips refused extras", () => {
@@ -50,7 +54,13 @@ describe("harbor-live ingest", () => {
     assert.ok(schema.properties.islandName);
     assert.ok(schema.properties.savedAt);
     assert.ok(schema.properties.workforce);
-    assert.ok((schema.properties.telemetry as { properties?: { goods?: unknown } }).properties?.goods);
+    assert.ok(schema.properties.connection);
+    assert.ok(
+      (schema.properties.telemetry as { properties?: { goods?: unknown } }).properties?.goods,
+    );
+    assert.ok(
+      (schema.properties.telemetry as { properties?: { routes?: unknown } }).properties?.routes,
+    );
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);
@@ -121,7 +131,9 @@ describe("harbor-live ingest", () => {
     });
     assert.equal(result.ok, true);
     if (!result.ok) return;
-    assert.deepEqual(result.snapshot.telemetry?.buildings, [{ id: "marketplace", name: "Mercado" }]);
+    assert.deepEqual(result.snapshot.telemetry?.buildings, [
+      { id: "marketplace", name: "Mercado" },
+    ]);
   });
 
   it("rejects a bad schema", () => {
@@ -207,5 +219,38 @@ describe("harbor-live ingest", () => {
     assert.equal(result.ok, false);
     if (result.ok) return;
     assert.equal(result.message, LIVE_MSG.game);
+  });
+});
+
+describe("trade route structural health", () => {
+  const configured = {
+    id: 26,
+    name: "Tablones La - Les",
+    ownerId: 0,
+    shipCount: 1,
+    stops: [
+      { areaId: 8451, goods: [{ guid: 1010196, name: "Tablones", amount: 20 }] },
+      { areaId: 9219, goods: [{ guid: 1010196, name: "Tablones", amount: 20 }] },
+    ],
+  };
+
+  it("does not overclaim an issue for a configured route", () => {
+    assert.equal(tradeRouteIssue(configured), null);
+    assert.deepEqual(uniqueTradeGoods(configured), [{ name: "Tablones", amount: 20 }]);
+  });
+
+  it("prioritizes missing ships, stops, then goods", () => {
+    assert.equal(tradeRouteIssue({ ...configured, shipCount: 0 }), "Sin barco asignado");
+    assert.equal(
+      tradeRouteIssue({ ...configured, stops: configured.stops.slice(0, 1) }),
+      "Sólo tiene una parada",
+    );
+    assert.equal(
+      tradeRouteIssue({
+        ...configured,
+        stops: configured.stops.map((stop) => ({ ...stop, goods: [] })),
+      }),
+      "No tiene bienes configurados",
+    );
   });
 });
