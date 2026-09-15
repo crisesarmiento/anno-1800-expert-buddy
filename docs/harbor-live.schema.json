@@ -26,7 +26,19 @@
         "goodsKinds": { "type": "integer", "minimum": 0 },
         "routeCount": { "type": "integer", "minimum": 0 },
         "islandCount": { "type": "integer", "minimum": 0 },
-        "questCount": { "type": "integer", "minimum": 0 }
+        "questCount": { "type": "integer", "minimum": 0 },
+        "native": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["provider", "view", "observedAt"],
+          "properties": {
+            "provider": { "const": "ux-enhancer-ocr" },
+            "view": { "type": "string", "enum": ["production", "finance", "population", "unknown"] },
+            "observedAt": { "type": "string", "format": "date-time" },
+            "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "serverVersion": { "type": "string", "minLength": 1, "maxLength": 40 }
+          }
+        }
       }
     },
     "quests": {
@@ -127,6 +139,26 @@
                   }
                 }
               }
+            }
+          }
+        },
+        "production": {
+          "type": "array",
+          "maxItems": 120,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["guid", "name", "observedAt"],
+            "properties": {
+              "guid": { "type": "integer" },
+              "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+              "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "observedAt": { "type": "string", "format": "date-time" },
+              "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "amount": { "type": "number", "minimum": 0 },
+              "requiredTMin": { "type": "number", "minimum": 0 },
+              "productivity": { "type": "number", "minimum": 0 },
+              "buildingCount": { "type": "number", "minimum": 0 }
             }
           }
         }

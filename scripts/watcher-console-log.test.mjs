@@ -13,7 +13,7 @@ test("summary line keeps counts and adds pulseHint coins/houses, in Spanish", ()
   assert.match(ps1, /function Get-HousesLabel\(\[string\]\$houses\) \{/);
   assert.match(
     ps1,
-    /Write-Host "\$\(Get-Date -Format HH:mm:ss\) \$\(\$save\.Name\) -> \$bCount edificios \/ \$gCount bienes \| Monedas: \$coinsLabel \| Casas: \$housesLabel"/,
+    /Write-Host "\$\(Get-Date -Format HH:mm:ss\) \$\(\$save\.Name\) -> \$bCount tipos de edificio \/ \$gCount bienes \/ \$\(@\(\$routes\)\.Count\) rutas \| Monedas: \$coinsLabel \| Casas: \$housesLabel"/,
   );
 });
 
