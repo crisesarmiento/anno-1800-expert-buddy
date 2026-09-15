@@ -8,6 +8,7 @@ import {
   LIVE_SCHEMA,
   LIVE_WORKFORCE_TIERS,
   type LiveBuildingHit,
+  type LiveConnection,
   type LiveIngestResult,
   type LiveNamedHit,
   type LivePulseHint,
@@ -16,6 +17,7 @@ import {
   type LiveSnapshot,
   type LiveSource,
   type LiveTelemetry,
+  type LiveTradeRoute,
   type LiveWorkforce,
 } from "./types.ts";
 
@@ -24,6 +26,12 @@ const QUEST_STATES = new Set<LiveQuestState>(["active", "ready", "done"]);
 const SOURCES = new Set<LiveSource>(["telemetry", "save", "file"]);
 const COINS = new Set(["unknown", "up", "down"]);
 const HOUSES = new Set(["unknown", "ok", "yellow", "empty"]);
+const CONNECTION_MODES = new Set<LiveConnection["mode"]>([
+  "documents-save",
+  "ubisoft-cloud",
+  "native",
+  "manual",
+]);
 
 function hasJsonExtension(filename: string) {
   return filename.toLowerCase().endsWith(".json");
@@ -135,20 +143,95 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
       if (!asRecord(item)) continue;
       const id = clipName(item.id, 48);
       const name = clipName(item.name, 80);
-      const amount = typeof item.amount === "number" && Number.isFinite(item.amount) ? Math.trunc(item.amount) : null;
+      const amount =
+        typeof item.amount === "number" && Number.isFinite(item.amount)
+          ? Math.trunc(item.amount)
+          : null;
       if (!id || !name || amount == null) continue;
       goods.push({ id, name, amount });
     }
     if (goods.length) telemetry.goods = goods;
   }
+  if (Array.isArray(value.routes)) {
+    const routes: LiveTradeRoute[] = [];
+    for (const item of value.routes.slice(0, 80)) {
+      if (!asRecord(item)) continue;
+      const name = clipName(item.name, 120);
+      if (!name) continue;
+      const route: LiveTradeRoute = {
+        name,
+        shipCount:
+          typeof item.shipCount === "number" && Number.isFinite(item.shipCount)
+            ? Math.max(0, Math.trunc(item.shipCount))
+            : 0,
+        stops: [],
+      };
+      if (typeof item.id === "number" && Number.isFinite(item.id)) route.id = Math.trunc(item.id);
+      if (typeof item.ownerId === "number" && Number.isFinite(item.ownerId)) {
+        route.ownerId = Math.trunc(item.ownerId);
+      }
+      if (Array.isArray(item.stops)) {
+        for (const stopValue of item.stops.slice(0, 20)) {
+          if (!asRecord(stopValue)) continue;
+          const stop: LiveTradeRoute["stops"][number] = { goods: [] };
+          if (typeof stopValue.areaId === "number" && Number.isFinite(stopValue.areaId)) {
+            stop.areaId = Math.trunc(stopValue.areaId);
+          }
+          if (Array.isArray(stopValue.goods)) {
+            for (const goodValue of stopValue.goods.slice(0, 20)) {
+              if (!asRecord(goodValue)) continue;
+              const guid = Number(goodValue.guid);
+              const amount = Number(goodValue.amount);
+              if (!Number.isFinite(guid) || !Number.isFinite(amount)) continue;
+              const good: LiveTradeRoute["stops"][number]["goods"][number] = {
+                guid: Math.trunc(guid),
+                amount: Math.trunc(amount),
+              };
+              const goodName = clipName(goodValue.name, 80);
+              if (goodName) good.name = goodName;
+              stop.goods.push(good);
+            }
+          }
+          route.stops.push(stop);
+        }
+      }
+      routes.push(route);
+    }
+    if (routes.length) telemetry.routes = routes;
+  }
   return Object.keys(telemetry).length ? telemetry : undefined;
+}
+
+function normalizeConnection(value: unknown): LiveConnection | undefined {
+  if (!asRecord(value) || !CONNECTION_MODES.has(value.mode as LiveConnection["mode"]))
+    return undefined;
+  const connection: LiveConnection = { mode: value.mode as LiveConnection["mode"] };
+  const fileName = clipName(value.fileName, 160);
+  if (fileName) connection.fileName = fileName;
+  for (const key of [
+    "buildingKinds",
+    "buildingTotal",
+    "goodsKinds",
+    "routeCount",
+    "islandCount",
+    "questCount",
+  ] as const) {
+    const raw = value[key];
+    if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0)
+      connection[key] = Math.trunc(raw);
+  }
+  return connection;
 }
 
 function normalizePulse(value: unknown): LivePulseHint | undefined {
   if (value === undefined || value === null) return undefined;
   if (!asRecord(value)) return undefined;
-  const coins = COINS.has(String(value.coins)) ? (value.coins as LivePulseHint["coins"]) : "unknown";
-  const houses = HOUSES.has(String(value.houses)) ? (value.houses as LivePulseHint["houses"]) : "unknown";
+  const coins = COINS.has(String(value.coins))
+    ? (value.coins as LivePulseHint["coins"])
+    : "unknown";
+  const houses = HOUSES.has(String(value.houses))
+    ? (value.houses as LivePulseHint["houses"])
+    : "unknown";
   return { coins, houses };
 }
 
@@ -216,6 +299,8 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   if (savedAt) snapshot.savedAt = savedAt;
   const workforce = normalizeWorkforce(raw.workforce);
   if (workforce) snapshot.workforce = workforce;
+  const connection = normalizeConnection(raw.connection);
+  if (connection) snapshot.connection = connection;
   return { ok: true, snapshot };
 }
 
@@ -270,7 +355,10 @@ export function ingestLiveJsonText(text: string, locale?: string | null): LiveIn
   return normalizeSnapshot(parsed, locale);
 }
 
-export async function ingestLiveFile(file: File, locale?: string | null): Promise<LiveIngestResult> {
+export async function ingestLiveFile(
+  file: File,
+  locale?: string | null,
+): Promise<LiveIngestResult> {
   if (file.size > LIVE_MAX_BYTES) {
     return { ok: false, message: msg("tooBig", locale) };
   }

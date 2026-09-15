@@ -6,6 +6,16 @@
   "game": "anno-1800",
   "sessionName": "Autosave",
   "islandName": "Bright Sands",
+  "connection": {
+    "mode": "manual",
+    "fileName": "fixture.json",
+    "buildingKinds": 3,
+    "buildingTotal": 3,
+    "goodsKinds": 0,
+    "routeCount": 2,
+    "islandCount": 1,
+    "questCount": 1
+  },
   "workforce": {
     "farmers": true
   },
@@ -30,12 +40,27 @@
       { "id": "hannah", "name": "Hannah Goode" },
       { "id": "kahina", "name": "Madame Kahina" }
     ],
-    "chains": [
-      { "id": "wood", "name": "Madera" }
-    ],
-    "islands": [
-      { "id": "bright-sands", "name": "Bright Sands" }
-    ],
-    "hints": ["farmers", "taxes"]
+    "chains": [{ "id": "wood", "name": "Madera" }],
+    "islands": [{ "id": "bright-sands", "name": "Bright Sands" }],
+    "hints": ["farmers", "taxes"],
+    "routes": [
+      {
+        "id": 26,
+        "name": "Tablones La - Les",
+        "ownerId": 0,
+        "shipCount": 1,
+        "stops": [
+          { "areaId": 8451, "goods": [{ "guid": 1010196, "name": "Tablones", "amount": 20 }] },
+          { "areaId": 9219, "goods": [{ "guid": 1010196, "name": "Tablones", "amount": 20 }] }
+        ]
+      },
+      {
+        "id": 31,
+        "name": "Ruta sin barco",
+        "ownerId": 0,
+        "shipCount": 0,
+        "stops": [{ "areaId": 8451, "goods": [] }]
+      }
+    ]
   }
 }

@@ -14,6 +14,21 @@
     "game": { "const": "anno-1800" },
     "sessionName": { "type": "string", "minLength": 1, "maxLength": 200 },
     "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["documents-save", "ubisoft-cloud", "native", "manual"] },
+        "fileName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "buildingKinds": { "type": "integer", "minimum": 0 },
+        "buildingTotal": { "type": "integer", "minimum": 0 },
+        "goodsKinds": { "type": "integer", "minimum": 0 },
+        "routeCount": { "type": "integer", "minimum": 0 },
+        "islandCount": { "type": "integer", "minimum": 0 },
+        "questCount": { "type": "integer", "minimum": 0 }
+      }
+    },
     "quests": {
       "type": "array",
       "maxItems": 40,
@@ -71,6 +86,47 @@
               "id": { "type": "string", "minLength": 1, "maxLength": 48 },
               "name": { "type": "string", "minLength": 1, "maxLength": 80 },
               "amount": { "type": "integer" }
+            }
+          }
+        },
+        "routes": {
+          "type": "array",
+          "maxItems": 80,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "shipCount", "stops"],
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+              "ownerId": { "type": "integer" },
+              "shipCount": { "type": "integer", "minimum": 0 },
+              "stops": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["goods"],
+                  "properties": {
+                    "areaId": { "type": "integer" },
+                    "goods": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["guid", "amount"],
+                        "properties": {
+                          "guid": { "type": "integer" },
+                          "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+                          "amount": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }

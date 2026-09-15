@@ -110,13 +110,17 @@ export function tallerThreshold(snapshot: TallerSnapshot): TallerStamp {
   if (snapshot.saturation === "empty") return missingLine(ratio);
 
   if (!snapshot.session.buildingsKnown) {
-    if (snapshot.session.workforceFarmers && snapshot.saturation === "unknown" && snapshot.balance !== "down") {
+    if (
+      snapshot.session.workforceFarmers &&
+      snapshot.saturation === "unknown" &&
+      snapshot.balance !== "down"
+    ) {
       return { kind: "no-alcanza", label: "No alcanza" };
     }
     if (snapshot.saturation === "yellow" || snapshot.balance === "down") {
       return { kind: "no-alcanza", label: "No alcanza" };
     }
-    if (snapshot.saturation === "ok" && snapshot.balance !== "down") {
+    if (snapshot.saturation === "ok") {
       return { kind: "alcanza", label: "Alcanza" };
     }
     return missingLine(ratio);

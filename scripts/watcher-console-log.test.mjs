@@ -18,12 +18,18 @@ test("summary line keeps counts and adds pulseHint coins/houses, in Spanish", ()
 });
 
 test("names line: top building names (catalog Spanish name, GUID-name fallback), capped, with a '+K más' overflow", () => {
-  assert.match(ps1, /function Get-BuildingsLogLine\(\$buildings, \$catalog, \[int\]\$maxNames\) \{/);
-  assert.match(ps1, /function Get-BuildingLabel\(\[string\]\$id, \[string\]\$fallback, \$catalog\) \{/);
+  assert.match(
+    ps1,
+    /function Get-BuildingsLogLine\(\$buildings, \$catalog, \[int\]\$maxNames\) \{/,
+  );
+  assert.match(
+    ps1,
+    /function Get-BuildingLabel\(\[string\]\$id, \[string\]\$fallback, \$catalog\) \{/,
+  );
   assert.match(ps1, /\$label×\$\(\[int\]\$b\.count\)/);
   assert.match(ps1, /\+\$extra más/);
   assert.match(ps1, /Get-BuildingsLogLine \$buildings \$catalog 10/);
-  assert.match(ps1, /if \(\$namesLine\) \{ Write-Host "  Edificios: \$namesLine" \}/);
+  assert.match(ps1, /if \(\$namesLine\) \{ Write-Host "[ ]{2}Edificios: \$namesLine" \}/);
 });
 
 test("names line caps between 8 and 12 entries before overflowing", () => {
@@ -40,7 +46,7 @@ test("optional goods line: top stock by amount, max ~6", () => {
   assert.match(ps1, /Sort-Object -Property \{ \$_\["amount"\] \} -Descending/);
   assert.doesNotMatch(ps1, /Sort-Object -Property amount -Descending/);
   assert.match(ps1, /Get-GoodsLogLine \$goods 6/);
-  assert.match(ps1, /if \(\$goodsLine\) \{ Write-Host "  Bienes: \$goodsLine" \}/);
+  assert.match(ps1, /if \(\$goodsLine\) \{ Write-Host "[ ]{2}Bienes: \$goodsLine" \}/);
 });
 
 test("building names line sorts by count via bracket indexing, not the broken -Property <name> form", () => {
@@ -56,7 +62,10 @@ test("no raw GUID dump in any Write-Host line", () => {
 });
 
 test("bundled .bat ships the same console-log helpers as the .ps1 source", () => {
-  assert.match(bat, /function Get-BuildingsLogLine\(\$buildings, \$catalog, \[int\]\$maxNames\) \{/);
+  assert.match(
+    bat,
+    /function Get-BuildingsLogLine\(\$buildings, \$catalog, \[int\]\$maxNames\) \{/,
+  );
   assert.match(bat, /function Get-GoodsLogLine\(\$goods, \[int\]\$maxGoods\) \{/);
   assert.match(bat, /Monedas: \$coinsLabel \| Casas: \$housesLabel/);
 });

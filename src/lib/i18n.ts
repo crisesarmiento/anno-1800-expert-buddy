@@ -21,7 +21,7 @@ export function fill(template: string, ...args: Array<string | number>) {
 const es = {
   tagline: "Anno 1800 · bastante bien, lindo, terminá la historia",
   where: "Dónde estás",
-  installMod: "Instalar el mod",
+  installMod: "Conectar partida",
   board: "Tablero",
   map: "Mapa",
   spoilers: "Spoilers {0}",
@@ -59,19 +59,20 @@ const es = {
     steelCopy: "Capítulo 2. Hierro en la montaña.",
     ocean: "Del otro lado del océano",
     oceanCopy: "Capítulo 3. El mismo 10×10, isla nueva.",
-    windows: "En Windows: Anno en el primer monitor (pantalla completa / Ctrl+G). Esta app es pestaña o PWA en el segundo. Nunca overlay, nunca click-through, nunca se queda siempre encima.",
+    windows:
+      "En Windows: Anno en el primer monitor (pantalla completa / Ctrl+G). Esta app es pestaña o PWA en el segundo. Nunca overlay, nunca click-through, nunca se queda siempre encima.",
     journalNote: "Los títulos de misión son los del diario en español, para matchear la campaña.",
     tryHint: "Sin Windows, sin mod, sin JSON. Un ejemplo de Capítulo 1 para ver el escritorio.",
   },
   power: {
     kicker: "Opcional",
-    title: "Power up · Conectar",
-    hint: "No hace falta para el primer consejo. Si más adelante jugás en Windows y querés que el diario mande solo, conectá el archivo acá.",
+    title: "Conectar el último guardado",
+    hint: "El vigilante encuentra partidas locales o de Ubisoft Cloud y escribe un diario que esta página puede seguir.",
     expand: "Ver instalación",
     collapse: "Ocultar instalación",
-    s1: "Descargá el mod.zip y el instalador. Windows: Más info → Ejecutar de todas formas.",
-    s2: "Anno → Mods → Harbor Buddy Telemetry ON. Entrá a la campaña.",
-    s3: "Abrí el vigilante, Ctrl+F5 en Anno, y soltá harbor-live.json acá.",
+    s1: "Descargá y abrí el vigilante de Windows. No necesita ningún mod.",
+    s2: "Entrá a la campaña y guardá con Ctrl+F5, o esperá el autoguardado.",
+    s3: "Elegí harbor-live.json una vez. Después el diario se actualiza solo mientras la pestaña siga abierta.",
   },
   live: {
     kicker: "Conectar",
@@ -90,7 +91,8 @@ const es = {
     noMatch: " · sin match, elegí a mano",
     hideSteps: "Ocultar pasos",
     showSteps: "Ver los 6 pasos acá",
-    whyEmpty: "El vigilante escribe el JSON al guardar con Ctrl+F5 o en el autoguardado. El primer consejo no depende de eso.",
+    whyEmpty:
+      "El vigilante escribe el JSON al guardar con Ctrl+F5 o en el autoguardado. El primer consejo no depende de eso.",
     watchBtn: "Vigilar harbor-live.json",
     watching: "Vigilando el archivo…",
     watcherDl: "Descargar vigilante",
@@ -114,11 +116,14 @@ const es = {
     dlZipCopy: "Un clic, sin cuenta. Dejá el zip en Descargas y seguimos.",
     dlZipBtn: "Descargar mod.zip",
     dlInst: "2. Descargar instalador Windows",
-    dlInstCopy: "Te copia el zip a Documentos\\Anno 1800\\mods, sin pedir administrador ni tocar tus partidas guardadas.",
-    smart: "Si Windows avisa, es normal: elegí Más info → Ejecutar de todas formas. Es un copiado de carpeta, no un cheat.",
+    dlInstCopy:
+      "Te copia el zip a Documentos\\Anno 1800\\mods, sin pedir administrador ni tocar tus partidas guardadas.",
+    smart:
+      "Si Windows avisa, es normal: elegí Más info → Ejecutar de todas formas. Es un copiado de carpeta, no un cheat.",
     bat: "Instalador (.bat)",
     ps1: "PowerShell (.ps1)",
-    watchCopy: "Un solo archivo, doble clic y listo. Si en Descargas hay un watch-harbor-live.ps1 viejo, el .bat lo renombra a .old solo, no lo usa. Encuentra tu partida más reciente en Documentos\\Anno 1800\\accounts (nunca la abre a ciegas ni la modifica) — dejá la ventana abierta y guardá con Ctrl+F5 en Anno (o esperá el autoguardado).",
+    watchCopy:
+      "Un solo archivo, doble clic y listo. Si en Descargas hay un watch-harbor-live.ps1 viejo, el .bat lo renombra a .old solo, no lo usa. Encuentra tu partida más reciente en Documentos\\Anno 1800\\accounts (nunca la abre a ciegas ni la modifica) — dejá la ventana abierta y guardá con Ctrl+F5 en Anno (o esperá el autoguardado).",
     watchBat: "Vigilante (.bat)",
     watchTitles: "Lista de títulos",
     done: "3. Ya lo instalé",
@@ -126,7 +131,8 @@ const es = {
     check2: "Mods → Harbor Buddy Telemetry ON",
     check3: "Jugar campaña",
     check4: "Vigilante abierto · Ctrl+F5 en Anno · soltar o vigilar harbor-live.json",
-    fallback: "Si el instalador no encuentra tu Anno, no te preocupes: copiá a mano la carpeta del zip a Documentos\\Anno 1800\\mods\\harbor-buddy-telemetry. Tiene que quedar un modinfo.json justo ahí adentro.",
+    fallback:
+      "Si el instalador no encuentra tu Anno, no te preocupes: copiá a mano la carpeta del zip a Documentos\\Anno 1800\\mods\\harbor-buddy-telemetry. Tiene que quedar un modinfo.json justo ahí adentro.",
     back: "Volver al escritorio",
     launcher: {
       kicker: "4. Lanzador opcional",
@@ -147,7 +153,8 @@ const es = {
     s4: "Abrí Anno → Mods → activá Harbor Buddy Telemetry. Entrá a la campaña.",
     s5: "Corré watch-harbor-live.bat (ventana abierta). En Anno, Ctrl+F5 (F5 es la cámara). El script también lee el autoguardado. Escribe Documentos\\Anno 1800\\harbor-live.json. Acá: Partida en vivo → soltá o vigilá ese archivo.",
     s6: "Si el JSON viene vacío, usá \u201CEscribí lo que ves en el diario\u201D una vez. Si el instalador no encuentra Anno, copiá la carpeta a mano.",
-    watcher: "Un watcher de Windows, más adelante, puede escribir el mismo harbor-live.json desde un .a7s. Anno 1800 Buddy no abre el guardado acá.",
+    watcher:
+      "Un watcher de Windows, más adelante, puede escribir el mismo harbor-live.json desde un .a7s. Anno 1800 Buddy no abre el guardado acá.",
     export: "Exportar dónde estoy: baja el JSON de esta sesión para llevarlo a otra PC.",
   },
   pulse: {
@@ -172,15 +179,18 @@ const es = {
   next: {
     kicker: "Tu próximo paso",
     coinsTitle: "La producción te está comiendo.",
-    coinsDetail: "En Economía, si Edificios de producción cuestan casi tanto como Impuestos, pausá fábricas. Si Instituciones tienen zzz, borralas. Un pueblo chico no mantiene 20 chimeneas ni 3 cuarteles de bomberos.",
+    coinsDetail:
+      "En Economía, si Edificios de producción cuestan casi tanto como Impuestos, pausá fábricas. Si Instituciones tienen zzz, borralas. Un pueblo chico no mantiene 20 chimeneas ni 3 cuarteles de bomberos.",
     emptyTitle: "Las casas vacías no pagan.",
     emptyDetail: "Camino al mercado, y que el almacén alcance. Si no hay calle, no se muda nadie.",
     yellowTitle: "Primero las barras amarillas.",
-    yellowDetail: "Una cadena a la vez. No hace falta una ciudad nueva. Cuando se pongan verdes, volvés a la misión.",
+    yellowDetail:
+      "Una cadena a la vez. No hace falta una ciudad nueva. Cuando se pongan verdes, volvés a la misión.",
     nowTitle: "Esto, ahora.",
     nowFallback: "Seguí el marcador de la misión.",
     questTitle: "La ciudad puede esperar.",
-    questDetail: "Seguí el marcador, entregá, y volvé. Si las barras están verdes, la isla se banca sola.",
+    questDetail:
+      "Seguí el marcador, entregá, y volvé. Si las barras están verdes, la isla se banca sola.",
     doneTitle: "Esta parte está.",
     doneDetail: "Marcá la misión como lista, o preguntame lo que te traba.",
   },
@@ -203,7 +213,8 @@ const es = {
     watch: "Ojo: ",
     waitCity: "La ciudad puede esperar",
     notPuzzle: "Esto no es un puzzle de edificios",
-    notPuzzleCopy: "Seguí el marcador y volvé a tus 10×10. Si las barras están verdes, la isla no te necesita un rato.",
+    notPuzzleCopy:
+      "Seguí el marcador y volvé a tus 10×10. Si las barras están verdes, la isla no te necesita un rato.",
     money: "Que las monedas suban",
     moneyTitle: "Bastante bien le gana a eficiente",
     economy: "Cómo leer Economía",
@@ -222,7 +233,8 @@ const es = {
   chat: {
     kicker: "Preguntale al compañero",
     title: "Acá al lado tuyo",
-    empty: "Preguntame como a un amigo en el sillón. Dónde va la taberna. Por qué se pusieron rojas las monedas. Si vale pelear con las otras compañías.",
+    empty:
+      "Preguntame como a un amigo en el sillón. Dónde va la taberna. Por qué se pusieron rojas las monedas. Si vale pelear con las otras compañías.",
     thinking: "Pensando con la marea…",
     placeholder: "¿Dónde pongo la taberna?",
     send: "Enviar",
@@ -233,7 +245,8 @@ const es = {
     coinsProblem: "El problema son las monedas",
     book: "Libro · una calle",
     stop: "Pará de construir. Arreglá el ticker. Después jugá.",
-    enough: "No hace falta ser eficiente al mil. Si las monedas suben, ya sos rico para terminar la historia.",
+    enough:
+      "No hace falta ser eficiente al mil. Si las monedas suben, ya sos rico para terminar la historia.",
     green: "El ticker ya está verde",
     still: "Sigo saturado",
   },
@@ -255,7 +268,8 @@ const es = {
     miss: "no matcheó · {0}",
     missEmpty: "no matcheó",
   },
-  footer: "Creado por Cristian Sarmiento · Anno 1800 Buddy, un compañero de campaña para Anno 1800. No afiliado a Ubisoft.",
+  footer:
+    "Creado por Cristian Sarmiento · Anno 1800 Buddy, un compañero de campaña para Anno 1800. No afiliado a Ubisoft.",
   reddit: "Guías en r/anno1800",
   wiki: "Wiki (spoilers)",
   wikiCatalog: {
@@ -308,7 +322,7 @@ export type UiDict = typeof es;
 const en: UiDict = {
   tagline: "Anno 1800 · good enough, pretty, finish the story",
   where: "Where you are",
-  installMod: "Install the mod",
+  installMod: "Connect game",
   board: "Dashboard",
   map: "Map",
   spoilers: "Spoilers {0}",
@@ -346,19 +360,21 @@ const en: UiDict = {
     steelCopy: "Chapter 2. Iron in the mountain.",
     ocean: "Across the ocean",
     oceanCopy: "Chapter 3. The same 10×10, new island.",
-    windows: "On Windows: Anno on the first monitor (fullscreen / Ctrl+G). This app is a tab or PWA on the second. Never an overlay, never click-through, never always-on-top.",
-    journalNote: "Mission names stay Spanish (Spanish journal). Pick Español if you want them to match your in-game journal.",
+    windows:
+      "On Windows: Anno on the first monitor (fullscreen / Ctrl+G). This app is a tab or PWA on the second. Never an overlay, never click-through, never always-on-top.",
+    journalNote:
+      "Mission names stay Spanish (Spanish journal). Pick Español if you want them to match your in-game journal.",
     tryHint: "No Windows, no mod, no JSON. A Chapter 1 example so you can see the desk.",
   },
   power: {
     kicker: "Optional",
-    title: "Power up · Connect",
-    hint: "You don't need this for the first tip. Later, on Windows, connect the file if you want the journal to lead.",
+    title: "Connect the latest save",
+    hint: "The Windows watcher finds local or Ubisoft Cloud saves and writes a journal this page can follow.",
     expand: "Show install steps",
     collapse: "Hide install steps",
-    s1: "Download the mod.zip and the installer. Windows: More info → Run anyway.",
-    s2: "Anno → Mods → Harbor Buddy Telemetry ON. Enter the campaign.",
-    s3: "Run the watcher, Ctrl+F5 in Anno, then drop harbor-live.json here.",
+    s1: "Download and open the Windows watcher. No mod is required.",
+    s2: "Enter the campaign and save with Ctrl+F5, or wait for autosave.",
+    s3: "Choose harbor-live.json once. The journal then refreshes while the tab stays open.",
   },
   live: {
     kicker: "Connect",
@@ -377,7 +393,8 @@ const en: UiDict = {
     noMatch: " · no match, pick by hand",
     hideSteps: "Hide steps",
     showSteps: "Show the 6 steps here",
-    whyEmpty: "The watcher writes the JSON when you save with Ctrl+F5 or on autosave. The first tip does not depend on that.",
+    whyEmpty:
+      "The watcher writes the JSON when you save with Ctrl+F5 or on autosave. The first tip does not depend on that.",
     watchBtn: "Watch harbor-live.json",
     watching: "Watching the file…",
     watcherDl: "Download watcher",
@@ -405,7 +422,8 @@ const en: UiDict = {
     smart: "Windows may warn. Choose More info → Run anyway. It is a folder copy, not a cheat.",
     bat: "Installer (.bat)",
     ps1: "PowerShell (.ps1)",
-    watchCopy: "One file. Double-click. If an old watch-harbor-live.ps1 is in Downloads, the .bat renames it to .old and ignores it. Leave the window open and Ctrl+F5 in Anno (or wait for autosave).",
+    watchCopy:
+      "One file. Double-click. If an old watch-harbor-live.ps1 is in Downloads, the .bat renames it to .old and ignores it. Leave the window open and Ctrl+F5 in Anno (or wait for autosave).",
     watchBat: "Watcher (.bat)",
     watchTitles: "Title list",
     done: "3. I already installed it",
@@ -413,7 +431,8 @@ const en: UiDict = {
     check2: "Mods → Harbor Buddy Telemetry ON",
     check3: "Play the campaign",
     check4: "Watcher open · Ctrl+F5 in Anno · drop or watch harbor-live.json",
-    fallback: "If the installer cannot find Anno, copy the zip folder by hand to Documents\\Anno 1800\\mods\\harbor-buddy-telemetry. There must be a modinfo.json right inside.",
+    fallback:
+      "If the installer cannot find Anno, copy the zip folder by hand to Documents\\Anno 1800\\mods\\harbor-buddy-telemetry. There must be a modinfo.json right inside.",
     back: "Back to the desk",
     launcher: {
       kicker: "4. Optional launcher",
@@ -434,7 +453,8 @@ const en: UiDict = {
     s4: "Open Anno → Mods → enable Harbor Buddy Telemetry. Enter the campaign.",
     s5: "Run watch-harbor-live.bat (leave the window open). In Anno, Ctrl+F5 (F5 is the camera). The script also reads autosave. It writes Documents\\Anno 1800\\harbor-live.json. Here: Live session → drop or watch that file.",
     s6: "If the JSON is empty, use \u201CType what you see in the journal\u201D once. If the installer cannot find Anno, copy the folder by hand.",
-    watcher: "A later Windows watcher can write the same harbor-live.json from a .a7s. Anno 1800 Buddy does not open the save here.",
+    watcher:
+      "A later Windows watcher can write the same harbor-live.json from a .a7s. Anno 1800 Buddy does not open the save here.",
     export: "Export where I am: download this session's JSON to take it to another PC.",
   },
   pulse: {
@@ -459,15 +479,18 @@ const en: UiDict = {
   next: {
     kicker: "Your next step",
     coinsTitle: "Production is eating you.",
-    coinsDetail: "In Economy, if Production buildings cost almost as much as Taxes, pause factories. If Institutions have zzz, delete them. A small town cannot keep 20 chimneys or 3 fire stations.",
+    coinsDetail:
+      "In Economy, if Production buildings cost almost as much as Taxes, pause factories. If Institutions have zzz, delete them. A small town cannot keep 20 chimneys or 3 fire stations.",
     emptyTitle: "Empty houses don't pay.",
     emptyDetail: "A road to the marketplace, and warehouse range. No street, nobody moves in.",
     yellowTitle: "Yellow bars first.",
-    yellowDetail: "One chain at a time. You don't need a new city. When they turn green, go back to the mission.",
+    yellowDetail:
+      "One chain at a time. You don't need a new city. When they turn green, go back to the mission.",
     nowTitle: "This, now.",
     nowFallback: "Follow the mission marker.",
     questTitle: "The city can wait.",
-    questDetail: "Follow the marker, turn it in, come back. If the bars are green, the island holds.",
+    questDetail:
+      "Follow the marker, turn it in, come back. If the bars are green, the island holds.",
     doneTitle: "This part is done.",
     doneDetail: "Mark the mission complete, or ask me what's blocking you.",
   },
@@ -490,7 +513,8 @@ const en: UiDict = {
     watch: "Watch: ",
     waitCity: "The city can wait",
     notPuzzle: "This is not a building puzzle",
-    notPuzzleCopy: "Follow the marker and come back to your 10×10. If the bars are green, the island doesn't need you for a bit.",
+    notPuzzleCopy:
+      "Follow the marker and come back to your 10×10. If the bars are green, the island doesn't need you for a bit.",
     money: "Keep the coins rising",
     moneyTitle: "Good enough beats efficient",
     economy: "How to read Economy",
@@ -509,7 +533,8 @@ const en: UiDict = {
   chat: {
     kicker: "Ask the buddy",
     title: "Right here beside you",
-    empty: "Ask me like a friend on the sofa. Where the pub goes. Why the coins went red. Whether it's worth fighting the other companies.",
+    empty:
+      "Ask me like a friend on the sofa. Where the pub goes. Why the coins went red. Whether it's worth fighting the other companies.",
     thinking: "Thinking with the tide…",
     placeholder: "Where do I put the pub?",
     send: "Send",
@@ -520,7 +545,8 @@ const en: UiDict = {
     coinsProblem: "The problem is the coins",
     book: "Ledger · one street",
     stop: "Stop building. Fix the ticker. Then play.",
-    enough: "You don't need max efficiency. If coins are rising, you are rich enough to finish the story.",
+    enough:
+      "You don't need max efficiency. If coins are rising, you are rich enough to finish the story.",
     green: "The ticker is green",
     still: "Still overloaded",
   },
@@ -542,7 +568,8 @@ const en: UiDict = {
     miss: "no match · {0}",
     missEmpty: "no match",
   },
-  footer: "Created by Cristian Sarmiento · Anno 1800 Buddy, a campaign companion for Anno 1800. Not affiliated with Ubisoft.",
+  footer:
+    "Created by Cristian Sarmiento · Anno 1800 Buddy, a campaign companion for Anno 1800. Not affiliated with Ubisoft.",
   reddit: "Guides on r/anno1800",
   wiki: "Wiki (spoilers)",
   wikiCatalog: {
@@ -593,7 +620,7 @@ const en: UiDict = {
 const it: UiDict = {
   tagline: "Anno 1800 · abbastanza bene, bello, finisci la storia",
   where: "Dove sei",
-  installMod: "Installa la mod",
+  installMod: "Collega partita",
   board: "Cruscotto",
   map: "Mappa",
   spoilers: "Spoiler {0}",
@@ -631,19 +658,22 @@ const it: UiDict = {
     steelCopy: "Capitolo 2. Ferro in montagna.",
     ocean: "Dall'altra parte dell'oceano",
     oceanCopy: "Capitolo 3. Lo stesso 10×10, isola nuova.",
-    windows: "Su Windows: Anno sul primo monitor (schermo intero / Ctrl+G). Questa app è una scheda o PWA sul secondo. Mai overlay, mai click-through, mai sempre in primo piano.",
-    journalNote: "I nomi delle missioni restano in spagnolo (diario ES). Scegli Español se vuoi farli coincidere con il diario di gioco.",
-    tryHint: "Senza Windows, senza mod, senza JSON. Un esempio del Capitolo 1 per vedere la scrivania.",
+    windows:
+      "Su Windows: Anno sul primo monitor (schermo intero / Ctrl+G). Questa app è una scheda o PWA sul secondo. Mai overlay, mai click-through, mai sempre in primo piano.",
+    journalNote:
+      "I nomi delle missioni restano in spagnolo (diario ES). Scegli Español se vuoi farli coincidere con il diario di gioco.",
+    tryHint:
+      "Senza Windows, senza mod, senza JSON. Un esempio del Capitolo 1 per vedere la scrivania.",
   },
   power: {
     kicker: "Opzionale",
-    title: "Power up · Connetti",
-    hint: "Non serve per il primo consiglio. Più avanti, su Windows, collega il file se vuoi che il diario guidi da solo.",
+    title: "Collega l'ultimo salvataggio",
+    hint: "Il watcher trova i salvataggi locali o Ubisoft Cloud e scrive un diario che questa pagina può seguire.",
     expand: "Mostra installazione",
     collapse: "Nascondi installazione",
-    s1: "Scarica il mod.zip e l'installer. Windows: Altre info → Esegui comunque.",
-    s2: "Anno → Mods → Harbor Buddy Telemetry ON. Entra in campagna.",
-    s3: "Apri il watcher, Ctrl+F5 in Anno, poi trascina harbor-live.json qui.",
+    s1: "Scarica e apri il watcher Windows. Non serve alcuna mod.",
+    s2: "Entra nella campagna e salva con Ctrl+F5, oppure attendi l'autosalvataggio.",
+    s3: "Scegli harbor-live.json una volta. Il diario si aggiorna finché la scheda resta aperta.",
   },
   live: {
     kicker: "Connetti",
@@ -662,7 +692,8 @@ const it: UiDict = {
     noMatch: " · nessun match, scegli a mano",
     hideSteps: "Nascondi i passi",
     showSteps: "Mostra i 6 passi qui",
-    whyEmpty: "Il watcher scrive il JSON quando salvi con Ctrl+F5 o con l'autosalvataggio. Il primo consiglio non dipende da quello.",
+    whyEmpty:
+      "Il watcher scrive il JSON quando salvi con Ctrl+F5 o con l'autosalvataggio. Il primo consiglio non dipende da quello.",
     watchBtn: "Osserva harbor-live.json",
     watching: "Osservando il file…",
     watcherDl: "Scarica watcher",
@@ -686,11 +717,14 @@ const it: UiDict = {
     dlZipCopy: "Un clic. Senza account. Lascia lo zip in Download.",
     dlZipBtn: "Scarica mod.zip",
     dlInst: "2. Scarica installer Windows",
-    dlInstCopy: "Copia lo zip in Documenti\\Anno 1800\\mods. Non chiede admin. Non tocca i salvataggi.",
-    smart: "Windows può avvisare. Altre info → Esegui comunque. È una copia di cartella, non un cheat.",
+    dlInstCopy:
+      "Copia lo zip in Documenti\\Anno 1800\\mods. Non chiede admin. Non tocca i salvataggi.",
+    smart:
+      "Windows può avvisare. Altre info → Esegui comunque. È una copia di cartella, non un cheat.",
     bat: "Installer (.bat)",
     ps1: "PowerShell (.ps1)",
-    watchCopy: "Un solo file. Doppio clic. Se in Download c'è un vecchio watch-harbor-live.ps1, il .bat lo rinomina in .old e non lo usa. Lascia la finestra aperta e Ctrl+F5 in Anno (o l'autosalvataggio).",
+    watchCopy:
+      "Un solo file. Doppio clic. Se in Download c'è un vecchio watch-harbor-live.ps1, il .bat lo rinomina in .old e non lo usa. Lascia la finestra aperta e Ctrl+F5 in Anno (o l'autosalvataggio).",
     watchBat: "Watcher (.bat)",
     watchTitles: "Elenco titoli",
     done: "3. L'ho già installata",
@@ -698,7 +732,8 @@ const it: UiDict = {
     check2: "Mod → Harbor Buddy Telemetry ON",
     check3: "Gioca la campagna",
     check4: "Watcher aperto · Ctrl+F5 in Anno · trascina o osserva harbor-live.json",
-    fallback: "Se l'installer non trova Anno, copia a mano la cartella dello zip in Documenti\\Anno 1800\\mods\\harbor-buddy-telemetry. Deve esserci un modinfo.json proprio lì.",
+    fallback:
+      "Se l'installer non trova Anno, copia a mano la cartella dello zip in Documenti\\Anno 1800\\mods\\harbor-buddy-telemetry. Deve esserci un modinfo.json proprio lì.",
     back: "Torna alla scrivania",
     launcher: {
       kicker: "4. Launcher opzionale",
@@ -719,7 +754,8 @@ const it: UiDict = {
     s4: "Apri Anno → Mod → attiva Harbor Buddy Telemetry. Entra in campagna.",
     s5: "Avvia watch-harbor-live.bat (lascia la finestra aperta). In Anno, Ctrl+F5 (F5 è la camera). Lo script legge anche l'autosalvataggio. Scrive Documenti\\Anno 1800\\harbor-live.json. Qui: Partita in diretta → trascina o osserva quel file.",
     s6: "Se il JSON è vuoto, usa \u201CScrivi quello che vedi nel diario\u201D una volta. Se l'installer non trova Anno, copia la cartella a mano.",
-    watcher: "Più avanti un watcher Windows può scrivere lo stesso harbor-live.json da un .a7s. Anno 1800 Buddy non apre il salvataggio qui.",
+    watcher:
+      "Più avanti un watcher Windows può scrivere lo stesso harbor-live.json da un .a7s. Anno 1800 Buddy non apre il salvataggio qui.",
     export: "Esporta dove sono: scarica il JSON di questa sessione per portarlo su un altro PC.",
   },
   pulse: {
@@ -744,15 +780,19 @@ const it: UiDict = {
   next: {
     kicker: "Il tuo prossimo passo",
     coinsTitle: "La produzione ti sta mangiando.",
-    coinsDetail: "In Economia, se gli Edifici di produzione costano quasi quanto le Tasse, metti in pausa le fabbriche. Se le Istituzioni hanno zzz, cancellale. Un paesino non tiene 20 ciminiere né 3 caserme dei pompieri.",
+    coinsDetail:
+      "In Economia, se gli Edifici di produzione costano quasi quanto le Tasse, metti in pausa le fabbriche. Se le Istituzioni hanno zzz, cancellale. Un paesino non tiene 20 ciminiere né 3 caserme dei pompieri.",
     emptyTitle: "Le case vuote non pagano.",
-    emptyDetail: "Strada fino al mercato, e magazzino a portata. Senza via, nessuno si trasferisce.",
+    emptyDetail:
+      "Strada fino al mercato, e magazzino a portata. Senza via, nessuno si trasferisce.",
     yellowTitle: "Prima le barre gialle.",
-    yellowDetail: "Una filiera alla volta. Non serve una città nuova. Quando diventano verdi, torni alla missione.",
+    yellowDetail:
+      "Una filiera alla volta. Non serve una città nuova. Quando diventano verdi, torni alla missione.",
     nowTitle: "Questo, adesso.",
     nowFallback: "Segui il marcatore della missione.",
     questTitle: "La città può aspettare.",
-    questDetail: "Segui il marcatore, consegna, torna. Se le barre sono verdi, l'isola si regge da sola.",
+    questDetail:
+      "Segui il marcatore, consegna, torna. Se le barre sono verdi, l'isola si regge da sola.",
     doneTitle: "Questa parte c'è.",
     doneDetail: "Segna la missione come fatta, o chiedimi cosa ti blocca.",
   },
@@ -775,7 +815,8 @@ const it: UiDict = {
     watch: "Occhio: ",
     waitCity: "La città può aspettare",
     notPuzzle: "Non è un puzzle di edifici",
-    notPuzzleCopy: "Segui il marcatore e torna al tuo 10×10. Se le barre sono verdi, l'isola non ti serve per un po'.",
+    notPuzzleCopy:
+      "Segui il marcatore e torna al tuo 10×10. Se le barre sono verdi, l'isola non ti serve per un po'.",
     money: "Che le monete salgano",
     moneyTitle: "Abbastanza bene batte efficiente",
     economy: "Come leggere Economia",
@@ -794,7 +835,8 @@ const it: UiDict = {
   chat: {
     kicker: "Chiedi al compagno",
     title: "Qui accanto a te",
-    empty: "Chiedimi come a un amico sul divano. Dove va la taverna. Perché le monete sono rosse. Se vale la pena litigare con le altre compagnie.",
+    empty:
+      "Chiedimi come a un amico sul divano. Dove va la taverna. Perché le monete sono rosse. Se vale la pena litigare con le altre compagnie.",
     thinking: "Penso con la marea…",
     placeholder: "Dove metto la taverna?",
     send: "Invia",
@@ -805,7 +847,8 @@ const it: UiDict = {
     coinsProblem: "Il problema sono le monete",
     book: "Libro · una strada",
     stop: "Smetti di costruire. Sistema il ticker. Poi gioca.",
-    enough: "Non serve l'efficienza massima. Se le monete salgono, sei già ricco per finire la storia.",
+    enough:
+      "Non serve l'efficienza massima. Se le monete salgono, sei già ricco per finire la storia.",
     green: "Il ticker è verde",
     still: "Sono ancora sommerso",
   },
@@ -827,7 +870,8 @@ const it: UiDict = {
     miss: "nessun match · {0}",
     missEmpty: "nessun match",
   },
-  footer: "Creato da Cristian Sarmiento · Anno 1800 Buddy, un compagno di campagna per Anno 1800. Non affiliato a Ubisoft.",
+  footer:
+    "Creato da Cristian Sarmiento · Anno 1800 Buddy, un compagno di campagna per Anno 1800. Non affiliato a Ubisoft.",
   reddit: "Guide su r/anno1800",
   wiki: "Wiki (spoiler)",
   wikiCatalog: {
@@ -878,7 +922,7 @@ const it: UiDict = {
 const de: UiDict = {
   tagline: "Anno 1800 · gut genug, hübsch, die Geschichte zu Ende",
   where: "Wo du bist",
-  installMod: "Mod installieren",
+  installMod: "Spielstand verbinden",
   board: "Übersicht",
   map: "Karte",
   spoilers: "Spoiler {0}",
@@ -916,19 +960,22 @@ const de: UiDict = {
     steelCopy: "Kapitel 2. Eisen im Berg.",
     ocean: "Jenseits des Ozeans",
     oceanCopy: "Kapitel 3. Dieselbe 10×10, neue Insel.",
-    windows: "Unter Windows: Anno auf dem ersten Monitor (Vollbild / Strg+G). Diese App ist Tab oder PWA auf dem zweiten. Kein Overlay, kein Klick-Durchgriff, nie im Vordergrund fest.",
-    journalNote: "Missionsnamen bleiben Spanisch (spanisches Tagebuch). Wähle Español, wenn sie zum Spiel-Tagebuch passen sollen.",
-    tryHint: "Kein Windows, keine Mod, kein JSON. Ein Kapitel-1-Beispiel, damit du den Schreibtisch siehst.",
+    windows:
+      "Unter Windows: Anno auf dem ersten Monitor (Vollbild / Strg+G). Diese App ist Tab oder PWA auf dem zweiten. Kein Overlay, kein Klick-Durchgriff, nie im Vordergrund fest.",
+    journalNote:
+      "Missionsnamen bleiben Spanisch (spanisches Tagebuch). Wähle Español, wenn sie zum Spiel-Tagebuch passen sollen.",
+    tryHint:
+      "Kein Windows, keine Mod, kein JSON. Ein Kapitel-1-Beispiel, damit du den Schreibtisch siehst.",
   },
   power: {
     kicker: "Optional",
-    title: "Power up · Verbinden",
-    hint: "Für den ersten Tipp brauchst du das nicht. Später unter Windows die Datei verbinden, wenn das Tagebuch führen soll.",
+    title: "Letzten Spielstand verbinden",
+    hint: "Der Windows-Watcher findet lokale oder Ubisoft-Cloud-Spielstände und schreibt ein Tagebuch für diese Seite.",
     expand: "Installation zeigen",
     collapse: "Installation verbergen",
-    s1: "Lade die mod.zip und den Installer. Windows: Weitere Infos → Trotzdem ausführen.",
-    s2: "Anno → Mods → Harbor Buddy Telemetry ON. Starte die Kampagne.",
-    s3: "Watcher öffnen, in Anno Strg+F5, dann harbor-live.json hier ablegen.",
+    s1: "Windows-Watcher laden und öffnen. Eine Mod ist nicht nötig.",
+    s2: "Kampagne starten und mit Strg+F5 speichern oder auf Autosave warten.",
+    s3: "harbor-live.json einmal auswählen. Danach aktualisiert sich das Tagebuch bei geöffnetem Tab.",
   },
   live: {
     kicker: "Verbinden",
@@ -947,7 +994,8 @@ const de: UiDict = {
     noMatch: " · kein Treffer, per Hand wählen",
     hideSteps: "Schritte verbergen",
     showSteps: "Die 6 Schritte hier zeigen",
-    whyEmpty: "Der Watcher schreibt das JSON beim Speichern mit Strg+F5 oder beim Autosave. Der erste Tipp hängt nicht davon ab.",
+    whyEmpty:
+      "Der Watcher schreibt das JSON beim Speichern mit Strg+F5 oder beim Autosave. Der erste Tipp hängt nicht davon ab.",
     watchBtn: "harbor-live.json beobachten",
     watching: "Datei wird beobachtet…",
     watcherDl: "Watcher laden",
@@ -971,11 +1019,14 @@ const de: UiDict = {
     dlZipCopy: "Ein Klick. Kein Konto. Zip in Downloads lassen.",
     dlZipBtn: "mod.zip herunterladen",
     dlInst: "2. Windows-Installer herunterladen",
-    dlInstCopy: "Kopiert das Zip nach Dokumente\\Anno 1800\\mods. Kein Admin. Rührt Speicherstände nicht an.",
-    smart: "Windows kann warnen. Weitere Infos → Trotzdem ausführen. Es ist eine Ordnerkopie, kein Cheat.",
+    dlInstCopy:
+      "Kopiert das Zip nach Dokumente\\Anno 1800\\mods. Kein Admin. Rührt Speicherstände nicht an.",
+    smart:
+      "Windows kann warnen. Weitere Infos → Trotzdem ausführen. Es ist eine Ordnerkopie, kein Cheat.",
     bat: "Installer (.bat)",
     ps1: "PowerShell (.ps1)",
-    watchCopy: "Eine Datei. Doppelklick. Liegt in Downloads ein altes watch-harbor-live.ps1, benennt die .bat es in .old um und ignoriert es. Fenster offen lassen und Strg+F5 in Anno (oder Autosave).",
+    watchCopy:
+      "Eine Datei. Doppelklick. Liegt in Downloads ein altes watch-harbor-live.ps1, benennt die .bat es in .old um und ignoriert es. Fenster offen lassen und Strg+F5 in Anno (oder Autosave).",
     watchBat: "Watcher (.bat)",
     watchTitles: "Titelliste",
     done: "3. Schon installiert",
@@ -983,7 +1034,8 @@ const de: UiDict = {
     check2: "Mods → Harbor Buddy Telemetry AN",
     check3: "Kampagne spielen",
     check4: "Watcher offen · Strg+F5 in Anno · harbor-live.json ablegen oder beobachten",
-    fallback: "Wenn der Installer Anno nicht findet, kopiere den Zip-Ordner von Hand nach Dokumente\\Anno 1800\\mods\\harbor-buddy-telemetry. Dort muss eine modinfo.json liegen.",
+    fallback:
+      "Wenn der Installer Anno nicht findet, kopiere den Zip-Ordner von Hand nach Dokumente\\Anno 1800\\mods\\harbor-buddy-telemetry. Dort muss eine modinfo.json liegen.",
     back: "Zurück zum Schreibtisch",
     launcher: {
       kicker: "4. Optionaler Launcher",
@@ -1004,7 +1056,8 @@ const de: UiDict = {
     s4: "Anno öffnen → Mods → Harbor Buddy Telemetry an. In die Kampagne.",
     s5: "watch-harbor-live.bat starten (Fenster offen lassen). In Anno Strg+F5 (F5 ist die Kamera). Das Skript liest auch den Autosave. Es schreibt Dokumente\\Anno 1800\\harbor-live.json. Hier: Live-Partie → Datei ablegen oder beobachten.",
     s6: "Wenn das JSON leer ist, einmal \u201ESchreib, was du im Tagebuch siehst\u201C. Findet der Installer Anno nicht, Ordner von Hand kopieren.",
-    watcher: "Später kann ein Windows-Watcher dieselbe harbor-live.json aus einer .a7s schreiben. Anno 1800 Buddy öffnet den Spielstand hier nicht.",
+    watcher:
+      "Später kann ein Windows-Watcher dieselbe harbor-live.json aus einer .a7s schreiben. Anno 1800 Buddy öffnet den Spielstand hier nicht.",
     export: "Exportieren, wo ich bin: JSON dieser Sitzung für einen anderen PC.",
   },
   pulse: {
@@ -1029,11 +1082,13 @@ const de: UiDict = {
   next: {
     kicker: "Dein nächster Schritt",
     coinsTitle: "Die Produktion frisst dich.",
-    coinsDetail: "In Wirtschaft: kosten Produktionsgebäude fast so viel wie Steuern, Fabriken pausieren. Institutionen mit zzz löschen. Ein kleines Dorf hält keine 20 Schlote und keine 3 Feuerwachen.",
+    coinsDetail:
+      "In Wirtschaft: kosten Produktionsgebäude fast so viel wie Steuern, Fabriken pausieren. Institutionen mit zzz löschen. Ein kleines Dorf hält keine 20 Schlote und keine 3 Feuerwachen.",
     emptyTitle: "Leere Häuser zahlen nicht.",
     emptyDetail: "Weg zum Markt, Lager in Reichweite. Ohne Straße zieht niemand ein.",
     yellowTitle: "Zuerst die gelben Balken.",
-    yellowDetail: "Eine Kette nach der anderen. Keine neue Stadt nötig. Werden sie grün, zurück zur Mission.",
+    yellowDetail:
+      "Eine Kette nach der anderen. Keine neue Stadt nötig. Werden sie grün, zurück zur Mission.",
     nowTitle: "Das, jetzt.",
     nowFallback: "Folge der Missionsmarkierung.",
     questTitle: "Die Stadt kann warten.",
@@ -1060,7 +1115,8 @@ const de: UiDict = {
     watch: "Achtung: ",
     waitCity: "Die Stadt kann warten",
     notPuzzle: "Das ist kein Gebäude-Puzzle",
-    notPuzzleCopy: "Folge der Markierung und komm zu deiner 10×10 zurück. Sind die Balken grün, braucht dich die Insel eine Weile nicht.",
+    notPuzzleCopy:
+      "Folge der Markierung und komm zu deiner 10×10 zurück. Sind die Balken grün, braucht dich die Insel eine Weile nicht.",
     money: "Damit die Münzen steigen",
     moneyTitle: "Gut genug schlägt effizient",
     economy: "Wirtschaft lesen",
@@ -1079,7 +1135,8 @@ const de: UiDict = {
   chat: {
     kicker: "Frag den Kumpel",
     title: "Genau neben dir",
-    empty: "Frag mich wie einen Freund auf dem Sofa. Wohin die Kneipe. Warum die Münzen rot sind. Ob sich Streit mit den anderen Firmen lohnt.",
+    empty:
+      "Frag mich wie einen Freund auf dem Sofa. Wohin die Kneipe. Warum die Münzen rot sind. Ob sich Streit mit den anderen Firmen lohnt.",
     thinking: "Denke mit der Tide…",
     placeholder: "Wohin mit der Kneipe?",
     send: "Senden",
@@ -1090,13 +1147,15 @@ const de: UiDict = {
     coinsProblem: "Das Problem sind die Münzen",
     book: "Buch · eine Straße",
     stop: "Hör auf zu bauen. Reparier den Ticker. Dann spiel.",
-    enough: "Du brauchst keine Max-Effizienz. Steigen die Münzen, bist du reich genug für die Geschichte.",
+    enough:
+      "Du brauchst keine Max-Effizienz. Steigen die Münzen, bist du reich genug für die Geschichte.",
     green: "Der Ticker ist grün",
     still: "Immer noch überfordert",
   },
   liveMsg: {
     notJson: "Das ist kein JSON. Such harbor-live.json.",
-    saveFile: "Das ist ein Anno-Spielstand, nicht das JSON. Exportiere oder nimm den harbor-live.json-Dump.",
+    saveFile:
+      "Das ist ein Anno-Spielstand, nicht das JSON. Exportiere oder nimm den harbor-live.json-Dump.",
     tooBig: "Die Datei ist zu groß.",
     broken: "Die Datei ist kaputt. Kein gültiges JSON.",
     schema: "Dieses JSON ist nicht von Anno 1800 Buddy (Schema harbor-live-v1).",
@@ -1112,7 +1171,8 @@ const de: UiDict = {
     miss: "kein Treffer · {0}",
     missEmpty: "kein Treffer",
   },
-  footer: "Erstellt von Cristian Sarmiento · Anno 1800 Buddy, ein Kampagnen-Kumpel für Anno 1800. Nicht mit Ubisoft verbunden.",
+  footer:
+    "Erstellt von Cristian Sarmiento · Anno 1800 Buddy, ein Kampagnen-Kumpel für Anno 1800. Nicht mit Ubisoft verbunden.",
   reddit: "Guides auf r/anno1800",
   wiki: "Wiki (Spoiler)",
   wikiCatalog: {

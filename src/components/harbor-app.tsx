@@ -85,7 +85,7 @@ function TopBar() {
   const t = useT();
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6">
+    <header className="flex flex-col items-stretch gap-3 border-b border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <IconWell>
           <Anchor className="size-5" strokeWidth={1.75} />
@@ -97,13 +97,19 @@ function TopBar() {
           <p className="mt-1 truncate text-xs text-mist">{t.tagline}</p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="-mx-1 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:shrink-0 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
         <LanguageSelect />
         <Link
           to="/tablero"
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           {t.board}
+        </Link>
+        <Link
+          to="/rutas"
+          className="inline-flex h-11 shrink-0 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          Rutas
         </Link>
         <Link
           to="/sandbox"
@@ -124,7 +130,7 @@ function TopBar() {
           Taller
         </Link>
         <Link
-          to="/instalar"
+          to="/conectar"
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           {t.installMod}
@@ -149,9 +155,7 @@ function TopBar() {
               onClick={() => setCalm(calm === "broke" ? "session" : "broke")}
             >
               <Coins className="size-3.5" />
-              <span className="hidden sm:inline">
-                {calm === "broke" ? t.backDesk : t.coinsRed}
-              </span>
+              <span className="hidden sm:inline">{calm === "broke" ? t.backDesk : t.coinsRed}</span>
               <span className="sm:hidden">{calm === "broke" ? t.deskShort : t.coinsShort}</span>
             </Button>
             <Button
@@ -447,9 +451,7 @@ function BrokePanel() {
           </li>
         ))}
       </ol>
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        {t.calm.enough}
-      </p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{t.calm.enough}</p>
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => setCalm("session")}>{t.calm.green}</Button>
         <Button variant="secondary" onClick={() => setCalm("overwhelmed")}>
@@ -487,7 +489,10 @@ function SessionDesk() {
   const activePerson = people.find((person) => person.id === (personId ?? people[0]?.id)) ?? null;
   const checked = missionId ? (checks[missionId] ?? []) : [];
   const move = nextMove(pulse, mission.do, checked, locale);
-  const chatAsks = [...mission.suggestedAsks, ...lifeAsks.filter((ask) => !mission.suggestedAsks.includes(ask))];
+  const chatAsks = [
+    ...mission.suggestedAsks,
+    ...lifeAsks.filter((ask) => !mission.suggestedAsks.includes(ask)),
+  ];
 
   return (
     <div className="stagger-in mx-auto flex max-w-3xl flex-col gap-6">
@@ -503,7 +508,9 @@ function SessionDesk() {
           </IconWell>
           <div className="min-w-0">
             <p className="text-xs font-medium tracking-wide text-mist uppercase">{t.next.kicker}</p>
-            <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">{move.title}</h2>
+            <h2 className="mt-0.5 font-display text-2xl font-medium tracking-tight">
+              {move.title}
+            </h2>
           </div>
         </div>
         <p className="mt-3 border-l-2 border-primary pl-3 text-sm leading-relaxed text-muted-foreground">
@@ -527,7 +534,9 @@ function SessionDesk() {
         <p className="mt-3 text-base leading-relaxed">{mission.objective}</p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{mission.why}</p>
         {spoilers && mission.spoilers ? (
-          <p className="mt-3 border-l-2 border-primary pl-3 text-sm leading-relaxed">{mission.spoilers}</p>
+          <p className="mt-3 border-l-2 border-primary pl-3 text-sm leading-relaxed">
+            {mission.spoilers}
+          </p>
         ) : null}
 
         <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:gap-8">
@@ -580,9 +589,7 @@ function SessionDesk() {
 
         <div className="mt-6 flex flex-wrap gap-2">
           {liveFileLoaded ? (
-            <p className="text-sm text-muted-foreground">
-              {t.session.liveLeads}
-            </p>
+            <p className="text-sm text-muted-foreground">{t.session.liveLeads}</p>
           ) : (
             <Button onClick={() => markComplete(mission.id)} disabled={done}>
               {done ? t.session.noted : t.session.thisDone}
@@ -624,7 +631,9 @@ function SessionDesk() {
           <ol className="mt-4 flex flex-col gap-2">
             {life.money.keepGreen.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm leading-relaxed">
-                <span className="font-display w-4 shrink-0 text-mist tabular-nums">{index + 1}</span>
+                <span className="font-display w-4 shrink-0 text-mist tabular-nums">
+                  {index + 1}
+                </span>
                 <span>{item}</span>
               </li>
             ))}
@@ -661,11 +670,15 @@ function SessionDesk() {
               </h2>
             </div>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{life.diplomacy.pulse}</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {life.diplomacy.pulse}
+          </p>
           <ol className="mt-4 flex flex-col gap-2">
             {life.diplomacy.keepPeace.map((item, index) => (
               <li key={item} className="flex gap-3 text-sm leading-relaxed">
-                <span className="font-display w-4 shrink-0 text-mist tabular-nums">{index + 1}</span>
+                <span className="font-display w-4 shrink-0 text-mist tabular-nums">
+                  {index + 1}
+                </span>
                 <span>{item}</span>
               </li>
             ))}
@@ -762,12 +775,7 @@ function IslandPulse() {
   const t = useT();
 
   return (
-    <HarborCard
-      kicker={t.pulse.kicker}
-      title={t.pulse.title}
-      stamp="cottage"
-      hint={t.pulse.hint}
-    >
+    <HarborCard kicker={t.pulse.kicker} title={t.pulse.title} stamp="cottage" hint={t.pulse.hint}>
       <div className="flex flex-col gap-4">
         <ChipRow<CoinsPulse>
           label={t.pulse.coins}
@@ -896,4 +904,3 @@ function HarborFooter({ reset = false }: { reset?: boolean }) {
     </footer>
   );
 }
-

@@ -13,6 +13,7 @@ import { resolveMission } from "@/lib/data";
 import { commitDeskMutation } from "@/lib/desk-offline";
 import { CHECK_HIGHLIGHT_ID } from "@/lib/radio-down";
 import { getDeskHost } from "@/lib/session-boot";
+import type { SessionCheckItem } from "@/lib/session-store";
 import { useHarbor } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -45,10 +46,8 @@ export function SessionDesk() {
   if (!resolved) return null;
 
   const { mission } = resolved;
-  const items =
-    checkItems.length > 0
-      ? checkItems
-      : [{ text: sessionEstoAhora(mission.do), done: false, pad: false }];
+  const items: SessionCheckItem[] =
+    checkItems.length > 0 ? checkItems : [{ text: sessionEstoAhora(mission.do), done: false }];
   const now = items.find((item) => !item.done) ?? items[0];
   const nowIndex = Math.max(0, items.indexOf(now));
   const { saturado, rojo, umbral, alarm, taller } = deskCalmUmbral(pulse, calm);
@@ -74,7 +73,9 @@ export function SessionDesk() {
         aria-label="Esto, ahora"
         className={cn(
           "hero-orla rounded-xl p-5 sm:p-7",
-          alarm ? "bg-destructive text-destructive-foreground" : "bg-card text-card-foreground",
+          alarm
+            ? "bg-destructive/10 text-foreground ring-1 ring-inset ring-destructive/35"
+            : "bg-card text-card-foreground",
         )}
       >
         <p

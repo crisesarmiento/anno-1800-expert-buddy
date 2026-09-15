@@ -158,7 +158,7 @@ describe("rankDoThisNow", () => {
   it("skips checked do items", () => {
     const rows = rank({
       pulse: pulse({ looking: "quest" }),
-      checks: [0, 1, 2],
+      checks: [0, 1, 2, 3, 4],
     });
     assert.equal(rows.some((row) => row.id.startsWith("mission:do:")), false);
   });

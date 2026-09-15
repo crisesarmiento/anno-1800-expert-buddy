@@ -262,6 +262,7 @@ function packWatcherBundle() {
     process.exit(1);
   }
   const injected = ps
+    .replace(/\r\n/g, "\n")
     .replace(needle, `$titlesPath = "embedded"\n$catalog = @'\n${catalog}\n'@ | ConvertFrom-Json`)
     .replace(
       guidNeedle,
