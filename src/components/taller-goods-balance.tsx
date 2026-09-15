@@ -1,8 +1,7 @@
-import { useMemo } from "react";
 import { InkSeal, Stamp, goodStamp } from "@/components/stamps";
-import campaignCh1 from "@/lib/sim/fixtures/campaign-ch1.json";
-import { GOOD_NAME_ES, compute, parseCitySeed } from "@/lib/sim";
-import type { GoodId } from "@/lib/sim/types";
+import { GOOD_NAME_ES, seenChapterId } from "@/lib/sim";
+import type { CitySeed, CityStats, GoodId, SimMode } from "@/lib/sim/types";
+import { TALLER_SATURADO_DETAIL } from "@/lib/taller-threshold";
 import { useHarbor } from "@/lib/store";
 import {
   classifyWorkshopGoods,
@@ -20,16 +19,32 @@ const STATUS_LABEL: Record<WorkshopGoodStatus, string> = {
 /**
  * Live cadena+stock status for goods the player has seen.
  * Mount on /taller only. No inventar rutas ni grilla de mercado.
+ * Campaign gates the list by chapter-seen chains; sandbox lifts that gate.
  */
-export function TallerGoodsBalance() {
+export function TallerGoodsBalance({
+  mode,
+  seed,
+  stats,
+}: {
+  mode: SimMode;
+  seed: CitySeed;
+  stats: CityStats;
+}) {
   const live = useHarbor((s) => s.liveSnapshot);
-  const stats = useMemo(() => compute(parseCitySeed({ ...campaignCh1, mode: "campaign" })), []);
-  const rows = classifyWorkshopGoods({ snapshot: live, stats });
+  const rows = classifyWorkshopGoods({
+    snapshot: live,
+    stats,
+    mode,
+    chapterId: seenChapterId(seed),
+  });
   const pulseHint = live?.pulseHint;
   if (rows.length === 0) return null;
+  const anySaturado = rows.some(
+    (row) => workshopGoodPaint(row.status, pulseHint) === "saturado",
+  );
 
   return (
-    <article className="hero-orla rounded-xl p-5 sm:p-7" data-taller-seen-goods="">
+    <article className="stamp-paper p-5 sm:p-7" data-taller-seen-goods="">
       <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         Cadena y almacén
       </p>
@@ -56,6 +71,11 @@ export function TallerGoodsBalance() {
           );
         })}
       </ul>
+      {anySaturado ? (
+        <p data-taller-saturado-detail="" className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          {TALLER_SATURADO_DETAIL}
+        </p>
+      ) : null}
     </article>
   );
 }

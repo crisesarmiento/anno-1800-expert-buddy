@@ -125,7 +125,7 @@ describe("Comercio: balance observado sin rutas inventadas", () => {
 
 describe("Taller: grilla de estado solo en /taller", () => {
   it("monta una fila por bien visto con copy Falta, Alcanza o Saturado", () => {
-    assert.match(bench, /<TallerGoodsBalance\s*\/>/);
+    assert.match(bench, /<TallerGoodsBalance\b[^>]*\/>/);
     assert.match(balance, /rows\.map/);
     assert.match(balance, /data-taller-seen-good=/);
     assert.match(balance, /data-taller-seen-status=/);
@@ -135,13 +135,44 @@ describe("Taller: grilla de estado solo en /taller", () => {
     assert.match(balance, /rows\.length === 0\) return null/);
   });
 
+  it("pinta la tarjeta de bienes con textura Stamp/Taller, nunca hero-orla", () => {
+    assert.match(balance, /stamp-paper/);
+    assert.doesNotMatch(balance, /hero-orla/);
+  });
+
+  it("gatea la lista por capítulo en campaña y la abre en sandbox", () => {
+    const seenCh1 = classifyWorkshopGoods({
+      snapshot: snapshot({
+        pulseHint: { coins: "up", houses: "ok" },
+        telemetry: { goods: [{ id: "steel-beams", name: "Vigas de acero", amount: 10 }] },
+      }),
+      mode: "campaign",
+      chapterId: "ch1",
+    });
+    assert.deepEqual(seenCh1, []);
+
+    const sandboxSameGood = classifyWorkshopGoods({
+      snapshot: snapshot({
+        pulseHint: { coins: "up", houses: "ok" },
+        telemetry: { goods: [{ id: "steel-beams", name: "Vigas de acero", amount: 10 }] },
+      }),
+      mode: "perfect",
+      chapterId: "ch1",
+    });
+    assert.equal(sandboxSameGood.length, 1);
+    assert.equal(sandboxSameGood[0]?.goodId, "steel-beams");
+
+    assert.match(balance, /mode/);
+    assert.match(balance, /chapterId:\s*seenChapterId\(seed\)/);
+  });
+
   it("no monta la grilla de estados fuera de Taller", () => {
     const permitidos = new Set([
       "components/taller-bench.tsx",
       "components/taller-goods-balance.tsx",
     ]);
     for (const path of [...archivosTsx(componentDir), ...archivosTsx(routeDir)]) {
-      const name = relative(srcDir, path);
+      const name = relative(srcDir, path).replace(/\\/g, "/");
       if (permitidos.has(name)) continue;
       const src = readFileSync(path, "utf8");
       assert.doesNotMatch(
@@ -193,7 +224,7 @@ describe("Campaign Home: un solo tip de freno durante diez segundos", () => {
       "components/session-desk.tsx",
     ]);
     for (const path of [...archivosTsx(componentDir), ...archivosTsx(routeDir)]) {
-      const name = relative(srcDir, path);
+      const name = relative(srcDir, path).replace(/\\/g, "/");
       if (permitidos.has(name)) continue;
       const src = readFileSync(path, "utf8");
       assert.doesNotMatch(

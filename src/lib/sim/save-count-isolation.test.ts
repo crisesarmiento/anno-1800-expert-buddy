@@ -93,7 +93,8 @@ describe("save-count isolation", () => {
     assert.match(city, /Usar conteos del save|SAVE_COUNT_CHIP_LABEL/);
     assert.match(city, /data-taller-save-counts-chip/);
     assert.match(bench, /TallerCity/);
-    assert.match(bench, /live=\{live\}/);
+    assert.match(bench, /applySaveCountsChip\(\{\s*seed,\s*live,/);
+    assert.match(bench, /onUseSaveCounts=\{onUseSaveCounts\}/);
     assert.doesNotMatch(app, /SAVE_COUNT_CHIP_LABEL|data-taller-save-counts-chip|Usar conteos del save/);
     assert.doesNotMatch(desk, /SAVE_COUNT_CHIP_LABEL|data-taller-save-counts-chip|Usar conteos del save/);
     assert.doesNotMatch(home, /SAVE_COUNT_CHIP_LABEL|data-taller-save-counts-chip|Usar conteos del save/);
