@@ -142,8 +142,10 @@ describe("Usar conteos del save chip surface", () => {
     assert.equal(SAVE_COUNT_CHIP_LABEL, "Usar conteos del save");
     assert.match(city, /SAVE_COUNT_CHIP_LABEL/);
     assert.match(city, /data-taller-save-counts-chip/);
-    assert.match(city, /applySaveCountsChip/);
-    assert.match(city, /fillFromSimMode/);
+    // applySaveCountsChip/fillFromSimMode live in TallerBench now — the
+    // seed/sim is shared with Bienes vistos, City just renders the chip.
+    assert.match(bench, /applySaveCountsChip/);
+    assert.match(bench, /fillFromSimMode/);
     assert.doesNotMatch(city, /GUID_TO_HOUSE|GUID_TO_FACTORY|mapSaveCountsToCitySeed/);
     assert.doesNotMatch(app, /Usar conteos del save|SAVE_COUNT_CHIP_LABEL|data-taller-save-counts-chip/);
     assert.doesNotMatch(desk, /Usar conteos del save|SAVE_COUNT_CHIP_LABEL|data-taller-save-counts-chip/);
@@ -156,6 +158,6 @@ describe("Usar conteos del save chip surface", () => {
     assert.doesNotMatch(home, /data-taller-next-build|TallerCity|applySaveCountsChip/);
     assert.doesNotMatch(city, /nextBuild:|chains:/);
     assert.match(bench, /TallerCity/);
-    assert.match(bench, /live=\{live\}/);
+    assert.match(bench, /applySaveCountsChip\(\{\s*seed,\s*live,/);
   });
 });

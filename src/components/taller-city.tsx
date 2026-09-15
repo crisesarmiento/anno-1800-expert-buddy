@@ -1,20 +1,14 @@
-import { useMemo, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Stamp, goodStamp } from "@/components/stamps";
-import campaignCh1 from "@/lib/sim/fixtures/campaign-ch1.json";
 import {
   SAVE_COUNT_CHIP_LABEL,
-  applySaveCountsChip,
-  fillFromSimMode,
   TIER_NAME_ES,
   buildingById,
-  compute,
   goodBalance,
   goodNameEs,
   outputTMinAt100,
-  parseCitySeed,
 } from "@/lib/sim";
-import type { BuildingId, CitySeed, GoodId, Island, IslandStats, PopulationTier, SimMode } from "@/lib/sim/types";
-import type { LiveSnapshot } from "@/lib/live/types";
+import type { BuildingId, CityStats, GoodId, Island, IslandStats, PopulationTier, SimMode } from "@/lib/sim/types";
 
 const LIVE_ONLY = [
   "Stock del almacén",
@@ -44,30 +38,31 @@ const BALANCE_LABEL = {
  * Panel de ciudades. Solo Taller. Una tarjeta por isla del seed.
  * Campaña es el default; sandbox (ratio wiki) es un toggle de Taller.
  * Fixture de campaña: La Inapetente es la isla por defecto.
+ * El seed/stats vive en TallerBench — Ciudad y Bienes vistos comparten el
+ * mismo cómputo, incluido el conteo aplicado del save (Usar conteos).
  */
-export function TallerCity({ live = null }: { live?: LiveSnapshot | null }) {
-  const [mode, setMode] = useState<SimMode>("campaign");
-  const [appliedSeed, setAppliedSeed] = useState<CitySeed | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const { stats, seedIslands, seed } = useMemo(() => {
-    const base = parseCitySeed({ ...campaignCh1, mode });
-    const working = appliedSeed ? parseCitySeed({ ...appliedSeed, mode }) : base;
-    return { stats: compute(working), seedIslands: working.islands, seed: working };
-  }, [mode, appliedSeed]);
-
-  function onUseSaveCounts() {
-    const result = applySaveCountsChip({ seed, live, fill: fillFromSimMode(mode) });
-    setNotice(result.message);
-    if (result.applied) setAppliedSeed(result.seed);
-  }
-
+export function TallerCity({
+  mode,
+  onModeChange,
+  stats,
+  seedIslands,
+  notice,
+  onUseSaveCounts,
+}: {
+  mode: SimMode;
+  onModeChange: (mode: SimMode) => void;
+  stats: CityStats;
+  seedIslands: Island[];
+  notice: string | null;
+  onUseSaveCounts: () => void;
+}) {
   return (
     <div className="flex flex-col gap-6" data-taller-city="seed">
       <div className="flex flex-wrap gap-2">
-        <ModeChip current={mode} value="campaign" onClick={setMode}>
+        <ModeChip current={mode} value="campaign" onClick={onModeChange}>
           Campaña
         </ModeChip>
-        <ModeChip current={mode} value="perfect" onClick={setMode}>
+        <ModeChip current={mode} value="perfect" onClick={onModeChange}>
           Sandbox (ratio wiki)
         </ModeChip>
         <button

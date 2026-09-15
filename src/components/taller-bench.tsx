@@ -1,7 +1,11 @@
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { InkSeal } from "@/components/stamps";
 import { TallerCity } from "@/components/taller-city";
 import { TallerGoodsBalance } from "@/components/taller-goods-balance";
+import campaignCh1 from "@/lib/sim/fixtures/campaign-ch1.json";
+import { applySaveCountsChip, compute, fillFromSimMode, parseCitySeed } from "@/lib/sim";
+import type { CitySeed, SimMode } from "@/lib/sim/types";
 import {
   TALLER_NIHOEL,
   TALLER_RATIOS_VERSION,
@@ -29,6 +33,23 @@ export function TallerBench() {
     },
   });
 
+  // Shared city seed/sim between Ciudad and Bienes vistos — one source of
+  // truth so Usar conteos (save-count chip) also feeds the comercio grid.
+  const [mode, setMode] = useState<SimMode>("campaign");
+  const [appliedSeed, setAppliedSeed] = useState<CitySeed | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { stats, seed } = useMemo(() => {
+    const base = parseCitySeed({ ...campaignCh1, mode });
+    const working = appliedSeed ? parseCitySeed({ ...appliedSeed, mode }) : base;
+    return { stats: compute(working), seed: working };
+  }, [mode, appliedSeed]);
+
+  function onUseSaveCounts() {
+    const result = applySaveCountsChip({ seed, live, fill: fillFromSimMode(mode) });
+    setNotice(result.message);
+    if (result.applied) setAppliedSeed(result.seed);
+  }
+
   return (
     <div className="min-h-dvh bg-background" data-visual="taller">
       <header className="border-b border-border bg-card px-4 py-3 sm:px-6">
@@ -49,8 +70,15 @@ export function TallerBench() {
           <h1 className="font-display text-3xl font-semibold tracking-tight">Umbral</h1>
           <TallerStamp stamp={stamp} />
         </article>
-        <TallerGoodsBalance />
-        <TallerCity live={live} />
+        <TallerGoodsBalance mode={mode} seed={seed} stats={stats} />
+        <TallerCity
+          mode={mode}
+          onModeChange={setMode}
+          stats={stats}
+          seedIslands={seed.islands}
+          notice={notice}
+          onUseSaveCounts={onUseSaveCounts}
+        />
         <p className="text-xs leading-relaxed text-muted-foreground">
           Ratios estáticos {TALLER_RATIOS_VERSION} (wiki CC-BY-SA, no params.js de NiHoel).{" "}
           <a href={TALLER_WIKI} target="_blank" rel="noreferrer" className="underline">

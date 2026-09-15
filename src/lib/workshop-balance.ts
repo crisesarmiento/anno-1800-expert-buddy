@@ -1,7 +1,7 @@
 import type { LivePulseHint, LiveSnapshot } from "./live/types.ts";
 import { BUILDINGS, CHAINS, chainByGood, chainById } from "./sim/chains.ts";
-import { goodBalance } from "./sim/compute.ts";
-import type { CityStats, GoodId } from "./sim/types.ts";
+import { chapterAllowsBuilding, goodBalance } from "./sim/compute.ts";
+import type { CampaignChapterId, CityStats, GoodId, SimMode } from "./sim/types.ts";
 
 export type WorkshopGoodStatus = "falta" | "alcanza" | "saturado";
 
@@ -20,6 +20,10 @@ export type WorkshopSimSlice = Pick<CityStats, "demand" | "supply" | "gap"> | {
 export type ClassifyWorkshopInput = {
   snapshot: LiveSnapshot | null;
   stats?: WorkshopSimSlice | null;
+  /** Default campaign. Sandbox (perfect) lifts the chapter gate below. */
+  mode?: SimMode;
+  /** Already-seen campaign chapter. Default ch1. Ignored in sandbox. */
+  chapterId?: CampaignChapterId;
 };
 
 const STOCK_LOW = 5;
@@ -73,6 +77,18 @@ function chainHitCount(goodId: string, snapshot: LiveSnapshot): number {
   return hits;
 }
 
+/**
+ * Campaign gate: a seen good still hides until its chain's first building
+ * is chapter-allowed. Sandbox lifts the gate — the wiki ratio has no chapters.
+ */
+function chapterGateAllows(goodId: string, mode: SimMode, chapterId: CampaignChapterId): boolean {
+  if (mode === "perfect") return true;
+  const chain = resolveChain(goodId);
+  const firstBuildingId = chain?.campaign[0]?.buildingId;
+  if (!firstBuildingId) return true;
+  return chapterAllowsBuilding(chapterId, firstBuildingId);
+}
+
 function classifyOne(
   goodId: string,
   amount: number,
@@ -102,10 +118,14 @@ export function classifyWorkshopGoods(input: ClassifyWorkshopInput): WorkshopGoo
   const snapshot = input.snapshot;
   const goods = snapshot?.telemetry?.goods ?? [];
   if (!snapshot || goods.length === 0) return [];
-  return goods.map((row) => ({
-    goodId: row.id,
-    status: classifyOne(row.id, row.amount, chainHitCount(row.id, snapshot), input.stats),
-  }));
+  const mode = input.mode ?? "campaign";
+  const chapterId = input.chapterId ?? "ch1";
+  return goods
+    .filter((row) => chapterGateAllows(row.id, mode, chapterId))
+    .map((row) => ({
+      goodId: row.id,
+      status: classifyOne(row.id, row.amount, chainHitCount(row.id, snapshot), input.stats),
+    }));
 }
 
 /** Tips red/saturated. Unknown pulseHint is never red. */

@@ -13,6 +13,13 @@ export const TALLER_RATIOS_VERSION = "wiki-v1-2026-09" as const;
 export const TALLER_WIKI = "https://anno1800.fandom.com/wiki/Production_chains" as const;
 export const TALLER_NIHOEL = "https://github.com/NiHoel/Anno1800Calculator" as const;
 
+/**
+ * Taller detail for a saturado good, same spirit as the Home ten-second tip
+ * but its own Spanish copy — no shared import, Taller stays isolated from Home.
+ */
+export const TALLER_SATURADO_DETAIL =
+  "Vendé lo que ya producís antes de sumar otra cadena. Si el almacén no baja, frená la fábrica un rato." as const;
+
 export type TallerRatio = {
   id: string;
   good: string;
