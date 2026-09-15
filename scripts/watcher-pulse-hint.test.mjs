@@ -23,8 +23,13 @@ test("Get-HousesPulse mirrors src/lib/live/a7s-snapshot.ts housesHint: presence,
   assert.match(ps1, /return "ok"/);
 });
 
+test("Get-HousesPulse returns unknown, not a guessed empty, when the scan found zero buildings", () => {
+  assert.match(ps1, /if \(@\(\$buildings\)\.Count -eq 0\) \{ return "unknown" \}/);
+});
+
 test("the bundled .bat ships the same houses computation as the .ps1 source", () => {
   assert.match(bat, /function Get-HousesPulse/);
+  assert.match(bat, /if \(@\(\$buildings\)\.Count -eq 0\) \{ return "unknown" \}/);
   assert.doesNotMatch(bat, /houses = "unknown" \}/);
 });
 

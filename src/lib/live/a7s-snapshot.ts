@@ -151,8 +151,13 @@ export function coinsHint(money: number | null, previousMoney?: number | null): 
   return money >= previousMoney ? "up" : "down";
 }
 
-/** Presence only. Residences + no market → empty; farmers without fish → yellow. */
+/**
+ * Presence only. Residences + no market → empty; farmers without fish → yellow.
+ * A scan that found zero buildings at all can't tell "no houses" from "the
+ * FileDB walk missed this island's residences" — prefer unknown over a false empty.
+ */
 export function housesHint(scan: Pick<SaveScan, "farmers" | "workers" | "artisans" | "engineers" | "buildingCounts" | "goods">): LivePulseHint["houses"] {
+  if (scan.buildingCounts.size === 0) return "unknown";
   const hasHouses = scan.farmers || scan.workers || scan.artisans || scan.engineers;
   if (!hasHouses) return "empty";
   const hasMarket = (scan.buildingCounts.get("marketplace")?.count ?? 0) > 0;

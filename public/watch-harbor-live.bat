@@ -79,11 +79,11 @@ function Get-AnnoRootFromSave($save) {
 }
 
 function Browse-AnnoRoot {
-  Write-Host "No encuentro Documentos\Anno 1800 ni un .a7s reciente."
-  $typed = Read-Host "Pegá la carpeta Anno 1800 (Enter para salir)"
-  if (-not $typed) { throw "Cancelado." }
+  Write-Host "No encontré Documentos\Anno 1800 ni una partida reciente — no pasa nada, la buscamos juntos."
+  $typed = Read-Host "Pegá la carpeta de Anno 1800 (Enter para salir)"
+  if (-not $typed) { throw "Cancelado. Cuando quieras, volvé a abrir este vigilante." }
   $typed = $typed.Trim()
-  if (-not (Test-Path -LiteralPath $typed)) { throw "Esa carpeta no existe." }
+  if (-not (Test-Path -LiteralPath $typed)) { throw "Esa carpeta no existe. Fijate el camino y probá de nuevo." }
   $item = Get-Item -LiteralPath $typed
   if (-not $item.PSIsContainer) { $item = $item.Directory }
   if ($item.Name -eq "Anno 1800") { return $item.FullName }
@@ -98,7 +98,7 @@ function Browse-AnnoRoot {
     if ($dir.Name -eq "Anno 1800") { return $dir.FullName }
     $dir = $dir.Parent
   }
-  throw "Solo sigo una carpeta Anno 1800 (o una que tenga accounts\*.a7s)."
+  throw "Solo puedo seguir una carpeta Anno 1800 (o una que tenga accounts\*.a7s adentro)."
 }
 
 function Find-AnnoRoot {
@@ -113,14 +113,14 @@ function Find-AnnoRoot {
   if ($bestSave) {
     $root = Get-AnnoRootFromSave $bestSave
     if ($root) {
-      Write-Host "Usando el .a7s más reciente (solo lectura): $($bestSave.FullName)"
-      Write-Host "Guardado: $($bestSave.LastWriteTime)"
+      Write-Host "Encontré tu partida más reciente (la leo, nunca la toco): $($bestSave.FullName)"
+      Write-Host "Guardado la última vez: $($bestSave.LastWriteTime)"
       return $root
     }
   }
   foreach ($path in Get-AnnoCandidates) {
     if ($path -and (Test-Path -LiteralPath $path)) {
-      Write-Host "Carpeta Anno 1800: $path (todavía no hay .a7s)"
+      Write-Host "Ya sé dónde está tu Anno 1800: $path (todavía no veo partidas guardadas ahí — arrancá a jugar cuando quieras)"
       return $path
     }
   }
@@ -143,10 +143,10 @@ function Find-Catalog {
 
   $dest = Join-Path $PSScriptRoot "harbor-catalog.json"
   $url = "https://raw.githubusercontent.com/crisesarmiento/anno-1800-expert-buddy/main/public/harbor-catalog.json"
-  Write-Host "Falta harbor-catalog.json. Lo bajo..."
+  Write-Host "Todavía no tengo harbor-catalog.json — lo bajo solo, un segundo."
   Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $dest
   if (-not (Test-Path -LiteralPath $dest)) {
-    throw "Falta harbor-catalog.json. Descargalo de Harbor Buddy junto a este script."
+    throw "Me falta harbor-catalog.json y no lo pude bajar. Descargalo de Harbor Buddy junto a este script."
   }
   return $dest
 }
@@ -184,8 +184,10 @@ function Get-NewestSave([string]$anno) {
 }
 
 # Houses pulse from presence, same rule as src/lib/live/a7s-snapshot.ts housesHint:
+# zero buildings found at all -> unknown (can't tell missed-scan from truly empty);
 # no residence tier or no marketplace -> empty; farmers with no fishery/fish stock -> yellow.
 function Get-HousesPulse($scan, $buildings, $goods) {
+  if (@($buildings).Count -eq 0) { return "unknown" }
   $hasHouses = [bool]$scan.farmers -or [bool]$scan.workers -or [bool]$scan.artisans -or [bool]$scan.engineers
   if (-not $hasHouses) { return "empty" }
   $hasMarket = @($buildings) | Where-Object { $_.id -eq "marketplace" } | Select-Object -First 1
@@ -1060,262 +1062,262 @@ $catalog = @'
 }
 '@ | ConvertFrom-Json
 $guidJson = @'
-{
-  "schema": "harbor-guids-v1",
-  "rows": [
-    {
-      "guid": 1010266,
-      "id": "lumberjack",
-      "kind": "building",
-      "name": "Lumberjack's Hut"
-    },
-    {
-      "guid": 1010267,
-      "id": "sheep",
-      "kind": "building",
-      "name": "Sheep Farm"
-    },
-    {
-      "guid": 1010294,
-      "id": "sawmill",
-      "kind": "building",
-      "name": "Sawmill"
-    },
-    {
-      "guid": 1010297,
-      "id": "sawmill",
-      "kind": "building",
-      "name": "Sawmill"
-    },
-    {
-      "guid": 1010298,
-      "id": "charcoal",
-      "kind": "building",
-      "name": "Charcoal Kiln"
-    },
-    {
-      "guid": 1010372,
-      "id": "marketplace",
-      "kind": "building",
-      "name": "Marketplace"
-    },
-    {
-      "guid": 1010371,
-      "id": "warehouse",
-      "kind": "building",
-      "name": "Warehouse"
-    },
-    {
-      "guid": 1010343,
-      "id": "farmer-house",
-      "kind": "building",
-      "name": "Farmer Residence"
-    },
-    {
-      "guid": 1010344,
-      "id": "worker-house",
-      "kind": "building",
-      "name": "Worker Residence"
-    },
-    {
-      "guid": 1010345,
-      "id": "artisan-house",
-      "kind": "building",
-      "name": "Artisan Residence"
-    },
-    {
-      "guid": 1010346,
-      "id": "engineer-house",
-      "kind": "building",
-      "name": "Engineer Residence"
-    },
-    {
-      "guid": 1010278,
-      "id": "fishery",
-      "kind": "building",
-      "name": "Fishery"
-    },
-    {
-      "guid": 1010265,
-      "id": "potato",
-      "kind": "building",
-      "name": "Potato Farm"
-    },
-    {
-      "guid": 1010262,
-      "id": "bread",
-      "kind": "building",
-      "name": "Grain Farm"
-    },
-    {
-      "guid": 1010269,
-      "id": "sausage",
-      "kind": "building",
-      "name": "Pig Farm"
-    },
-    {
-      "guid": 1010316,
-      "id": "knitters",
-      "kind": "building",
-      "name": "Knitter's Hut"
-    },
-    {
-      "guid": 1010358,
-      "id": "pub",
-      "kind": "building",
-      "name": "Pub"
-    },
-    {
-      "guid": 1010360,
-      "id": "school",
-      "kind": "building",
-      "name": "School"
-    },
-    {
-      "guid": 1010359,
-      "id": "church",
-      "kind": "building",
-      "name": "Church"
-    },
-    {
-      "guid": 101254,
-      "id": "jornalero",
-      "kind": "building",
-      "name": "Jornalero Residence"
-    },
-    {
-      "guid": 101255,
-      "id": "obrero",
-      "kind": "building",
-      "name": "Obrero Residence"
-    },
-    {
-      "guid": 101257,
-      "id": "marketplace",
-      "kind": "building",
-      "name": "Marketplace"
-    },
-    {
-      "guid": 1010312,
-      "id": "distillery",
-      "kind": "building",
-      "name": "Schnapps Distillery"
-    },
-    {
-      "guid": 1010035,
-      "id": "warehouse",
-      "kind": "building",
-      "name": "Warehouse"
-    },
-    {
-      "guid": 1010017,
-      "id": "money",
-      "kind": "good",
-      "name": "Coins"
-    },
-    {
-      "guid": 120008,
-      "id": "wood-log",
-      "kind": "good",
-      "name": "Wood"
-    },
-    {
-      "guid": 1010196,
-      "id": "wood",
-      "kind": "good",
-      "name": "Timber"
-    },
-    {
-      "guid": 1010200,
-      "id": "fish",
-      "kind": "good",
-      "name": "Fish"
-    },
-    {
-      "guid": 1010195,
-      "id": "potato",
-      "kind": "good",
-      "name": "Potatoes"
-    },
-    {
-      "guid": 1010216,
-      "id": "schnapps",
-      "kind": "good",
-      "name": "Schnapps"
-    },
-    {
-      "guid": 1010197,
-      "id": "wool",
-      "kind": "good",
-      "name": "Wool"
-    },
-    {
-      "guid": 1010237,
-      "id": "clothes",
-      "kind": "good",
-      "name": "Work Clothes"
-    },
-    {
-      "guid": 1010199,
-      "id": "pigs",
-      "kind": "good",
-      "name": "Pigs"
-    },
-    {
-      "guid": 1010238,
-      "id": "sausage",
-      "kind": "good",
-      "name": "Sausages"
-    },
-    {
-      "guid": 1010192,
-      "id": "grain",
-      "kind": "good",
-      "name": "Grain"
-    },
-    {
-      "guid": 1010213,
-      "id": "bread",
-      "kind": "good",
-      "name": "Bread"
-    },
-    {
-      "guid": 1010203,
-      "id": "soap",
-      "kind": "good",
-      "name": "Soap"
-    },
-    {
-      "guid": 1010224,
-      "id": "steel",
-      "kind": "good",
-      "name": "Steel"
-    },
-    {
-      "guid": 1010210,
-      "id": "sails",
-      "kind": "good",
-      "name": "Sails"
-    },
-    {
-      "guid": 180023,
-      "id": "old-world",
-      "kind": "island",
-      "name": "Old World"
-    },
-    {
-      "guid": 180025,
-      "id": "new-world",
-      "kind": "island",
-      "name": "New World"
-    },
-    {
-      "guid": 180014,
-      "id": "bright-sands",
-      "kind": "island",
-      "name": "Bright Sands"
-    }
-  ]
+{
+  "schema": "harbor-guids-v1",
+  "rows": [
+    {
+      "guid": 1010266,
+      "id": "lumberjack",
+      "kind": "building",
+      "name": "Lumberjack's Hut"
+    },
+    {
+      "guid": 1010267,
+      "id": "sheep",
+      "kind": "building",
+      "name": "Sheep Farm"
+    },
+    {
+      "guid": 1010294,
+      "id": "sawmill",
+      "kind": "building",
+      "name": "Sawmill"
+    },
+    {
+      "guid": 1010297,
+      "id": "sawmill",
+      "kind": "building",
+      "name": "Sawmill"
+    },
+    {
+      "guid": 1010298,
+      "id": "charcoal",
+      "kind": "building",
+      "name": "Charcoal Kiln"
+    },
+    {
+      "guid": 1010372,
+      "id": "marketplace",
+      "kind": "building",
+      "name": "Marketplace"
+    },
+    {
+      "guid": 1010371,
+      "id": "warehouse",
+      "kind": "building",
+      "name": "Warehouse"
+    },
+    {
+      "guid": 1010343,
+      "id": "farmer-house",
+      "kind": "building",
+      "name": "Farmer Residence"
+    },
+    {
+      "guid": 1010344,
+      "id": "worker-house",
+      "kind": "building",
+      "name": "Worker Residence"
+    },
+    {
+      "guid": 1010345,
+      "id": "artisan-house",
+      "kind": "building",
+      "name": "Artisan Residence"
+    },
+    {
+      "guid": 1010346,
+      "id": "engineer-house",
+      "kind": "building",
+      "name": "Engineer Residence"
+    },
+    {
+      "guid": 1010278,
+      "id": "fishery",
+      "kind": "building",
+      "name": "Fishery"
+    },
+    {
+      "guid": 1010265,
+      "id": "potato",
+      "kind": "building",
+      "name": "Potato Farm"
+    },
+    {
+      "guid": 1010262,
+      "id": "bread",
+      "kind": "building",
+      "name": "Grain Farm"
+    },
+    {
+      "guid": 1010269,
+      "id": "sausage",
+      "kind": "building",
+      "name": "Pig Farm"
+    },
+    {
+      "guid": 1010316,
+      "id": "knitters",
+      "kind": "building",
+      "name": "Knitter's Hut"
+    },
+    {
+      "guid": 1010358,
+      "id": "pub",
+      "kind": "building",
+      "name": "Pub"
+    },
+    {
+      "guid": 1010360,
+      "id": "school",
+      "kind": "building",
+      "name": "School"
+    },
+    {
+      "guid": 1010359,
+      "id": "church",
+      "kind": "building",
+      "name": "Church"
+    },
+    {
+      "guid": 101254,
+      "id": "jornalero",
+      "kind": "building",
+      "name": "Jornalero Residence"
+    },
+    {
+      "guid": 101255,
+      "id": "obrero",
+      "kind": "building",
+      "name": "Obrero Residence"
+    },
+    {
+      "guid": 101257,
+      "id": "marketplace",
+      "kind": "building",
+      "name": "Marketplace"
+    },
+    {
+      "guid": 1010312,
+      "id": "distillery",
+      "kind": "building",
+      "name": "Schnapps Distillery"
+    },
+    {
+      "guid": 1010035,
+      "id": "warehouse",
+      "kind": "building",
+      "name": "Warehouse"
+    },
+    {
+      "guid": 1010017,
+      "id": "money",
+      "kind": "good",
+      "name": "Coins"
+    },
+    {
+      "guid": 120008,
+      "id": "wood-log",
+      "kind": "good",
+      "name": "Wood"
+    },
+    {
+      "guid": 1010196,
+      "id": "wood",
+      "kind": "good",
+      "name": "Timber"
+    },
+    {
+      "guid": 1010200,
+      "id": "fish",
+      "kind": "good",
+      "name": "Fish"
+    },
+    {
+      "guid": 1010195,
+      "id": "potato",
+      "kind": "good",
+      "name": "Potatoes"
+    },
+    {
+      "guid": 1010216,
+      "id": "schnapps",
+      "kind": "good",
+      "name": "Schnapps"
+    },
+    {
+      "guid": 1010197,
+      "id": "wool",
+      "kind": "good",
+      "name": "Wool"
+    },
+    {
+      "guid": 1010237,
+      "id": "clothes",
+      "kind": "good",
+      "name": "Work Clothes"
+    },
+    {
+      "guid": 1010199,
+      "id": "pigs",
+      "kind": "good",
+      "name": "Pigs"
+    },
+    {
+      "guid": 1010238,
+      "id": "sausage",
+      "kind": "good",
+      "name": "Sausages"
+    },
+    {
+      "guid": 1010192,
+      "id": "grain",
+      "kind": "good",
+      "name": "Grain"
+    },
+    {
+      "guid": 1010213,
+      "id": "bread",
+      "kind": "good",
+      "name": "Bread"
+    },
+    {
+      "guid": 1010203,
+      "id": "soap",
+      "kind": "good",
+      "name": "Soap"
+    },
+    {
+      "guid": 1010224,
+      "id": "steel",
+      "kind": "good",
+      "name": "Steel"
+    },
+    {
+      "guid": 1010210,
+      "id": "sails",
+      "kind": "good",
+      "name": "Sails"
+    },
+    {
+      "guid": 180023,
+      "id": "old-world",
+      "kind": "island",
+      "name": "Old World"
+    },
+    {
+      "guid": 180025,
+      "id": "new-world",
+      "kind": "island",
+      "name": "New World"
+    },
+    {
+      "guid": 180014,
+      "id": "bright-sands",
+      "kind": "island",
+      "name": "Bright Sands"
+    }
+  ]
 }
 '@
 $scanCs = @'
@@ -1630,11 +1632,11 @@ function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
   }
 }
 
-Write-Host "Harbor Buddy vigilante"
-Write-Host "Anno: $anno"
-Write-Host "Catalogo: $titlesPath"
-Write-Host "Salida: $outJson"
-Write-Host "Juga, guarda con Ctrl+F5 (o espera el autoguardado). Ctrl+C para salir."
+Write-Host "Harbor Buddy — vigilante del diario, listo para acompañarte"
+Write-Host "Ya te encontré la carpeta de Anno: $anno"
+Write-Host "Catálogo de títulos: $titlesPath"
+Write-Host "Voy a escribir el diario en vivo acá: $outJson"
+Write-Host "Dejá esta ventana abierta y jugá tranquilo. Guardá con Ctrl+F5 (o esperá el autoguardado). Ctrl+C para salir cuando quieras."
 Write-Host ""
 
 $lastStamp = $null

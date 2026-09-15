@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { lookupGuid } from "../data/guids.ts";
+import { deskCalmUmbral } from "../session-desk.ts";
 import { housesHint, pulseHintFromScan, snapshotFromScan, type SaveScan } from "./a7s-snapshot.ts";
 import { ingestLiveJsonText } from "./validate.ts";
 
@@ -73,8 +74,20 @@ describe("pulseHint from save presence", () => {
     assert.equal(pulseHintFromScan(scanOf({ money: -12 }), null).coins, "down");
   });
 
-  it("houses empty without residences or without a marketplace", () => {
-    assert.equal(housesHint(scanOf()), "empty");
+  it("houses unknown when the scan found no building data at all — never a guessed empty", () => {
+    assert.equal(housesHint(scanOf()), "unknown");
+    assert.equal(housesHint(scanOf({ money: null })), "unknown");
+  });
+
+  it("houses empty without residences or without a marketplace, once the scan actually found buildings", () => {
+    assert.equal(
+      housesHint(
+        scanOf({
+          buildingCounts: new Map([["marketplace", { name: "Marketplace", count: 1 }]]),
+        }),
+      ),
+      "empty",
+    );
     assert.equal(
       housesHint(
         scanOf({
@@ -96,6 +109,25 @@ describe("pulseHint from save presence", () => {
       ),
       "yellow",
     );
+  });
+
+  it("a multi-island save the FileDB walk couldn't fully read stays calm: unknown pulse, no false red on the desk", () => {
+    const scan = scanOf({
+      money: null,
+      islands: new Set(["old-world", "new-world"]),
+      islandNames: new Map([
+        ["old-world", "Old World"],
+        ["new-world", "New World"],
+      ]),
+    });
+    const pulse = pulseHintFromScan(scan);
+    assert.equal(pulse.coins, "unknown");
+    assert.equal(pulse.houses, "unknown");
+    const calm = deskCalmUmbral({ ...pulse, looking: "unknown" }, "session");
+    assert.equal(calm.rojo, false);
+    assert.equal(calm.saturado, false);
+    assert.equal(calm.umbral, "enough");
+    assert.equal(calm.alarm, false);
   });
 
   it("houses ok when market and fishery (or fish stock) are present", () => {

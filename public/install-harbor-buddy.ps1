@@ -1,5 +1,5 @@
 ﻿# Harbor Buddy Telemetry — instalador
-# Copia el mod a Documentos\Anno 1800\mods. No pide admin. No toca partidas.
+# Tranquilo: solo copia una carpeta a Documentos\Anno 1800\mods. No pide admin ni toca tus partidas guardadas.
 
 $ErrorActionPreference = "Stop"
 
@@ -65,12 +65,12 @@ function Get-AnnoRootFromSave($save) {
 }
 
 function Browse-AnnoRoot {
-  Write-Host "No encuentro Documentos\Anno 1800 ni un .a7s reciente. Lo instalaste?"
-  $typed = Read-Host "Pegá la carpeta Anno 1800 (Enter para salir)"
+  Write-Host "No encontré Documentos\Anno 1800 ni una partida reciente. ¿Ya instalaste el juego?"
+  $typed = Read-Host "Pegá la carpeta de Anno 1800 (Enter para salir)"
   if (-not $typed) { exit 1 }
   $typed = $typed.Trim()
   if (-not (Test-Path -LiteralPath $typed)) {
-    Write-Host "Esa carpeta no existe."
+    Write-Host "Esa carpeta no existe. Fijate el camino y probá otra vez."
     exit 1
   }
   $item = Get-Item -LiteralPath $typed
@@ -87,7 +87,7 @@ function Browse-AnnoRoot {
     if ($dir.Name -eq "Anno 1800") { return $dir.FullName }
     $dir = $dir.Parent
   }
-  Write-Host "Solo copio adentro de una carpeta que se llame Anno 1800 (o que tenga accounts\*.a7s)."
+  Write-Host "Solo copio adentro de una carpeta llamada Anno 1800 (o una que tenga accounts\*.a7s adentro)."
   exit 1
 }
 
@@ -103,14 +103,14 @@ function Find-AnnoRoot {
   if ($bestSave) {
     $root = Get-AnnoRootFromSave $bestSave
     if ($root) {
-      Write-Host "Usando el .a7s más reciente (solo lectura): $($bestSave.FullName)"
-      Write-Host "Guardado: $($bestSave.LastWriteTime)"
+      Write-Host "Encontré tu partida más reciente (solo la leo, no la toco): $($bestSave.FullName)"
+      Write-Host "Guardado la última vez: $($bestSave.LastWriteTime)"
       return $root
     }
   }
   foreach ($path in Get-AnnoCandidates) {
     if ($path -and (Test-Path -LiteralPath $path)) {
-      Write-Host "Carpeta Anno 1800: $path"
+      Write-Host "Ya tengo tu carpeta de Anno 1800: $path"
       return $path
     }
   }
@@ -129,8 +129,8 @@ function Find-ModZip {
       if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
   }
-  Write-Host "No encontré harbor-buddy-telemetry.zip."
-  Write-Host "Descargalo en Harbor Buddy y deja el zip en Descargas o junto a este instalador."
+  Write-Host "Todavía no tengo harbor-buddy-telemetry.zip a mano."
+  Write-Host "Descargalo desde Harbor Buddy y dejá el zip en Descargas o al lado de este instalador. Después volvé a correr esto."
   exit 1
 }
 
@@ -149,7 +149,7 @@ try {
   Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force
   $modinfo = Get-ChildItem -LiteralPath $tmp -Recurse -Filter "modinfo.json" | Select-Object -First 1
   if (-not $modinfo) {
-    Write-Host "El zip no tiene modinfo.json. Descargá de nuevo harbor-buddy-telemetry.zip."
+    Write-Host "Este zip no tiene modinfo.json adentro. Descargá de nuevo harbor-buddy-telemetry.zip y probamos otra vez."
     exit 1
   }
   $src = $modinfo.Directory.FullName
@@ -172,7 +172,7 @@ finally {
 
 $check = Join-Path $dest "modinfo.json"
 if (-not (Test-Path -LiteralPath $check)) {
-  Write-Host "Algo salió mal: no quedó modinfo.json en mods\harbor-buddy-telemetry."
+  Write-Host "Algo no cerró: no quedó modinfo.json en mods\harbor-buddy-telemetry. Probá de nuevo o copiá el zip a mano."
   exit 1
 }
 
@@ -182,9 +182,9 @@ try {
   if ($raw -match '"Version"\s*:\s*"([^"]+)"') { $version = $Matches[1] }
 } catch {}
 
-Write-Host "Listo. Mod $version en $dest"
-Write-Host "Abrí Anno → Mods → activá Harbor Buddy Telemetry."
-Write-Host "Si Anno se cae, desactivá el mod. Harbor Buddy anda igual sin él."
+Write-Host "Listo — el mod $version ya está en $dest."
+Write-Host "Abrí Anno → Mods → activá Harbor Buddy Telemetry y jugá tranquilo."
+Write-Host "Si Anno se cae con el mod puesto, desactivalo sin miedo: Harbor Buddy anda igual sin él."
 
 function Copy-Helper([string]$name) {
   $places = @(
@@ -196,7 +196,7 @@ function Copy-Helper([string]$name) {
     $from = Join-Path $place $name
     if (Test-Path -LiteralPath $from) {
       Copy-Item -LiteralPath $from -Destination (Join-Path $anno $name) -Force
-      Write-Host "Copié $name a $anno"
+      Write-Host "Copié $name junto a tu Anno 1800."
       return
     }
   }
@@ -208,5 +208,5 @@ Copy-Helper "harbor-titles.json"
 Copy-Helper "harbor-catalog.json"
 Copy-Helper "harbor-guids.json"
 Copy-Helper "a7s-scan.cs"
-Write-Host "Para el diario: ejecutá watch-harbor-live.bat y guardá la partida (Ctrl+F5 o autoguardado)."
+Write-Host "Para el diario en vivo: ejecutá watch-harbor-live.bat y guardá la partida (Ctrl+F5 o el autoguardado hace lo mismo)."
 
