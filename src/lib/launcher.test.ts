@@ -9,8 +9,11 @@ describe("optional Windows launcher: steam:// + watcher + this page", () => {
     assert.equal(steamLaunchUri("12345"), "steam://rungameid/12345");
   });
 
-  it("starts Steam, the local watcher, and the caller's own origin — never a guessed domain", () => {
+  it("starts optional OCR, Steam, the local watcher, and the caller's own origin", () => {
     const script = buildLauncherScript("https://example.harbor-buddy.app/");
+    assert.match(script, /if exist "Server\.exe"/);
+    assert.match(script, /if exist "UXEnhancer\\Server\.exe"/);
+    assert.match(script, /start "Harbor Buddy OCR" \/D "%HARBOR_OCR_DIR%" "%HARBOR_OCR%"/);
     assert.match(script, /start "" "steam:\/\/rungameid\/916440"/);
     assert.match(script, /if exist "watch-harbor-live\.bat"/);
     assert.match(script, /start "" "watch-harbor-live\.bat"/);

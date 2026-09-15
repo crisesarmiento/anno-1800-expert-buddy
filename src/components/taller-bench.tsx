@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { NativeProductionCard } from "@/components/native-production-card";
 import { InkSeal } from "@/components/stamps";
 import { TallerCity } from "@/components/taller-city";
 import { TallerGoodsBalance } from "@/components/taller-goods-balance";
@@ -71,6 +72,7 @@ export function TallerBench() {
           <TallerStamp stamp={stamp} />
         </article>
         <TallerGoodsBalance mode={mode} seed={seed} stats={stats} />
+        <NativeProductionCard />
         <TallerCity
           mode={mode}
           onModeChange={setMode}

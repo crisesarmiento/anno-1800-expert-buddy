@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Cloud, Database, Route, TimerReset } from "lucide-react";
+import { Cloud, Database, Route, ScanLine, TimerReset } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useHarbor } from "@/lib/store";
 
@@ -11,6 +11,13 @@ function relativeTime(iso: string | undefined, locale: string) {
   if (Math.abs(minutes) < 1) return locale === "es" ? "ahora" : "now";
   return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(minutes, "minute");
 }
+
+const NATIVE_VIEW_LABEL = {
+  production: "producción",
+  finance: "finanzas",
+  population: "población",
+  unknown: "pantalla detectada",
+} as const;
 
 export function LiveStatus() {
   const snapshot = useHarbor((state) => state.liveSnapshot);
@@ -42,6 +49,7 @@ export function LiveStatus() {
   const goodsKinds = connection?.goodsKinds ?? snapshot.telemetry?.goods?.length ?? 0;
   const saved = relativeTime(snapshot.savedAt, locale);
   const isCloud = connection?.mode === "ubisoft-cloud";
+  const native = connection?.native;
 
   return (
     <div
@@ -90,9 +98,18 @@ export function LiveStatus() {
           <TimerReset className="size-3.5" aria-hidden="true" />
           lectura {relativeTime(snapshot.updatedAt, locale) ?? "sin hora"}
         </Badge>
+        {native ? (
+          <Badge variant="outline">
+            <ScanLine className="size-3.5" aria-hidden="true" />
+            OCR observado · {NATIVE_VIEW_LABEL[native.view]} ·{" "}
+            {relativeTime(native.observedAt, locale) ?? "sin hora"}
+          </Badge>
+        ) : null}
       </div>
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-        Leído del archivo: edificios y rutas. Misión, monedas y necesidades pueden ser inferencias.
+        {native
+          ? "Edificios y rutas salen del save; producción sale de la pantalla Estadísticas por OCR. No lee memoria."
+          : "Leído del archivo: edificios y rutas. Producción en tiempo real todavía no está conectada."}
       </p>
     </div>
   );

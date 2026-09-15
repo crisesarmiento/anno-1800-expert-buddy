@@ -11,6 +11,9 @@ import {
   type LiveConnection,
   type LiveIngestResult,
   type LiveNamedHit,
+  type LiveNativeConnection,
+  type LiveNativeView,
+  type LiveProductionMetric,
   type LivePulseHint,
   type LiveQuest,
   type LiveQuestState,
@@ -31,6 +34,12 @@ const CONNECTION_MODES = new Set<LiveConnection["mode"]>([
   "ubisoft-cloud",
   "native",
   "manual",
+]);
+const NATIVE_VIEWS = new Set<LiveNativeView>([
+  "production",
+  "finance",
+  "population",
+  "unknown",
 ]);
 
 function hasJsonExtension(filename: string) {
@@ -199,7 +208,48 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
     }
     if (routes.length) telemetry.routes = routes;
   }
+  if (Array.isArray(value.production)) {
+    const production: LiveProductionMetric[] = [];
+    for (const item of value.production.slice(0, 120)) {
+      if (!asRecord(item)) continue;
+      const guid = Number(item.guid);
+      const name = clipName(item.name, 80);
+      const observedAt = parseOptionalIso(item.observedAt);
+      if (!Number.isFinite(guid) || !name || !observedAt) continue;
+      const metric: LiveProductionMetric = {
+        guid: Math.trunc(guid),
+        name,
+        observedAt,
+      };
+      const id = clipName(item.id, 48);
+      const islandName = clipName(item.islandName, LIVE_MAX_TITLE);
+      if (id) metric.id = id;
+      if (islandName) metric.islandName = islandName;
+      for (const key of ["amount", "requiredTMin", "productivity", "buildingCount"] as const) {
+        const raw = item[key];
+        if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0) continue;
+        metric[key] = key === "productivity" ? raw : Math.trunc(raw * 1000) / 1000;
+      }
+      production.push(metric);
+    }
+    if (production.length) telemetry.production = production;
+  }
   return Object.keys(telemetry).length ? telemetry : undefined;
+}
+
+function normalizeNativeConnection(value: unknown): LiveNativeConnection | undefined {
+  if (!asRecord(value) || value.provider !== "ux-enhancer-ocr") return undefined;
+  const view = NATIVE_VIEWS.has(value.view as LiveNativeView)
+    ? (value.view as LiveNativeView)
+    : "unknown";
+  const observedAt = parseOptionalIso(value.observedAt);
+  if (!observedAt) return undefined;
+  const native: LiveNativeConnection = { provider: "ux-enhancer-ocr", view, observedAt };
+  const islandName = clipName(value.islandName, LIVE_MAX_TITLE);
+  const serverVersion = clipName(value.serverVersion, 40);
+  if (islandName) native.islandName = islandName;
+  if (serverVersion) native.serverVersion = serverVersion;
+  return native;
 }
 
 function normalizeConnection(value: unknown): LiveConnection | undefined {
@@ -220,6 +270,8 @@ function normalizeConnection(value: unknown): LiveConnection | undefined {
     if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0)
       connection[key] = Math.trunc(raw);
   }
+  const native = normalizeNativeConnection(value.native);
+  if (native) connection.native = native;
   return connection;
 }
 

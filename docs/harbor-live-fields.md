@@ -27,6 +27,8 @@ Schema: `docs/harbor-live.schema.json`.
 | `telemetry.hints`     | residencias farmer/worker/…                                                                                                               |                                                                                                                                                                                                                                                                                                     |
 | `telemetry.goods`     | `StrgLrg` pares GUID+amount                                                                                                               | Stock. Sandbox lo muestra; la campaña no hereda tips de producción.                                                                                                                                                                                                                                 |
 | `telemetry.routes`    | `SessionTradeRouteManager/RouteMap`                                                                                                       | Sólo rutas del jugador (`ownerId = 0`): nombre, número de barcos, paradas y bienes configurados. Todavía no afirma dirección ni rendimiento.                                                                                                                                                        |
+| `connection.native`   | UXEnhancer `Server.exe` por loopback                                                                                                      | Evidencia OCR: proveedor, pestaña visible, isla y hora. No implica lectura de memoria. Ver `docs/native-telemetry.md`.                                                                                                                                                                               |
+| `telemetry.production` | Pantallas Producción + Finanzas por OCR                                                                                                  | Demanda/productividad y conteo por isla. Taller sólo aconseja si ambas muestras existen y conoce el ritmo del GUID.                                                                                                                                                                                 |
 
 El dump Lua (`tools/harbor-buddy-telemetry/dump_live.lua`) **no va en el zip**. Si algún día hay hook seguro, escribe el mismo schema y no inventa títulos. El `modinfo` 0.2.0 sigue vacío (`<ModOps></ModOps>`).
 
@@ -35,7 +37,7 @@ El dump Lua (`tools/harbor-buddy-telemetry/dump_live.lua`) **no va en el zip**. 
 No se agregan aunque el `.a7s` “los tenga” por dentro:
 
 - Conteos de población por casa (sí hay residencias y `goods`; no hay barra amarilla de necesidad todavía).
-- Rutas NPC, dirección carga/descarga y rendimiento real. El walker ya confirma las rutas del jugador; la telemetría nativa queda para el siguiente PR (`docs/filedb-spike-routes.md`).
+- Rutas NPC, dirección carga/descarga y rendimiento real. El walker confirma la configuración de las rutas del jugador; el proveedor OCR no expone throughput (`docs/native-telemetry.md`).
 - Spoilers de diario más allá de GUIDs de quest mapeados.
 - Inject: Lua en el pack, parche de GUID, `ModOps` sobre assets vanilla.
 - Write al `.a7s`.
