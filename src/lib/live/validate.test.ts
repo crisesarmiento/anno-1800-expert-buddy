@@ -61,6 +61,10 @@ describe("harbor-live ingest", () => {
     assert.ok(
       (schema.properties.telemetry as { properties?: { routes?: unknown } }).properties?.routes,
     );
+    assert.ok(
+      (schema.properties.telemetry as { properties?: { production?: unknown } }).properties
+        ?.production,
+    );
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);
@@ -134,6 +138,47 @@ describe("harbor-live ingest", () => {
     assert.deepEqual(result.snapshot.telemetry?.buildings, [
       { id: "marketplace", name: "Mercado" },
     ]);
+  });
+
+  it("normalizes evidence-stamped OCR production and drops malformed rows", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-15T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      connection: {
+        mode: "ubisoft-cloud",
+        native: {
+          provider: "ux-enhancer-ocr",
+          view: "production",
+          observedAt: "2026-09-15T11:59:58.000Z",
+          islandName: "La Inapetente",
+          serverVersion: "v11.0",
+        },
+      },
+      telemetry: {
+        production: [
+          {
+            guid: 1010278,
+            id: "fishery",
+            name: "Fishery",
+            observedAt: "2026-09-15T11:59:58.000Z",
+            islandName: "La Inapetente",
+            requiredTMin: 3.5,
+            productivity: 120,
+            buildingCount: 2,
+          },
+          { guid: "bad", name: "Bad", observedAt: "not-a-date" },
+        ],
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.connection?.native?.view, "production");
+    assert.equal(result.snapshot.connection?.native?.islandName, "La Inapetente");
+    assert.equal(result.snapshot.telemetry?.production?.length, 1);
+    assert.equal(result.snapshot.telemetry?.production?.[0]?.requiredTMin, 3.5);
   });
 
   it("rejects a bad schema", () => {

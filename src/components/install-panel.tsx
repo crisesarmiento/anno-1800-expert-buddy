@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Download } from "lucide-react";
+import { Check, Download, ExternalLink, ScanLine } from "lucide-react";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
 import { buildLauncherScript, launcherFileName } from "@/lib/launcher";
@@ -118,6 +118,35 @@ export function InstallPanel({
               </a>
             </Button>
           </div>
+        </li>
+
+        <li className="rounded-md bg-muted p-4" data-native-ocr-install="">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Telemetría real · opcional
+          </p>
+          <p className="mt-1 flex items-center gap-2 text-sm font-medium">
+            <ScanLine className="size-4" aria-hidden="true" />
+            Extractor OCR de Estadísticas
+          </p>
+          <p className="mt-2 text-sm leading-relaxed">
+            Una sola instalación manual: descargá UXEnhancer, extraelo como carpeta
+            <strong className="font-medium"> UXEnhancer</strong> junto al launcher. Después el
+            launcher abre Server.exe, Anno, el vigilante y esta página automáticamente.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            Es software externo y experimental. No inyecta código: captura la ventana y sólo lee la
+            pestaña de Estadísticas que tengas visible. Puede pedir Visual C++ y permisos de Windows.
+          </p>
+          <Button asChild variant="secondary" className="mt-3">
+            <a
+              href="https://github.com/NiHoel/Anno1800UXEnhancer/releases/latest"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink className="size-3.5" aria-hidden="true" />
+              Descargar extractor externo
+            </a>
+          </Button>
         </li>
 
         {launcher ? <LauncherCard /> : null}

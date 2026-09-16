@@ -1,5 +1,5 @@
 /**
- * Optional Windows launcher: Steam + watcher + this page. /instalar only.
+ * Optional Windows launcher: OCR server (when present) + Steam + watcher + this page. /instalar only.
  * Never sends F5/keystrokes to Anno — the player still saves themselves.
  */
 
@@ -24,6 +24,21 @@ export function buildLauncherScript(origin: string): string {
     "rem Nunca manda F5 ni teclas a Anno. Vos guardas cuando quieras (Ctrl+F5 o autoguardado).",
     "setlocal",
     "cd /d \"%~dp0\"",
+    'set "HARBOR_OCR="',
+    'set "HARBOR_OCR_DIR="',
+    'if exist "Server.exe" (',
+    '  set "HARBOR_OCR=%~dp0Server.exe"',
+    '  set "HARBOR_OCR_DIR=%~dp0"',
+    ")",
+    'if not defined HARBOR_OCR if exist "UXEnhancer\\Server.exe" (',
+    '  set "HARBOR_OCR=%~dp0UXEnhancer\\Server.exe"',
+    '  set "HARBOR_OCR_DIR=%~dp0UXEnhancer"',
+    ")",
+    'if defined HARBOR_OCR (',
+    '  start "Harbor Buddy OCR" /D "%HARBOR_OCR_DIR%" "%HARBOR_OCR%"',
+    ") else (",
+    "  echo Telemetria OCR opcional no encontrada. El lector de saves sigue funcionando.",
+    ")",
     `start "" "${steamLaunchUri()}"`,
     'if exist "watch-harbor-live.bat" (',
     '  start "" "watch-harbor-live.bat"',

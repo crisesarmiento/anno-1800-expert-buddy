@@ -11,8 +11,13 @@ if errorlevel 1 pause
 exit /b 0
 ::HARBOR_WATCHER_SCRIPT_V1
 # Harbor Buddy - vigilante del diario
-# No inyecta Anno. Lee el ultimo .a7s, busca titulos, escribe harbor-live.json.
-# Deja esta ventana abierta. Guarda con F5 (o espera el autoguardado).
+# No inyecta Anno. Lee el ultimo save y, si existe, el OCR local de Estadisticas.
+# Deja esta ventana abierta. Guarda con Ctrl+F5 (o espera el autoguardado).
+
+param(
+  [ValidateSet("brazilian", "chinese", "english", "french", "german", "italian", "japanese", "korean", "polish", "portuguese", "russian", "spanish", "taiwanese")]
+  [string]$NativeLanguage = "spanish"
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -1817,6 +1822,9 @@ namespace HarborBuddy {
   }
 }
 '@
+$guidCatalog = $guidJson | ConvertFrom-Json
+$guidByNumber = @{}
+foreach ($row in @($guidCatalog.rows)) { $guidByNumber[[string]$row.guid] = $row }
 Add-Type -TypeDefinition $scanCs
 $outJson = Join-Path $anno "harbor-live.json"
 # Internal only: last scanned money, for the coins delta. Never read by the browser/UI, never part of the harbor-live-v1 schema.
@@ -1858,24 +1866,135 @@ function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
   }
 }
 
+$nativeEndpoint = "http://127.0.0.1:8000/AnnoServer/Population"
+$nativeProductionByIsland = @{}
+$nativeCountsByIsland = @{}
+$nativeWasActive = $false
+$nativeResidenceGuids = @{
+  "1010343" = $true; "1010344" = $true; "1010345" = $true; "1010346" = $true
+  "101254" = $true; "101255" = $true
+}
+
+function Test-NativeProperty($value, [string]$name) {
+  return $value -and ($value.PSObject.Properties.Name -contains $name)
+}
+
+function Update-HarborNative {
+  if (-not (Test-Path -LiteralPath $outJson)) { return }
+  try {
+    $uri = "$nativeEndpoint`?lang=$NativeLanguage&optimalProductivity=false"
+    $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 2 -ErrorAction Stop
+    if (-not $response) { return }
+    $observedAt = (Get-Date).ToUniversalTime().ToString("o")
+    $metricProps = @($response.PSObject.Properties | Where-Object { $_.Name -match '^\d+$' -and $_.Value })
+    $hasProductivity = $false
+    $hasAmountOrLimit = $false
+    $hasCounts = $false
+    foreach ($prop in $metricProps) {
+      $hasProductivity = $hasProductivity -or (Test-NativeProperty $prop.Value "percentBoost")
+      $hasAmountOrLimit = $hasAmountOrLimit -or (Test-NativeProperty $prop.Value "amount") -or (Test-NativeProperty $prop.Value "limit")
+      $hasCounts = $hasCounts -or (Test-NativeProperty $prop.Value "existingBuildings")
+    }
+    $view = "unknown"
+    if ($hasProductivity -or $hasAmountOrLimit) { $view = "production" }
+    elseif ($hasCounts) {
+      $factoryCountRows = @($metricProps | Where-Object {
+          (Test-NativeProperty $_.Value "existingBuildings") -and -not $nativeResidenceGuids.ContainsKey([string]$_.Name)
+        })
+      $view = $(if ($factoryCountRows.Count -gt 0) { "finance" } else { "population" })
+    }
+
+    $island = [string]$response.islandName
+    if ($island -and $view -eq "production") {
+      $rows = @()
+      foreach ($prop in $metricProps) {
+        $guid = [int]$prop.Name
+        $value = $prop.Value
+        if (-not (Test-NativeProperty $value "percentBoost") -and -not (Test-NativeProperty $value "limit")) { continue }
+        $known = $guidByNumber[[string]$guid]
+        $metric = [ordered]@{
+          guid       = $guid
+          name       = $(if ($known -and $known.name) { [string]$known.name } else { "GUID $guid" })
+          observedAt = $observedAt
+          islandName = $island
+        }
+        if ($known -and $known.id) { $metric.id = [string]$known.id }
+        if (Test-NativeProperty $value "amount") { $metric.amount = [double]$value.amount }
+        if (Test-NativeProperty $value "limit") { $metric.requiredTMin = [double]$value.limit }
+        if (Test-NativeProperty $value "percentBoost") { $metric.productivity = [double]$value.percentBoost }
+        $rows += [pscustomobject]$metric
+      }
+      if ($rows.Count -gt 0) { $script:nativeProductionByIsland[$island] = @($rows) }
+    }
+    if ($island -and $hasCounts) {
+      $counts = @{}
+      foreach ($prop in $metricProps) {
+        if (Test-NativeProperty $prop.Value "existingBuildings") {
+          $counts[[string]$prop.Name] = [int]$prop.Value.existingBuildings
+        }
+      }
+      if ($counts.Count -gt 0) { $script:nativeCountsByIsland[$island] = $counts }
+    }
+
+    $payload = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (-not $payload.connection) { $payload | Add-Member -NotePropertyName connection -NotePropertyValue ([pscustomobject]@{ mode = "manual" }) }
+    $native = [ordered]@{
+      provider   = "ux-enhancer-ocr"
+      view       = $view
+      observedAt = $observedAt
+    }
+    if ($island) { $native.islandName = $island }
+    if ($response.version) { $native.serverVersion = [string]$response.version }
+    $payload.connection | Add-Member -NotePropertyName native -NotePropertyValue ([pscustomobject]$native) -Force
+
+    if ($island -and $script:nativeProductionByIsland.ContainsKey($island)) {
+      $production = @($script:nativeProductionByIsland[$island])
+      $counts = $script:nativeCountsByIsland[$island]
+      if ($counts) {
+        foreach ($row in $production) {
+          $count = $counts[[string]$row.guid]
+          if ($count -ne $null) { $row | Add-Member -NotePropertyName buildingCount -NotePropertyValue ([int]$count) -Force }
+        }
+      }
+      if (-not $payload.telemetry) { $payload | Add-Member -NotePropertyName telemetry -NotePropertyValue ([pscustomobject]@{}) }
+      $payload.telemetry | Add-Member -NotePropertyName production -NotePropertyValue $production -Force
+    }
+    $payload.updatedAt = $observedAt
+    $json = $payload | ConvertTo-Json -Depth 10 -Compress
+    $null = $json | ConvertFrom-Json
+    Write-HarborLiveCrashSafe $outJson ($json + "`n")
+    if (-not $script:nativeWasActive) {
+      Write-Host "$(Get-Date -Format HH:mm:ss) OCR conectado: abrí Estadísticas > Producción y Finanzas en Anno."
+    }
+    $script:nativeWasActive = $true
+  } catch {
+    if ($script:nativeWasActive) {
+      Write-Host "$(Get-Date -Format HH:mm:ss) OCR desconectado; sigo leyendo saves."
+    }
+    $script:nativeWasActive = $false
+  }
+}
+
 Write-Host "Harbor Buddy — vigilante del diario, listo para acompañarte"
 Write-Host "Ya te encontré la carpeta de Anno: $anno"
 Write-Host "Catálogo de títulos: $titlesPath"
 Write-Host "Voy a escribir el diario en vivo acá: $outJson"
 Write-Host "Dejá esta ventana abierta y jugá tranquilo. Guardá con Ctrl+F5 (o esperá el autoguardado). Ctrl+C para salir cuando quieras."
+Write-Host "Si UXEnhancer Server.exe está abierto, también leo Producción y Finanzas por OCR cada 4 segundos."
 Write-Host ""
 
 $lastStamp = $null
 while ($true) {
   try {
+    Update-HarborNative
     $save = Get-NewestSave $anno
     if (-not $save) {
-      Start-Sleep -Seconds 8
+      Start-Sleep -Seconds 4
       continue
     }
     $stamp = "{0}|{1}" -f $save.FullName, $save.LastWriteTimeUtc.Ticks
     if ($stamp -eq $lastStamp) {
-      Start-Sleep -Seconds 8
+      Start-Sleep -Seconds 4
       continue
     }
     $lastStamp = $stamp
@@ -2013,8 +2132,9 @@ while ($true) {
     if ($namesLine) { Write-Host "  Edificios: $namesLine" }
     $goodsLine = Get-GoodsLogLine $goods 6
     if ($goodsLine) { Write-Host "  Bienes: $goodsLine" }
+    Update-HarborNative
   } catch {
     Write-Host "$(Get-Date -Format HH:mm:ss) error: $($_.Exception.Message)"
   }
-  Start-Sleep -Seconds 8
+  Start-Sleep -Seconds 4
 }

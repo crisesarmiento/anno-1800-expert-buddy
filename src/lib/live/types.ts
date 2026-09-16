@@ -64,6 +64,30 @@ export type LiveConnection = {
   routeCount?: number;
   islandCount?: number;
   questCount?: number;
+  native?: LiveNativeConnection;
+};
+
+export type LiveNativeView = "production" | "finance" | "population" | "unknown";
+
+export type LiveNativeConnection = {
+  provider: "ux-enhancer-ocr";
+  view: LiveNativeView;
+  observedAt: string;
+  islandName?: string;
+  serverVersion?: string;
+};
+
+/** OCR sample from Anno's statistics screen. Values stay raw and evidence-stamped. */
+export type LiveProductionMetric = {
+  guid: number;
+  id?: string;
+  name: string;
+  observedAt: string;
+  islandName?: string;
+  amount?: number;
+  requiredTMin?: number;
+  productivity?: number;
+  buildingCount?: number;
 };
 
 export type LiveTelemetry = {
@@ -74,6 +98,7 @@ export type LiveTelemetry = {
   hints?: string[];
   goods?: LiveGoodHit[];
   routes?: LiveTradeRoute[];
+  production?: LiveProductionMetric[];
 };
 
 /** Presencia de estrato (needles del catálogo). Sin conteos. */
