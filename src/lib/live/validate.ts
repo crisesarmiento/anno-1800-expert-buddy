@@ -9,6 +9,7 @@ import {
   LIVE_WORKFORCE_TIERS,
   type LiveBuildingHit,
   type LiveConnection,
+  type LiveGoodChange,
   type LiveIngestResult,
   type LiveNamedHit,
   type LiveNativeConnection,
@@ -161,6 +162,41 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
     }
     if (goods.length) telemetry.goods = goods;
   }
+  if (Array.isArray(value.goodsChanges)) {
+    const changes: LiveGoodChange[] = [];
+    for (const item of value.goodsChanges.slice(0, 40)) {
+      if (!asRecord(item)) continue;
+      const id = clipName(item.id, 48);
+      const name = clipName(item.name, 80);
+      const previousSavedAt = parseOptionalIso(item.previousSavedAt);
+      const previousAmount = Number(item.previousAmount);
+      const amount = Number(item.amount);
+      const delta = Number(item.delta);
+      if (
+        !id ||
+        !name ||
+        !previousSavedAt ||
+        !Number.isFinite(previousAmount) ||
+        !Number.isFinite(amount) ||
+        !Number.isFinite(delta)
+      ) {
+        continue;
+      }
+      const normalizedPreviousAmount = Math.trunc(previousAmount);
+      const normalizedAmount = Math.trunc(amount);
+      const normalizedDelta = Math.trunc(delta);
+      if (normalizedAmount - normalizedPreviousAmount !== normalizedDelta) continue;
+      changes.push({
+        id,
+        name,
+        previousAmount: normalizedPreviousAmount,
+        amount: normalizedAmount,
+        delta: normalizedDelta,
+        previousSavedAt,
+      });
+    }
+    if (changes.length) telemetry.goodsChanges = changes;
+  }
   if (Array.isArray(value.routes)) {
     const routes: LiveTradeRoute[] = [];
     for (const item of value.routes.slice(0, 80)) {
@@ -196,7 +232,9 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
                 guid: Math.trunc(guid),
                 amount: Math.trunc(amount),
               };
+              const goodId = clipName(goodValue.id, 48);
               const goodName = clipName(goodValue.name, 80);
+              if (goodId) good.id = goodId;
               if (goodName) good.name = goodName;
               stop.goods.push(good);
             }
