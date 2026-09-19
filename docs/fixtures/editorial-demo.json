@@ -1,0 +1,22 @@
+{
+  "schema": "harbor-live-v1",
+  "game": "anno-1800",
+  "source": "save",
+  "updatedAt": "2026-09-19T14:14:00Z",
+  "savedAt": "2026-09-19T14:13:00Z",
+  "sessionName": "Editorial demonstration — not a real save",
+  "quests": [],
+  "connection": {
+    "mode": "documents-save",
+    "native": { "provider": "ux-enhancer-ocr", "view": "production", "observedAt": "2026-09-19T14:13:25Z", "islandName": "Ditchwater" },
+    "nativeProbe": { "provider": "ux-enhancer-ocr", "state": "reachable", "lastProbeAt": "2026-09-19T14:14:00Z" }
+  },
+  "telemetry": {
+    "routes": [
+      { "id": 1, "name": "Ruta Madera", "ownerId": 0, "shipCount": 0, "stops": [ { "goods": [{ "guid": 1010196, "id": "timber", "name": "Madera", "amount": 20 }] }, { "goods": [] } ] },
+      { "id": 2, "name": "Ruta Pan", "ownerId": 0, "shipCount": 1, "stops": [ { "goods": [{ "guid": 1010213, "id": "bread", "name": "Pan", "amount": 20 }] }, { "goods": [] } ] }
+    ],
+    "production": [ { "guid": 1010278, "id": "fishery", "name": "Pesquería", "islandName": "Ditchwater", "observedAt": "2026-09-19T14:13:25Z", "buildingCountObservedAt": "2026-09-19T14:13:25Z", "buildingCount": 1, "productivity": 100, "requiredTMin": 3.5 } ],
+    "goodsChanges": [ { "id": "bread", "name": "Pan", "previousAmount": 120, "amount": 96, "delta": -24, "previousSavedAt": "2026-09-19T14:08:00Z" } ]
+  }
+}

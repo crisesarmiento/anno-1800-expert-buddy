@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { EditorialHome } from "@/components/editorial-home";
+import { HarborApp } from "@/components/harbor-app";
 import { SessionBoot } from "@/components/session-boot";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/diario")({ component: Diary });
 
-function Home() {
+function Diary() {
   return (
     <SessionBoot>
-      <EditorialHome />
+      <HarborApp />
     </SessionBoot>
   );
 }

@@ -1,20 +1,24 @@
 # Anno 1800 Buddy
 
-A Vite + TanStack Start companion for **Anno 1800**. Keep it next to the game, tap where you are in the campaign, and get the next ten minutes: a 10×10 city stamp, where the new building goes, how not to go broke, and who not to fight.
+A calm, Spanish-first companion for a personal Anno 1800 campaign. Keep Anno fullscreen; keep Harbor in the background and alt-tab when you want a glance. Not an overlay, not always-on-top, and not click-through on the game.
 
-Not a min-max spreadsheet. Default is **spoilers off**. Tagline: *bastante bien, lindo, terminá la historia.*
+**Inicio** (`/`) is the operational summary: at most three issues, conclusion first, evidence and age on one line. **Diario** (`/diario`) is the campaign desk. Production detail lives in `/taller`. Route evidence lives in `/rutas`. Connect and install stay under Más.
 
-`/taller` is an opt-in workbench (not Home): one **Alcanza / No alcanza** stamp from **static versioned wiki ratios** (`wiki-v1-2026-09`, [Production chains](https://anno1800.fandom.com/wiki/Production_chains), CC-BY-SA) times the live snapshot fields that already exist (balance, saturation/workforce, session buildings). Method inspired by [NiHoel/Anno1800Calculator](https://github.com/NiHoel/Anno1800Calculator) (**MIT except `params.js`**). This app does **not** copy `params.js` (Ubisoft game assets). Not a factory simulator, goods grid, or t/min hero.
+Not a min-max spreadsheet. Spoilers stay off by default. Tagline: *bastante bien, lindo, terminá la historia.*
+
+`/taller` is an opt-in workbench (not Inicio): one **Alcanza / No alcanza** stamp from **static versioned wiki ratios** (`wiki-v1-2026-09`, [Production chains](https://anno1800.fandom.com/wiki/Production_chains), CC-BY-SA) times the live snapshot fields that already exist (balance, saturation/workforce, session buildings). Method inspired by [NiHoel/Anno1800Calculator](https://github.com/NiHoel/Anno1800Calculator) (**MIT except `params.js`**). This app does **not** copy `params.js` (Ubisoft game assets). Not a factory simulator, goods grid, or t/min hero.
 
 [github.com/crisesarmiento/anno-1800-expert-buddy](https://github.com/crisesarmiento/anno-1800-expert-buddy)
 
 ## A look at the buddy
 
-| City stamps                                                                                                                 | Economy pulse                                                                                      |
-| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| ![A 10 by 10 city stamp with roads, homes, gardens, water, and building marks inside the grid](screenshots/stamps-grid.png) | ![The Harbor Buddy coins-in-red state with a short calm recommendation](screenshots/coins-red.png) |
-| **Production chains**                                                                                                       | **Diplomacy**                                                                                      |
-| ![A short raw-material-to-factory chain on a dark wood surface](screenshots/chains.png)                                     | ![The diplomacy desk with calm guidance for campaign characters](screenshots/diplomacy.png)        |
+| Inicio (empty)                                                                                                                                      | Inicio (demo snapshot)                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ![Inicio with no live reading: next priority is connect the game, production still off](screenshots/editorial-empty.png)                            | ![Inicio with illustrative sample data labelled as a demonstration](screenshots/editorial-demo.png)             |
+| **Campaign diary**                                                                                                                                  | **Economy pulse**                                                                                               |
+| ![The campaign diary with one next step and journal-title chips](screenshots/session.png)                                                           | ![The Harbor Buddy coins-in-red state with a short calm recommendation](screenshots/coins-red.png)              |
+
+The demo screenshot uses `docs/fixtures/editorial-demo.json`. It is labelled in the UI as illustrative data, not a real save.
 
 ## Design skill pack
 
@@ -22,7 +26,14 @@ The repository includes an [Agent Skills design pack](.grok/skills/README.md) fo
 
 ## Why it exists
 
-The game's campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. This app is that voice on a **second monitor** (tab or PWA): Spanish-first (UI also in English, Italian, and German), one mission at a time, calm modes when the ticker is red or you are overloaded. Not an overlay and not click-through on the game.
+The campaign is easier when someone on the sofa tells you one next step instead of a wiki dump. Harbor is that voice: Spanish-first (UI also in English, Italian, and German), one glance on Inicio, one mission at a time in Diario. It works on a second monitor, or on the same monitor via alt-tab. Not an overlay and not click-through on the game.
+
+Inicio only speaks when the evidence is honest:
+
+- Route failures are confirmed from the save (no ship, fewer than two stops, or no goods).
+- Production shortfall or excess is inferred, and only when demand, productivity, factory count, a known catalog rate, the same island, and a fresh OCR sample are all present.
+- Stock drops are global observations between saves. They do not prove a route caused the change.
+- Save time, OCR time, and connection state stay separate. JSON file time is never an observation.
 
 ## Local-first data and privacy
 
@@ -34,7 +45,7 @@ Optional Windows live diary (`harbor-live.json`) is a local file you drop or pas
 
 ## Status
 
-Playable companion: campaign rail, session desk (next step / do-don't / checks), city stamps, island pulse, calm modes (*Estoy saturado*, *Monedas en rojo*), Spanish buddy chat, HUD screenshot paste for one next step, and `/tablero` as a secondary presence view.
+Playable companion: Inicio operational glance, campaign diary on `/diario`, session desk (next step / do-don't / checks), city stamps, island pulse, calm modes (*Estoy saturado*, *Monedas en rojo*), Spanish buddy chat, HUD screenshot paste for one next step, and `/tablero` as a secondary presence view.
 
 Optional extras on Windows: install page (`/instalar`), connect page (`/conectar`), and a save watcher that writes `harbor-live.json`. The in-game pack does **not** run Lua (that crashes Anno); the watcher reads the latest save instead. Hard ceiling: `docs/telemetry-ceiling.md` — read-only on `.a7s`, no Lua/DLL/Python inject; the telemetry zip is a stub and is not required for the watcher.
 
@@ -85,7 +96,7 @@ Do not use `vite` / `npx vite` directly — env flags (`VITE_AUTH_ENABLED`) only
 ## Limitations
 
 - Unofficial fan companion. Anno 1800 is Ubisoft; this is not affiliated.
-- Second-monitor tab/PWA only — never an overlay, never always-on-top, never click-through on Anno. First monitor / Ctrl+G stays the game. See `docs/second-screen.md`.
+- Tab/PWA only — never an overlay, never always-on-top, never click-through on Anno. First monitor / Ctrl+G stays the game. One monitor: alt-tab. See `docs/second-screen.md`.
 - Mission titles stay in Spanish to match the in-game journal.
 - Screenshot HUD advice is a local server function. Offline chat does not invent a vision call.
 - `scripts/preview.mjs stop|restart` is a Linux sandbox helper for port 8081, not a macOS/Windows workflow.

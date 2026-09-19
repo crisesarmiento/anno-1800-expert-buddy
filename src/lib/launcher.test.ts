@@ -48,9 +48,11 @@ describe("launcher power-up stays on /instalar only", () => {
     assert.doesNotMatch(conectar, /launcher/);
   });
 
-  it("never mounts on Home (Welcome or the session desk)", () => {
+  it("never mounts on Inicio or Diario", () => {
+    const editorial = readFileSync(new URL("../components/editorial-home.tsx", import.meta.url), "utf8");
     assert.doesNotMatch(app, /LauncherCard|buildLauncherScript|data-install-launcher/);
     assert.doesNotMatch(desk, /LauncherCard|buildLauncherScript|data-install-launcher/);
+    assert.doesNotMatch(editorial, /LauncherCard|buildLauncherScript|data-install-launcher/);
   });
 
   it("defaults off — InstallPanel needs the explicit prop to show it", () => {

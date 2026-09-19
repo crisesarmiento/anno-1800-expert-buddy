@@ -27,7 +27,7 @@ describe("visual A diario de expedición", () => {
     assert.doesNotMatch(styles, /--color-background: #14110e/);
   });
 
-  it("leads Home with one Esto ahora plus diary-title chips", () => {
+  it("leads Diario with one Esto ahora plus diary-title chips", () => {
     const welcome = sliceFn(app, "Welcome");
     assert.match(welcome, /data-hero="esto-ahora"/);
     assert.match(welcome, /Esto, ahora/);

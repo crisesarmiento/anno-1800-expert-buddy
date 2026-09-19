@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as ConectarRouteImport } from './routes/conectar'
+import { Route as DiarioRouteImport } from './routes/diario'
 import { Route as InstalarRouteImport } from './routes/instalar'
 import { Route as MapaRouteImport } from './routes/mapa'
 import { Route as RutasRouteImport } from './routes/rutas'
@@ -32,6 +33,11 @@ const CatalogoRoute = CatalogoRouteImport.update({
 const ConectarRoute = ConectarRouteImport.update({
   id: '/conectar',
   path: '/conectar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiarioRoute = DiarioRouteImport.update({
+  id: '/diario',
+  path: '/diario',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstalarRoute = InstalarRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
+  '/diario': typeof DiarioRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
   '/rutas': typeof RutasRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
+  '/diario': typeof DiarioRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
   '/rutas': typeof RutasRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/catalogo': typeof CatalogoRoute
   '/conectar': typeof ConectarRoute
+  '/diario': typeof DiarioRoute
   '/instalar': typeof InstalarRoute
   '/mapa': typeof MapaRoute
   '/rutas': typeof RutasRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/catalogo'
     | '/conectar'
+    | '/diario'
     | '/instalar'
     | '/mapa'
     | '/rutas'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/catalogo'
     | '/conectar'
+    | '/diario'
     | '/instalar'
     | '/mapa'
     | '/rutas'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/catalogo'
     | '/conectar'
+    | '/diario'
     | '/instalar'
     | '/mapa'
     | '/rutas'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CatalogoRoute: typeof CatalogoRoute
   ConectarRoute: typeof ConectarRoute
+  DiarioRoute: typeof DiarioRoute
   InstalarRoute: typeof InstalarRoute
   MapaRoute: typeof MapaRoute
   RutasRoute: typeof RutasRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/conectar'
       fullPath: '/conectar'
       preLoaderRoute: typeof ConectarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diario': {
+      id: '/diario'
+      path: '/diario'
+      fullPath: '/diario'
+      preLoaderRoute: typeof DiarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instalar': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CatalogoRoute: CatalogoRoute,
   ConectarRoute: ConectarRoute,
+  DiarioRoute: DiarioRoute,
   InstalarRoute: InstalarRoute,
   MapaRoute: MapaRoute,
   RutasRoute: RutasRoute,

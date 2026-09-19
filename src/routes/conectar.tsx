@@ -26,7 +26,7 @@ function ConectarPage() {
             </div>
             <LanguageSelect className="ml-auto" />
             <Link to="/" className="inline-flex h-11 items-center text-sm text-primary">
-              Escritorio
+              Inicio
             </Link>
           </div>
         </header>

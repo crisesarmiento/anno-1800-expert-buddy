@@ -59,6 +59,9 @@ export function TallerBench() {
             Anno 1800 Buddy
           </p>
           <Link to="/" className="ml-auto inline-flex h-11 items-center text-sm text-primary">
+            Inicio
+          </Link>
+          <Link to="/diario" className="inline-flex h-11 items-center text-sm text-primary">
             Diario
           </Link>
         </div>
