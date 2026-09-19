@@ -5,13 +5,14 @@ player-facing decisions that must survive future work.
 
 ## Product goal
 
-This is a calm, Spanish-first second-screen companion for a personal Anno 1800 campaign. Its main
-job is to detect production imbalance, help review trade routes, and suggest what to build or pause
-with as little manual setup as practical.
+This is a calm, Spanish-first companion for a personal Anno 1800 campaign. Its main job is to
+detect production imbalance, help review trade routes, and suggest what to review next with as
+little manual setup as practical.
 
-- Campaign is the primary mode; Sandbox remains separate.
-- Keep the game on the first monitor. Do not build an overlay, inject into Anno, automate keys, or
-  modify saves.
+- `/` (Inicio) is the operational summary: a 3–5 second glance, at most three issues, conclusion
+  first. `/diario` is the campaign diary. Sandbox remains separate.
+- One-monitor use is first-class: Anno fullscreen, Harbor in the background, alt-tab. Do not build
+  an overlay, always-on-top window, inject into Anno, automate keys, or modify saves.
 - Prefer one actionable conclusion over dashboards full of numbers.
 - Authentication and a database are not product requirements.
 
@@ -78,13 +79,21 @@ changes.
 
 ## UI boundaries
 
-- Home/Diario stays calm and campaign-focused; do not add production grids or route diagnostics
-  there.
+- `/` (Inicio) is an operational summary: at most three priorities, conclusion first, evidence and
+  age on one line. It may summarize inferred production and confirmed route issues. It must not
+  mount the OCR technical panel (`NativeProductionCard`).
+- `/diario` is the campaign diary (`HarborApp`). Zero OCR technical panel, no production grids, no
+  route diagnostics.
 - Detailed production belongs in `/taller`.
 - Detailed route evidence belongs in `/rutas`.
-- Show timestamps and scope (global save vs selected island) next to evidence.
-- Keep desktop and 390 px mobile layouts usable with no horizontal overflow.
-- Never use Ubisoft-owned artwork; retain the paper/ink visual language.
+- Connect and install diagnostics belong in `/conectar` and `/instalar`, under Más — not in the
+  primary glance.
+- Show timestamps and scope (global save vs selected island) next to evidence. Keep save, OCR, and
+  connection dates separate. Never treat JSON mtime or "connected" as a fresh observation.
+- Keep desktop and 390 px mobile layouts usable with no horizontal overflow. Inicio is a
+  mobile-first column for a narrow window beside the game. Controls are at least 44 px.
+- Never use Ubisoft-owned artwork; retain the paper/ink visual language. Inicio uses clear paper,
+  blue ink, and brass.
 
 ## Generated files and packaging
 

@@ -12,6 +12,7 @@ const live = readFileSync(new URL("../components/live-panel.tsx", import.meta.ur
 const surface = readFileSync(new URL("../components/session-desk-surface.tsx", import.meta.url), "utf8");
 const ahora = readFileSync(new URL("../components/esto-ahora.tsx", import.meta.url), "utf8");
 const homeRoute = readFileSync(new URL("../routes/index.tsx", import.meta.url), "utf8");
+const editorial = readFileSync(new URL("../components/editorial-home.tsx", import.meta.url), "utf8");
 const sheets = readFileSync(new URL("../components/desk-sheets/desk-disclosure-panels.tsx", import.meta.url), "utf8");
 const place = readFileSync(new URL("../components/desk-sheets/place-panel.tsx", import.meta.url), "utf8");
 const stamp = readFileSync(new URL("../components/desk-sheets/stamp-panel.tsx", import.meta.url), "utf8");
@@ -34,7 +35,7 @@ describe("Home/diary never consume building grids or counts", () => {
     const welcome = sliceFn(app, "Welcome");
     const harbor = sliceFn(app, "HarborApp");
     const legacyDesk = sliceFn(app, "SessionDesk");
-    for (const src of [welcome, harbor, desk, chips, live, ahora, homeRoute]) {
+    for (const src of [welcome, harbor, desk, chips, live, ahora, homeRoute, editorial]) {
       assert.doesNotMatch(src, /BlockGrid|HarborRoute/);
       assert.doesNotMatch(src, COUNT_UI);
       assert.doesNotMatch(src, /TallerCity|data-taller-production-building|data-taller-city/);

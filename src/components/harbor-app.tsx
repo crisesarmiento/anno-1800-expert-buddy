@@ -100,6 +100,12 @@ function TopBar() {
       <div className="-mx-1 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:shrink-0 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
         <LanguageSelect />
         <Link
+          to="/"
+          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          Inicio
+        </Link>
+        <Link
           to="/tablero"
           className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >

@@ -138,13 +138,17 @@ describe("P0 offline session desk composition", () => {
 
   it("wires restore, desk mutations, radio-down chat, and no login wall", () => {
     const index = source("src/routes/index.tsx");
+    const diary = source("src/routes/diario.tsx");
     const chat = source("src/components/buddy-chat.tsx");
     const desk = source("src/components/session-desk.tsx");
     const boot = source("src/components/session-boot.tsx");
 
     assert.match(index, /SessionBoot/);
-    assert.match(index, /HarborApp/);
+    assert.match(index, /EditorialHome/);
+    assert.doesNotMatch(index, /HarborApp/);
     assert.doesNotMatch(index, /RedirectToSignIn|\/login/);
+    assert.match(diary, /SessionBoot/);
+    assert.match(diary, /HarborApp/);
 
     assert.match(boot, /hydrateHarborFromSessionStore/);
     assert.match(boot, /data-empty-desk/);

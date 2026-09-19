@@ -50,7 +50,7 @@ export function NativeProductionCard() {
 
   if (cardState === "never-tried") {
     return (
-      <article className="stamp-paper p-5 sm:p-7" data-native-production="off">
+      <article id="native-production" className="stamp-paper p-5 sm:p-7" data-native-production="off">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Telemetría opcional
         </p>
@@ -73,7 +73,11 @@ export function NativeProductionCard() {
 
   if (cardState === "unreachable") {
     return (
-      <article className="stamp-paper p-5 sm:p-7" data-native-production="unreachable">
+      <article
+        id="native-production"
+        className="stamp-paper p-5 sm:p-7"
+        data-native-production="unreachable"
+      >
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Telemetría opcional
         </p>
@@ -103,6 +107,7 @@ export function NativeProductionCard() {
 
   return (
     <article
+      id="native-production"
       className="stamp-paper p-5 sm:p-7"
       data-native-production={historical ? "historical" : "observed"}
     >
@@ -171,6 +176,7 @@ export function NativeProductionCard() {
             return (
               <li
                 key={row.guid}
+                id={`production-${row.guid}`}
                 data-native-production-row={row.status}
                 className="rounded-lg bg-muted/60 p-3"
               >

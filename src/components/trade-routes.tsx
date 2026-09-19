@@ -13,6 +13,7 @@ import { LanguageSelect } from "@/components/language-select";
 import { LiveStatus } from "@/components/live-status";
 import { Badge } from "@/components/ui/badge";
 import { useHarbor } from "@/lib/store";
+import { routeAnchor } from "@/lib/home-priorities";
 import { tradeRouteHealth, uniqueTradeGoods } from "@/lib/trade-route-health";
 
 export function TradeRoutes() {
@@ -88,6 +89,7 @@ export function TradeRoutes() {
               {routeRows.map(({ route, health, goods }, index) => {
                 return (
                   <article
+                    id={routeAnchor(route, index)}
                     key={route.id ?? `${route.name}-${index}`}
                     className="rounded-xl bg-card p-4 shadow-border sm:p-5"
                   >
