@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Database, Factory, ScanLine, Ship, Wheat } from "lucide-react";
 import { HarborNavigation } from "@/components/harbor-navigation";
@@ -7,13 +7,7 @@ import { homePriorities, type HomePriority } from "@/lib/home-priorities";
 import { editorialCopy } from "@/lib/editorial-copy";
 import { fill, LOCALE_META, type Locale } from "@/lib/i18n";
 import { useHarbor } from "@/lib/store";
-import { ingestLiveFile } from "@/lib/live";
-import {
-  LIVE_POLL_MS,
-  readPersistedLiveHandle,
-  refreshLiveHandle,
-  tickLiveHandle,
-} from "@/lib/live/handle-store";
+import { resumeLiveReader, useLiveReader } from "@/lib/live-reader";
 
 function age(iso: string | undefined, locale: Locale, now: number) {
   if (!iso || !Number.isFinite(Date.parse(iso))) return editorialCopy[locale].unknownTime;
@@ -33,69 +27,22 @@ export function EditorialHome() {
   const fileName = useHarbor((s) => s.liveFileName);
   const t = editorialCopy[locale];
   const [now, setNow] = useState(() => Date.now());
-  const [reading, setReading] = useState<"imported" | "watching" | "stopped">("imported");
+  const reading = useLiveReader((s) => s.status);
   const [busy, setBusy] = useState(false);
-  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const mounted = useRef(true);
   useEffect(() => {
-    mounted.current = true;
     const clock = setInterval(() => setNow(Date.now()), 30_000);
-    return () => {
-      mounted.current = false;
-      clearInterval(clock);
-      clearInterval(timer.current);
-    };
+    return () => clearInterval(clock);
   }, []);
   useEffect(() => {
     document.documentElement.lang = LOCALE_META[locale].html;
   }, [locale]);
-  useEffect(() => {
-    if (!enabled) {
-      clearInterval(timer.current);
-      setReading("imported");
-    }
-  }, [enabled]);
-
-  // Permission is requested only after a click, never during hydration. Polling
-  // belongs to this screen and is explicitly stopped on navigation/unmount.
   async function refresh() {
     if (busy) return;
     setBusy(true);
-    clearInterval(timer.current);
     try {
-      const handle = await readPersistedLiveHandle();
-      const first = await refreshLiveHandle();
-      if (!handle || !first) throw new Error("No permitted file");
-      const apply = async (file: File) => {
-        const state = useHarbor.getState();
-        const result = await ingestLiveFile(file, state.locale);
-        if (!result.ok) throw new Error("Invalid observation");
-        if (mounted.current) state.applyLiveSnapshot(result.snapshot, file.name);
-      };
-      await apply(first);
-      if (!mounted.current) return;
-      let modified = first.lastModified;
-      let inFlight = false;
-      setReading("watching");
-      timer.current = setInterval(() => {
-        if (inFlight) return;
-        inFlight = true;
-        void tickLiveHandle(handle, modified, apply)
-          .then((value) => {
-            modified = value;
-          })
-          .catch(() => {
-            clearInterval(timer.current);
-            if (mounted.current) setReading("stopped");
-          })
-          .finally(() => {
-            inFlight = false;
-          });
-      }, LIVE_POLL_MS);
-    } catch {
-      if (mounted.current) setReading("stopped");
+      await resumeLiveReader();
     } finally {
-      if (mounted.current) setBusy(false);
+      setBusy(false);
     }
   }
 

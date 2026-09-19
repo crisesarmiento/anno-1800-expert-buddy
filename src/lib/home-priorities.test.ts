@@ -61,6 +61,15 @@ function snapshot(): LiveSnapshot {
   };
 }
 describe("editorial operational priorities", () => {
+  it("never turns preserved rows into current advice when the server sees no island/window", () => {
+    for (const result of ["no_observation", "no_window"] as const) {
+      const data = snapshot();
+      data.connection!.nativeProbe!.result = result;
+      const model = homePriorities(data, now);
+      assert.equal(model.readiness, "historical");
+      assert.ok(model.priorities.every((item) => item.kind !== "production"));
+    }
+  });
   it("handles no data without invented tasks", () => {
     assert.deepEqual(homePriorities(null, now), {
       priorities: [],

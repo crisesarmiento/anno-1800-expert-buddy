@@ -18,6 +18,17 @@ const fixture = JSON.parse(
 
 const encoder = new TextEncoder();
 
+it("preserves capture outcome separately from historical observation", () => {
+  const raw = readFileSync(new URL("./fixture-no-observation.json", import.meta.url), "utf8");
+  const result = ingestLiveJsonText(raw);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+  assert.equal(result.snapshot.connection?.nativeProbe?.result, "no_observation");
+  assert.equal(result.snapshot.connection?.native?.observedAt, "2026-09-19T12:00:00.000Z");
+  const invalid = ingestLiveJsonText(raw.replace('"no_observation"', '"invented"'));
+  assert.equal(invalid.ok && invalid.snapshot.connection?.nativeProbe?.result, undefined);
+});
+
 describe("harbor-live ingest", () => {
   it("accepts the good fixture and matches Una chispa que vuelve", () => {
     const raw = JSON.stringify(fixture);
@@ -327,7 +338,10 @@ describe("harbor-live ingest", () => {
     if (!result.ok) return;
     assert.equal(result.snapshot.connection?.native?.islandName, "La Inapetente");
     assert.equal(result.snapshot.connection?.nativeProbe?.state, "unreachable");
-    assert.equal(result.snapshot.connection?.nativeProbe?.lastSuccessAt, "2026-09-19T00:00:00.000Z");
+    assert.equal(
+      result.snapshot.connection?.nativeProbe?.lastSuccessAt,
+      "2026-09-19T00:00:00.000Z",
+    );
     assert.equal(
       result.snapshot.telemetry?.production?.[0]?.buildingCountObservedAt,
       "2026-09-19T00:00:30.000Z",
@@ -495,19 +509,16 @@ describe("trade route structural health", () => {
   });
 
   it("keeps a structural failure above a matching stock signal", () => {
-    const health = tradeRouteHealth(
-      { ...configured, shipCount: 0 },
-      [
-        {
-          id: "timber",
-          name: "Tablones",
-          previousAmount: 48,
-          amount: 31,
-          delta: -17,
-          previousSavedAt: "2026-09-15T11:55:00.000Z",
-        },
-      ],
-    );
+    const health = tradeRouteHealth({ ...configured, shipCount: 0 }, [
+      {
+        id: "timber",
+        name: "Tablones",
+        previousAmount: 48,
+        amount: 31,
+        delta: -17,
+        previousSavedAt: "2026-09-15T11:55:00.000Z",
+      },
+    ]);
     assert.deepEqual(health, { level: "confirmed", message: "Sin barco asignado" });
   });
 });

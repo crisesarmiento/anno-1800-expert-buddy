@@ -45,6 +45,28 @@ Optional Windows live diary (`harbor-live.json`) is a local file you drop or pas
 
 ## Status
 
+### Reading a real game
+
+1. Run the save watcher and use **Connect → Watch file** to select `harbor-live.json`.
+   Dropping/pasting a file imports one snapshot; it does not establish a live connection.
+2. Optional OCR: download the official [Anno1800UXEnhancer release](https://github.com/NiHoel/Anno1800UXEnhancer/releases/tag/v11.0),
+   extract the **whole archive**, and run **Server.exe**, not the separate reroll bot `UXEnhancer.exe`.
+   The launcher detects `Server.exe` beside it or inside an adjacent `UXEnhancer` folder;
+   a version-named folder elsewhere in Downloads is not automatically discovered.
+3. Keep Anno's Statistics visible in borderless mode. Select one island, open Production,
+   then Finance. The watcher defaults to Spanish OCR; its `NativeLanguage` must match the game.
+4. In Production, check the island and observation time. Construction/pause advice requires
+   recent Production **and** Finance evidence for that island and a known catalog rate.
+
+The selected-file reader survives navigation between Inicio, Production, Routes, and Diary.
+Pause/remove cancels pending reads; transient/partial reads retain the last valid snapshot and retry.
+After a full browser reload, explicitly refresh/re-authorize the saved file handle. Background tabs
+may be throttled by the browser; returning to the tab triggers another read.
+
+Server reachability is not fresh game data. A responding server may find no window or recognize
+no island; those probes do not refresh the previous observation's timestamp. OCR only reads the
+visible statistics, not the entire economy in the background. See [OCR details](docs/native-telemetry.md).
+
 Playable companion: Inicio operational glance, campaign diary on `/diario`, session desk (next step / do-don't / checks), city stamps, island pulse, calm modes (*Estoy saturado*, *Monedas en rojo*), Spanish buddy chat, HUD screenshot paste for one next step, and `/tablero` as a secondary presence view.
 
 Optional extras on Windows: install page (`/instalar`), connect page (`/conectar`), and a save watcher that writes `harbor-live.json`. The in-game pack does **not** run Lua (that crashes Anno); the watcher reads the latest save instead. Hard ceiling: `docs/telemetry-ceiling.md` — read-only on `.a7s`, no Lua/DLL/Python inject; the telemetry zip is a stub and is not required for the watcher.

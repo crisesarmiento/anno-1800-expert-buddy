@@ -48,6 +48,7 @@
             "state": { "type": "string", "enum": ["reachable", "unreachable", "invalid_response"] },
             "lastProbeAt": { "type": "string", "format": "date-time" },
             "lastSuccessAt": { "type": "string", "format": "date-time" },
+            "result": { "type": "string", "enum": ["observation", "no_observation", "no_window"] },
             "reason": { "type": "string", "enum": ["timeout", "connection_refused", "bad_payload"] }
           }
         }

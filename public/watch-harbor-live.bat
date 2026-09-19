@@ -1906,9 +1906,17 @@ function Update-HarborNative {
   $state = $null
   $reason = $null
   $response = $null
+  $captureResult = $null
   try {
     $uri = "$nativeEndpoint`?lang=$NativeLanguage&optimalProductivity=false"
-    $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 2 -ErrorAction Stop
+    $http = Invoke-WebRequest -UseBasicParsing -Uri $uri -Method Get -TimeoutSec 8 -ErrorAction Stop
+    if ($http.StatusCode -eq 204) {
+      $state = "reachable"
+      $captureResult = "no_window"
+    } else {
+      try { $response = $http.Content | ConvertFrom-Json -ErrorAction Stop }
+      catch { $state = "invalid_response"; $reason = "bad_payload" }
+    }
   } catch {
     $state = "unreachable"
     $reason = Get-NativeProbeReason $_
@@ -1917,11 +1925,12 @@ function Update-HarborNative {
   $metricProps = @()
   if (-not $state) {
     $metricProps = @($response.PSObject.Properties | Where-Object { $_.Name -match '^\d+$' -and $_.Value })
-    if ($metricProps.Count -eq 0 -and -not $response.islandName) {
+    if (-not $response.version -and -not $response.islandName) {
       $state = "invalid_response"
       $reason = "bad_payload"
     } else {
       $state = "reachable"
+      $captureResult = $(if ($response.islandName -and $metricProps.Count -gt 0) { "observation" } else { "no_observation" })
     }
   }
 
@@ -1929,7 +1938,7 @@ function Update-HarborNative {
   $island = $null
   $production = @()
 
-  if ($state -eq "reachable") {
+  if ($captureResult -eq "observation") {
     $hasProductivity = $false
     $hasAmountOrLimit = $false
     $hasCounts = $false
@@ -2003,7 +2012,7 @@ function Update-HarborNative {
   # Rewrite policy (docs/native-telemetry.md): only on a state/observation change, or a 30-60s
   # heartbeat. An identical repeated failure (same state + reason) never rewrites in between.
   $rowsSig = ($production | ForEach-Object { "$($_.guid)=$($_.amount)|$($_.requiredTMin)|$($_.productivity)|$($_.buildingCount)" }) -join ","
-  $signature = "$state|$reason|$view|$island|$rowsSig"
+  $signature = "$state|$reason|$captureResult|$view|$island|$rowsSig"
   $elapsed = if ($script:nativeLastWriteAt) { ($now - $script:nativeLastWriteAt).TotalSeconds } else { [double]::PositiveInfinity }
   $heartbeatDue = $elapsed -ge $nativeHeartbeatSeconds
   if ($signature -eq $script:nativeLastSignature -and -not $heartbeatDue) { return }
@@ -2018,9 +2027,10 @@ function Update-HarborNative {
   }
   if ($script:nativeLastSuccessAt) { $probe.lastSuccessAt = $script:nativeLastSuccessAt }
   if ($reason) { $probe.reason = $reason }
+  if ($captureResult) { $probe.result = $captureResult }
   $payload.connection | Add-Member -NotePropertyName nativeProbe -NotePropertyValue ([pscustomobject]$probe) -Force
 
-  if ($state -eq "reachable") {
+  if ($captureResult -eq "observation") {
     $native = [ordered]@{
       provider   = "ux-enhancer-ocr"
       view       = $view

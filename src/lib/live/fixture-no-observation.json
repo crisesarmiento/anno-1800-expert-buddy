@@ -1,0 +1,22 @@
+{
+  "schema": "harbor-live-v1",
+  "source": "file",
+  "game": "anno-1800",
+  "updatedAt": "2026-09-19T12:05:00.000Z",
+  "quests": [],
+  "connection": {
+    "mode": "documents-save",
+    "nativeProbe": {
+      "provider": "ux-enhancer-ocr",
+      "state": "reachable",
+      "result": "no_observation",
+      "lastProbeAt": "2026-09-19T12:05:00.000Z"
+    },
+    "native": {
+      "provider": "ux-enhancer-ocr",
+      "view": "production",
+      "islandName": "Demonstration island",
+      "observedAt": "2026-09-19T12:00:00.000Z"
+    }
+  }
+}

@@ -42,6 +42,8 @@ export function homePriorities(snapshot: LiveSnapshot | null, now: number, enabl
   const historical =
     !enabled ||
     (probe != null && probe.state !== "reachable") ||
+    probe?.result === "no_observation" ||
+    probe?.result === "no_window" ||
     (native != null && stale(native.observedAt));
   const islandRows = currentIsland
     ? production.filter((row) => row.islandName?.trim() === currentIsland)

@@ -39,12 +39,7 @@ const CONNECTION_MODES = new Set<LiveConnection["mode"]>([
   "native",
   "manual",
 ]);
-const NATIVE_VIEWS = new Set<LiveNativeView>([
-  "production",
-  "finance",
-  "population",
-  "unknown",
-]);
+const NATIVE_VIEWS = new Set<LiveNativeView>(["production", "finance", "population", "unknown"]);
 const NATIVE_PROBE_STATES = new Set<LiveNativeProbeState>([
   "reachable",
   "unreachable",
@@ -316,6 +311,14 @@ function normalizeNativeProbe(value: unknown): LiveNativeProbe | undefined {
     lastProbeAt,
   };
   const lastSuccessAt = parseOptionalIso(value.lastSuccessAt);
+  if (
+    probe.state === "reachable" &&
+    (value.result === "observation" ||
+      value.result === "no_observation" ||
+      value.result === "no_window")
+  ) {
+    probe.result = value.result;
+  }
   if (lastSuccessAt) probe.lastSuccessAt = lastSuccessAt;
   if (NATIVE_PROBE_REASONS.has(value.reason as LiveNativeProbeReason)) {
     probe.reason = value.reason as LiveNativeProbeReason;

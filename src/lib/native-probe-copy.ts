@@ -18,10 +18,16 @@ export function nativeCardState(connection: LiveConnection | undefined): NativeC
   const probe = connection?.nativeProbe;
   const native = connection?.native;
   if (!probe && !native) return "never-tried";
+  if (
+    probe?.state === "reachable" &&
+    (probe.result === "no_observation" || probe.result === "no_window")
+  )
+    return "guidance-unknown";
   if (probe && probe.state !== "reachable") {
     return native ? "historical" : "unreachable";
   }
   if (native?.view === "population") return "guidance-population";
   if (native?.view === "unknown") return "guidance-unknown";
+  if (!native) return "guidance-unknown";
   return "ready";
 }
