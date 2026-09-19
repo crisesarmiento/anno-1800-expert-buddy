@@ -13,6 +13,9 @@ import {
   type LiveIngestResult,
   type LiveNamedHit,
   type LiveNativeConnection,
+  type LiveNativeProbe,
+  type LiveNativeProbeReason,
+  type LiveNativeProbeState,
   type LiveNativeView,
   type LiveProductionMetric,
   type LivePulseHint,
@@ -41,6 +44,16 @@ const NATIVE_VIEWS = new Set<LiveNativeView>([
   "finance",
   "population",
   "unknown",
+]);
+const NATIVE_PROBE_STATES = new Set<LiveNativeProbeState>([
+  "reachable",
+  "unreachable",
+  "invalid_response",
+]);
+const NATIVE_PROBE_REASONS = new Set<LiveNativeProbeReason>([
+  "timeout",
+  "connection_refused",
+  "bad_payload",
 ]);
 
 function hasJsonExtension(filename: string) {
@@ -268,6 +281,8 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
         if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0) continue;
         metric[key] = key === "productivity" ? raw : Math.trunc(raw * 1000) / 1000;
       }
+      const buildingCountObservedAt = parseOptionalIso(item.buildingCountObservedAt);
+      if (buildingCountObservedAt) metric.buildingCountObservedAt = buildingCountObservedAt;
       production.push(metric);
     }
     if (production.length) telemetry.production = production;
@@ -290,6 +305,24 @@ function normalizeNativeConnection(value: unknown): LiveNativeConnection | undef
   return native;
 }
 
+function normalizeNativeProbe(value: unknown): LiveNativeProbe | undefined {
+  if (!asRecord(value) || value.provider !== "ux-enhancer-ocr") return undefined;
+  if (!NATIVE_PROBE_STATES.has(value.state as LiveNativeProbeState)) return undefined;
+  const lastProbeAt = parseOptionalIso(value.lastProbeAt);
+  if (!lastProbeAt) return undefined;
+  const probe: LiveNativeProbe = {
+    provider: "ux-enhancer-ocr",
+    state: value.state as LiveNativeProbeState,
+    lastProbeAt,
+  };
+  const lastSuccessAt = parseOptionalIso(value.lastSuccessAt);
+  if (lastSuccessAt) probe.lastSuccessAt = lastSuccessAt;
+  if (NATIVE_PROBE_REASONS.has(value.reason as LiveNativeProbeReason)) {
+    probe.reason = value.reason as LiveNativeProbeReason;
+  }
+  return probe;
+}
+
 function normalizeConnection(value: unknown): LiveConnection | undefined {
   if (!asRecord(value) || !CONNECTION_MODES.has(value.mode as LiveConnection["mode"]))
     return undefined;
@@ -310,6 +343,8 @@ function normalizeConnection(value: unknown): LiveConnection | undefined {
   }
   const native = normalizeNativeConnection(value.native);
   if (native) connection.native = native;
+  const nativeProbe = normalizeNativeProbe(value.nativeProbe);
+  if (nativeProbe) connection.nativeProbe = nativeProbe;
   return connection;
 }
 

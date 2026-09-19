@@ -75,6 +75,25 @@ describe("native OCR production advice", () => {
     });
   });
 
+  it("carries buildingCountObservedAt through so Finance freshness stays independent of Production", () => {
+    const rows = analyzeNativeProduction(
+      snapshot([
+        {
+          guid: 1010278,
+          id: "fishery",
+          name: "Fishery",
+          observedAt,
+          buildingCountObservedAt: "2026-09-15T11:30:00.000Z",
+          buildingCount: 1,
+          requiredTMin: 3.5,
+          productivity: 100,
+        },
+      ]),
+    );
+    assert.equal(rows[0]?.observedAt, observedAt);
+    assert.equal(rows[0]?.buildingCountObservedAt, "2026-09-15T11:30:00.000Z");
+  });
+
   it("ignores unknown GUIDs instead of inventing a cycle rate", () => {
     assert.deepEqual(
       analyzeNativeProduction(

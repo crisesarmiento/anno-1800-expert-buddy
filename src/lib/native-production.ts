@@ -16,6 +16,8 @@ export type NativeProductionAdvice = {
   pauseCount: number;
   observedAt: string;
   islandName?: string;
+  /** When Finance last supplied buildingCount, independent of `observedAt` (Production's sample). */
+  buildingCountObservedAt?: string;
 };
 
 const STATUS_ORDER: Record<NativeProductionStatus, number> = {
@@ -53,6 +55,7 @@ function adviceFromMetric(metric: LiveProductionMetric): NativeProductionAdvice 
     observedAt: metric.observedAt,
   };
   if (metric.islandName) advice.islandName = metric.islandName;
+  if (metric.buildingCountObservedAt) advice.buildingCountObservedAt = metric.buildingCountObservedAt;
   return advice;
 }
 

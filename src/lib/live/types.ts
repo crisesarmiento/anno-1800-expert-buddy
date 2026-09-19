@@ -76,6 +76,7 @@ export type LiveConnection = {
   islandCount?: number;
   questCount?: number;
   native?: LiveNativeConnection;
+  nativeProbe?: LiveNativeProbe;
 };
 
 export type LiveNativeView = "production" | "finance" | "population" | "unknown";
@@ -86,6 +87,22 @@ export type LiveNativeConnection = {
   observedAt: string;
   islandName?: string;
   serverVersion?: string;
+};
+
+export type LiveNativeProbeState = "reachable" | "unreachable" | "invalid_response";
+export type LiveNativeProbeReason = "timeout" | "connection_refused" | "bad_payload";
+
+/**
+ * Technical probe facts only (never game-state words like missing/starting/connected/stale/wrong_view).
+ * Independent of connection.native, which stays the last *valid* OCR observation and is never cleared
+ * on disconnect — see docs/native-telemetry.md.
+ */
+export type LiveNativeProbe = {
+  provider: "ux-enhancer-ocr";
+  state: LiveNativeProbeState;
+  lastProbeAt: string;
+  lastSuccessAt?: string;
+  reason?: LiveNativeProbeReason;
 };
 
 /** OCR sample from Anno's statistics screen. Values stay raw and evidence-stamped. */
@@ -99,6 +116,8 @@ export type LiveProductionMetric = {
   requiredTMin?: number;
   productivity?: number;
   buildingCount?: number;
+  /** When Finance last supplied buildingCount, independent of `observedAt` (Production's sample time). */
+  buildingCountObservedAt?: string;
 };
 
 export type LiveTelemetry = {

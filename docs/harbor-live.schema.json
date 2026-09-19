@@ -38,6 +38,18 @@
             "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
             "serverVersion": { "type": "string", "minLength": 1, "maxLength": 40 }
           }
+        },
+        "nativeProbe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["provider", "state", "lastProbeAt"],
+          "properties": {
+            "provider": { "const": "ux-enhancer-ocr" },
+            "state": { "type": "string", "enum": ["reachable", "unreachable", "invalid_response"] },
+            "lastProbeAt": { "type": "string", "format": "date-time" },
+            "lastSuccessAt": { "type": "string", "format": "date-time" },
+            "reason": { "type": "string", "enum": ["timeout", "connection_refused", "bad_payload"] }
+          }
         }
       }
     },
@@ -183,7 +195,8 @@
               "amount": { "type": "number", "minimum": 0 },
               "requiredTMin": { "type": "number", "minimum": 0 },
               "productivity": { "type": "number", "minimum": 0 },
-              "buildingCount": { "type": "number", "minimum": 0 }
+              "buildingCount": { "type": "number", "minimum": 0 },
+              "buildingCountObservedAt": { "type": "string", "format": "date-time" }
             }
           }
         }

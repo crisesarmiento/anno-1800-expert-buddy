@@ -41,8 +41,37 @@ La última observación OCR queda fechada y la UI no la presenta como lectura de
 
 ## Campos nuevos de `harbor-live-v1`
 
-- `connection.native`: proveedor, pestaña, isla, versión y `observedAt`.
+- `connection.native`: proveedor, pestaña, isla, versión y `observedAt`. Sigue siendo la última
+  observación **válida**: el vigilante nunca la borra sólo porque el sondeo actual falle.
+- `connection.nativeProbe` (opcional): hechos técnicos del último sondeo HTTP, separados de
+  `connection.native`. `state` es `reachable`, `unreachable` o `invalid_response`; `lastProbeAt`
+  y, si alguna vez hubo éxito, `lastSuccessAt`; `reason` opcional (`timeout`,
+  `connection_refused`, `bad_payload`) sólo en fallas. Nunca lleva palabras de estado de juego
+  (`missing`, `starting`, `connected`, `stale`, `wrong_view`), ni `hintEs`, rutas locales,
+  stacktraces o mensajes crudos de Windows. Un JSON sin este campo sigue siendo válido.
 - `telemetry.production[]`: GUID/nombre, demanda, productividad, conteo de fábrica y fecha de la
-  muestra.
+  muestra (`observedAt`). `buildingCountObservedAt` (opcional) marca cuándo llegó ese conteo desde
+  Finanzas — independiente de `observedAt` — para que el frescor de Finanzas no dependa del de
+  Producción.
+
+## Sondeo y reescritura
+
+- El vigilante sondea `Server.exe` cada ~4 segundos; eso está bien, no sobrecarga el proceso local.
+- Sólo reescribe `harbor-live.json` cuando cambia el `state`/vista/observación útil del sondeo, o
+  pasó un heartbeat de 30–60 segundos sin cambios. Una falla idéntica repetida (mismo `state` y
+  `reason`) **no** reescribe el archivo sondeo tras sondeo.
+- Si el sondeo falla, el vigilante sigue leyendo saves y **conserva** `connection.native` y
+  `telemetry.production` del último éxito; sólo actualiza `connection.nativeProbe`. La UI debe
+  marcar esa evidencia como histórica, no borrarla.
+
+## Copy de servidor (UI)
+
+- Estado `unreachable` → «Servidor OCR no detectado». Nunca «no está instalado»: el jugador puede
+  tenerlo instalado y cerrado, o recién por abrir.
+- Nunca mostrar un estado tipo `starting` salvo una señal real de lanzador + timestamp; no se
+  infiere arrancando sólo por un TCP que todavía no contesta.
+- `reachable` con `view` `population` o `unknown` → guiar, no diagnosticar: «Servidor conectado ·
+  abrí Producción y Finanzas» (población) o «No pude reconocer la pestaña» (desconocida). Nunca
+  mostrar `wrong_view` como si fuera evidencia.
 
 El contrato detallado sigue en `docs/harbor-live.schema.json`.

@@ -122,20 +122,15 @@ export function InstallPanel({
 
         <li className="rounded-md bg-muted p-4" data-native-ocr-install="">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Telemetría real · opcional
+            {t.install.nativeOcr.kicker}
           </p>
           <p className="mt-1 flex items-center gap-2 text-sm font-medium">
             <ScanLine className="size-4" aria-hidden="true" />
-            Extractor OCR de Estadísticas
+            {t.install.nativeOcr.title}
           </p>
-          <p className="mt-2 text-sm leading-relaxed">
-            Una sola instalación manual: descargá UXEnhancer, extraelo como carpeta
-            <strong className="font-medium"> UXEnhancer</strong> junto al launcher. Después el
-            launcher abre Server.exe, Anno, el vigilante y esta página automáticamente.
-          </p>
+          <p className="mt-2 text-sm leading-relaxed">{t.install.nativeOcr.copy}</p>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Es software externo y experimental. No inyecta código: captura la ventana y sólo lee la
-            pestaña de Estadísticas que tengas visible. Puede pedir Visual C++ y permisos de Windows.
+            {t.install.nativeOcr.note}
           </p>
           <Button asChild variant="secondary" className="mt-3">
             <a
@@ -144,7 +139,7 @@ export function InstallPanel({
               rel="noreferrer"
             >
               <ExternalLink className="size-3.5" aria-hidden="true" />
-              Descargar extractor externo
+              {t.install.nativeOcr.download}
             </a>
           </Button>
         </li>
