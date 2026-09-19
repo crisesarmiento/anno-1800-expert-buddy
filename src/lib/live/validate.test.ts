@@ -76,6 +76,13 @@ describe("harbor-live ingest", () => {
       (schema.properties.telemetry as { properties?: { goodsChanges?: unknown } }).properties
         ?.goodsChanges,
     );
+    assert.ok(
+      (
+        schema.properties.connection as {
+          properties?: { nativeProbe?: unknown };
+        }
+      ).properties?.nativeProbe,
+    );
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);
@@ -215,6 +222,116 @@ describe("harbor-live ingest", () => {
     assert.equal(result.snapshot.connection?.native?.islandName, "La Inapetente");
     assert.equal(result.snapshot.telemetry?.production?.length, 1);
     assert.equal(result.snapshot.telemetry?.production?.[0]?.requiredTMin, 3.5);
+  });
+
+  it("accepts legacy JSON with no connection.nativeProbe at all", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      connection: { mode: "documents-save" },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.connection?.nativeProbe, undefined);
+  });
+
+  it("normalizes a technical nativeProbe and drops one with a bad state", () => {
+    const ok = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      connection: {
+        mode: "documents-save",
+        nativeProbe: {
+          provider: "ux-enhancer-ocr",
+          state: "unreachable",
+          lastProbeAt: "2026-09-19T00:00:00.000Z",
+          reason: "connection_refused",
+        },
+      },
+    });
+    assert.equal(ok.ok, true);
+    if (!ok.ok) return;
+    assert.deepEqual(ok.snapshot.connection?.nativeProbe, {
+      provider: "ux-enhancer-ocr",
+      state: "unreachable",
+      lastProbeAt: "2026-09-19T00:00:00.000Z",
+      reason: "connection_refused",
+    });
+
+    const bad = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      connection: {
+        mode: "documents-save",
+        nativeProbe: {
+          provider: "ux-enhancer-ocr",
+          state: "starting",
+          lastProbeAt: "2026-09-19T00:00:00.000Z",
+        },
+      },
+    });
+    assert.equal(bad.ok, true);
+    if (!bad.ok) return;
+    assert.equal(bad.snapshot.connection?.nativeProbe, undefined);
+  });
+
+  it("keeps connection.native + telemetry.production when nativeProbe reports unreachable (preserve evidence)", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T00:05:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      connection: {
+        mode: "documents-save",
+        native: {
+          provider: "ux-enhancer-ocr",
+          view: "production",
+          observedAt: "2026-09-19T00:00:00.000Z",
+          islandName: "La Inapetente",
+        },
+        nativeProbe: {
+          provider: "ux-enhancer-ocr",
+          state: "unreachable",
+          lastProbeAt: "2026-09-19T00:05:00.000Z",
+          lastSuccessAt: "2026-09-19T00:00:00.000Z",
+          reason: "timeout",
+        },
+      },
+      telemetry: {
+        production: [
+          {
+            guid: 1010278,
+            id: "fishery",
+            name: "Fishery",
+            observedAt: "2026-09-19T00:00:00.000Z",
+            buildingCountObservedAt: "2026-09-19T00:00:30.000Z",
+            islandName: "La Inapetente",
+            requiredTMin: 3.5,
+            productivity: 100,
+            buildingCount: 1,
+          },
+        ],
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.connection?.native?.islandName, "La Inapetente");
+    assert.equal(result.snapshot.connection?.nativeProbe?.state, "unreachable");
+    assert.equal(result.snapshot.connection?.nativeProbe?.lastSuccessAt, "2026-09-19T00:00:00.000Z");
+    assert.equal(
+      result.snapshot.telemetry?.production?.[0]?.buildingCountObservedAt,
+      "2026-09-19T00:00:30.000Z",
+    );
   });
 
   it("rejects a bad schema", () => {

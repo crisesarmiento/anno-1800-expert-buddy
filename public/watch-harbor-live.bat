@@ -1869,7 +1869,12 @@ function Write-HarborLiveCrashSafe([string]$Dest, [string]$Text) {
 $nativeEndpoint = "http://127.0.0.1:8000/AnnoServer/Population"
 $nativeProductionByIsland = @{}
 $nativeCountsByIsland = @{}
+$nativeCountsObservedAtByIsland = @{}
 $nativeWasActive = $false
+$nativeLastSuccessAt = $null
+$nativeLastSignature = $null
+$nativeLastWriteAt = $null
+$nativeHeartbeatSeconds = 45
 $nativeResidenceGuids = @{
   "1010343" = $true; "1010344" = $true; "1010345" = $true; "1010346" = $true
   "101254" = $true; "101255" = $true
@@ -1879,14 +1884,52 @@ function Test-NativeProperty($value, [string]$name) {
   return $value -and ($value.PSObject.Properties.Name -contains $name)
 }
 
+# Classifies a failed probe as timeout or connection_refused. Loopback-only endpoint: any other
+# network fault (DNS, refused by a firewall, reset, ...) is reported as connection_refused, the
+# overwhelming common case when Server.exe simply is not running. Never surfaces the raw .NET
+# exception text to harbor-live.json or the UI (docs/native-telemetry.md).
+function Get-NativeProbeReason($errorRecord) {
+  $ex = $errorRecord.Exception
+  while ($ex -and -not ($ex -is [System.Net.WebException])) { $ex = $ex.InnerException }
+  if ($ex -and $ex.Status -eq [System.Net.WebExceptionStatus]::Timeout) { return "timeout" }
+  return "connection_refused"
+}
+
+# connection.nativeProbe carries technical probe facts only (state/reason), separate from
+# connection.native, which stays the last VALID OCR observation and is never cleared here just
+# because this probe failed - the caller (main loop) is what could overwrite it, and only does so
+# when this function itself writes a fresh one on a reachable probe.
 function Update-HarborNative {
   if (-not (Test-Path -LiteralPath $outJson)) { return }
+  $now = Get-Date
+  $observedAt = $now.ToUniversalTime().ToString("o")
+  $state = $null
+  $reason = $null
+  $response = $null
   try {
     $uri = "$nativeEndpoint`?lang=$NativeLanguage&optimalProductivity=false"
     $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 2 -ErrorAction Stop
-    if (-not $response) { return }
-    $observedAt = (Get-Date).ToUniversalTime().ToString("o")
+  } catch {
+    $state = "unreachable"
+    $reason = Get-NativeProbeReason $_
+  }
+
+  $metricProps = @()
+  if (-not $state) {
     $metricProps = @($response.PSObject.Properties | Where-Object { $_.Name -match '^\d+$' -and $_.Value })
+    if ($metricProps.Count -eq 0 -and -not $response.islandName) {
+      $state = "invalid_response"
+      $reason = "bad_payload"
+    } else {
+      $state = "reachable"
+    }
+  }
+
+  $view = "unknown"
+  $island = $null
+  $production = @()
+
+  if ($state -eq "reachable") {
     $hasProductivity = $false
     $hasAmountOrLimit = $false
     $hasCounts = $false
@@ -1895,7 +1938,6 @@ function Update-HarborNative {
       $hasAmountOrLimit = $hasAmountOrLimit -or (Test-NativeProperty $prop.Value "amount") -or (Test-NativeProperty $prop.Value "limit")
       $hasCounts = $hasCounts -or (Test-NativeProperty $prop.Value "existingBuildings")
     }
-    $view = "unknown"
     if ($hasProductivity -or $hasAmountOrLimit) { $view = "production" }
     elseif ($hasCounts) {
       $factoryCountRows = @($metricProps | Where-Object {
@@ -1933,11 +1975,52 @@ function Update-HarborNative {
           $counts[[string]$prop.Name] = [int]$prop.Value.existingBuildings
         }
       }
-      if ($counts.Count -gt 0) { $script:nativeCountsByIsland[$island] = $counts }
+      if ($counts.Count -gt 0) {
+        $script:nativeCountsByIsland[$island] = $counts
+        $script:nativeCountsObservedAtByIsland[$island] = $observedAt
+      }
     }
 
-    $payload = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
-    if (-not $payload.connection) { $payload | Add-Member -NotePropertyName connection -NotePropertyValue ([pscustomobject]@{ mode = "manual" }) }
+    # Finance's buildingCount is merged onto Production's cached rows here, but each keeps its own
+    # timestamp: buildingCountObservedAt tracks Finance's sample time independent of the row's
+    # observedAt (Production's), so Taller can flag either one going stale on its own.
+    if ($island -and $script:nativeProductionByIsland.ContainsKey($island)) {
+      $production = @($script:nativeProductionByIsland[$island])
+      $counts = $script:nativeCountsByIsland[$island]
+      $countsObservedAt = $script:nativeCountsObservedAtByIsland[$island]
+      if ($counts) {
+        foreach ($row in $production) {
+          $count = $counts[[string]$row.guid]
+          if ($count -ne $null) {
+            $row | Add-Member -NotePropertyName buildingCount -NotePropertyValue ([int]$count) -Force
+            if ($countsObservedAt) { $row | Add-Member -NotePropertyName buildingCountObservedAt -NotePropertyValue $countsObservedAt -Force }
+          }
+        }
+      }
+    }
+  }
+
+  # Rewrite policy (docs/native-telemetry.md): only on a state/observation change, or a 30-60s
+  # heartbeat. An identical repeated failure (same state + reason) never rewrites in between.
+  $rowsSig = ($production | ForEach-Object { "$($_.guid)=$($_.amount)|$($_.requiredTMin)|$($_.productivity)|$($_.buildingCount)" }) -join ","
+  $signature = "$state|$reason|$view|$island|$rowsSig"
+  $elapsed = if ($script:nativeLastWriteAt) { ($now - $script:nativeLastWriteAt).TotalSeconds } else { [double]::PositiveInfinity }
+  $heartbeatDue = $elapsed -ge $nativeHeartbeatSeconds
+  if ($signature -eq $script:nativeLastSignature -and -not $heartbeatDue) { return }
+
+  $payload = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json
+  if (-not $payload.connection) { $payload | Add-Member -NotePropertyName connection -NotePropertyValue ([pscustomobject]@{ mode = "manual" }) }
+  if ($state -eq "reachable") { $script:nativeLastSuccessAt = $observedAt }
+  $probe = [ordered]@{
+    provider    = "ux-enhancer-ocr"
+    state       = $state
+    lastProbeAt = $observedAt
+  }
+  if ($script:nativeLastSuccessAt) { $probe.lastSuccessAt = $script:nativeLastSuccessAt }
+  if ($reason) { $probe.reason = $reason }
+  $payload.connection | Add-Member -NotePropertyName nativeProbe -NotePropertyValue ([pscustomobject]$probe) -Force
+
+  if ($state -eq "reachable") {
     $native = [ordered]@{
       provider   = "ux-enhancer-ocr"
       view       = $view
@@ -1946,28 +2029,25 @@ function Update-HarborNative {
     if ($island) { $native.islandName = $island }
     if ($response.version) { $native.serverVersion = [string]$response.version }
     $payload.connection | Add-Member -NotePropertyName native -NotePropertyValue ([pscustomobject]$native) -Force
-
-    if ($island -and $script:nativeProductionByIsland.ContainsKey($island)) {
-      $production = @($script:nativeProductionByIsland[$island])
-      $counts = $script:nativeCountsByIsland[$island]
-      if ($counts) {
-        foreach ($row in $production) {
-          $count = $counts[[string]$row.guid]
-          if ($count -ne $null) { $row | Add-Member -NotePropertyName buildingCount -NotePropertyValue ([int]$count) -Force }
-        }
-      }
+    if ($production.Count -gt 0) {
       if (-not $payload.telemetry) { $payload | Add-Member -NotePropertyName telemetry -NotePropertyValue ([pscustomobject]@{}) }
       $payload.telemetry | Add-Member -NotePropertyName production -NotePropertyValue $production -Force
     }
-    $payload.updatedAt = $observedAt
-    $json = $payload | ConvertTo-Json -Depth 10 -Compress
-    $null = $json | ConvertFrom-Json
-    Write-HarborLiveCrashSafe $outJson ($json + "`n")
+  }
+
+  $payload.updatedAt = $observedAt
+  $json = $payload | ConvertTo-Json -Depth 10 -Compress
+  $null = $json | ConvertFrom-Json
+  Write-HarborLiveCrashSafe $outJson ($json + "`n")
+  $script:nativeLastSignature = $signature
+  $script:nativeLastWriteAt = $now
+
+  if ($state -eq "reachable") {
     if (-not $script:nativeWasActive) {
       Write-Host "$(Get-Date -Format HH:mm:ss) OCR conectado: abrí Estadísticas > Producción y Finanzas en Anno."
     }
     $script:nativeWasActive = $true
-  } catch {
+  } else {
     if ($script:nativeWasActive) {
       Write-Host "$(Get-Date -Format HH:mm:ss) OCR desconectado; sigo leyendo saves."
     }
@@ -2155,6 +2235,16 @@ while ($true) {
     $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
     $payload.pulseHint = $pulseHint
+    # Preserve OCR evidence across a save-triggered rewrite: connection.native and
+    # telemetry.production are OCR-owned (Update-HarborNative refreshes them on its own cadence),
+    # so a fresh save write must carry them forward instead of dropping them mid-session.
+    if ($previousPayload -and $previousPayload.telemetry -and $previousPayload.telemetry.production) {
+      $telemetry.production = $previousPayload.telemetry.production
+    }
+    if ($previousPayload -and $previousPayload.connection) {
+      if ($previousPayload.connection.native) { $payload.connection.native = $previousPayload.connection.native }
+      if ($previousPayload.connection.nativeProbe) { $payload.connection.nativeProbe = $previousPayload.connection.nativeProbe }
+    }
     $payload.telemetry = $telemetry
     $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
     $null = $json | ConvertFrom-Json

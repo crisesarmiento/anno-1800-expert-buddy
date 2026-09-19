@@ -142,6 +142,13 @@ const es = {
       btn: "Descargar lanzador (.bat)",
       note: "Si el ID de Steam no coincide con tu Anno, abrí el .bat con el Bloc de notas y cambiá el número — dos minutos y listo.",
     },
+    nativeOcr: {
+      kicker: "Telemetría real · opcional",
+      title: "Extractor OCR de Estadísticas",
+      copy: "Una sola instalación manual: descargá UXEnhancer y extraelo como carpeta UXEnhancer junto al launcher. Después el launcher abre Server.exe, Anno, el vigilante y esta página automáticamente.",
+      note: "Es software externo y experimental. No inyecta código: captura la ventana y sólo lee la pestaña de Estadísticas que tengas visible. Puede pedir Visual C++ y permisos de Windows.",
+      download: "Descargar extractor externo",
+    },
   },
   connect: {
     kicker: "Cómo conectar Anno",
@@ -315,6 +322,20 @@ const es = {
     fixBuilding: "Poné {0} donde dice la ficha, con calle.",
   },
   buddyLang: "Respondé en español rioplatense, de compañero, sin planillas.",
+  nativeProbe: {
+    unreachable: "Servidor OCR no detectado",
+    invalidResponse: "El servidor respondió, pero no reconocí los datos",
+    populationGuidance: "Servidor conectado · abrí Producción y Finanzas",
+    unknownGuidance: "No pude reconocer la pestaña",
+    historical: "Evidencia anterior · el servidor no responde ahora",
+    confirmed: "Confirmado",
+    inferred: "Inferido",
+    fresh: "Al día",
+    stale: "Desactualizado",
+    reasonTimeout: "sin respuesta a tiempo",
+    reasonConnectionRefused: "no encontré el servidor",
+    reasonBadPayload: "datos que no reconozco",
+  },
 };
 
 export type UiDict = typeof es;
@@ -441,6 +462,13 @@ const en: UiDict = {
       warn: "Steam only. On Epic Games, use the steps above by hand.",
       btn: "Download launcher (.bat)",
       note: "If the Steam ID does not match your Anno, open the .bat in Notepad and change the number.",
+    },
+    nativeOcr: {
+      kicker: "Real production telemetry · optional",
+      title: "Statistics OCR extractor",
+      copy: "One manual install: download UXEnhancer and extract it as a UXEnhancer folder next to the launcher. The launcher then opens Server.exe, Anno, the watcher, and this page automatically.",
+      note: "External, experimental software. No code injection: it captures the window and only reads whichever Statistics tab you have visible. It may ask for Visual C++ or Windows permissions.",
+      download: "Download the external extractor",
     },
   },
   connect: {
@@ -615,6 +643,20 @@ const en: UiDict = {
     fixBuilding: "Place {0} where the card says, with a road.",
   },
   buddyLang: "Reply in English, as a calm sofa buddy, no spreadsheets.",
+  nativeProbe: {
+    unreachable: "OCR server not detected",
+    invalidResponse: "The server answered, but I didn't recognize the data",
+    populationGuidance: "Server connected · open Production and Finance",
+    unknownGuidance: "I couldn't recognize the tab",
+    historical: "Earlier evidence · the server isn't responding now",
+    confirmed: "Confirmed",
+    inferred: "Inferred",
+    fresh: "Up to date",
+    stale: "Stale",
+    reasonTimeout: "no answer in time",
+    reasonConnectionRefused: "couldn't find the server",
+    reasonBadPayload: "data I didn't recognize",
+  },
 };
 
 const it: UiDict = {
@@ -742,6 +784,13 @@ const it: UiDict = {
       warn: "Solo Steam. Su Epic Games, usa i passaggi sopra a mano.",
       btn: "Scarica launcher (.bat)",
       note: "Se l'ID Steam non corrisponde al tuo Anno, apri il .bat con il Blocco note e cambia il numero.",
+    },
+    nativeOcr: {
+      kicker: "Telemetria reale · opzionale",
+      title: "Estrattore OCR di Statistiche",
+      copy: "Una sola installazione manuale: scarica UXEnhancer ed estrailo come cartella UXEnhancer accanto al launcher. Poi il launcher apre Server.exe, Anno, il watcher e questa pagina automaticamente.",
+      note: "Software esterno e sperimentale. Non inietta codice: cattura la finestra e legge solo la scheda Statistiche che hai visibile. Può chiedere Visual C++ o permessi di Windows.",
+      download: "Scarica l'estrattore esterno",
     },
   },
   connect: {
@@ -917,6 +966,20 @@ const it: UiDict = {
     fixBuilding: "Metti {0} dove dice la scheda, con una strada.",
   },
   buddyLang: "Rispondi in italiano, da compagno calmo, senza fogli di calcolo.",
+  nativeProbe: {
+    unreachable: "Server OCR non rilevato",
+    invalidResponse: "Il server ha risposto, ma non ho riconosciuto i dati",
+    populationGuidance: "Server connesso · apri Produzione e Finanze",
+    unknownGuidance: "Non ho riconosciuto la scheda",
+    historical: "Evidenza precedente · il server non risponde ora",
+    confirmed: "Confermato",
+    inferred: "Dedotto",
+    fresh: "Aggiornato",
+    stale: "Non aggiornato",
+    reasonTimeout: "nessuna risposta in tempo",
+    reasonConnectionRefused: "non ho trovato il server",
+    reasonBadPayload: "dati che non riconosco",
+  },
 };
 
 const de: UiDict = {
@@ -1044,6 +1107,13 @@ const de: UiDict = {
       warn: "Nur Steam. Bei Epic Games die Schritte oben von Hand nutzen.",
       btn: "Launcher herunterladen (.bat)",
       note: "Passt die Steam-ID nicht zu deinem Anno, öffne die .bat mit dem Editor und ändere die Nummer.",
+    },
+    nativeOcr: {
+      kicker: "Echte Produktionstelemetrie · optional",
+      title: "OCR-Extraktor für Statistiken",
+      copy: "Eine manuelle Installation: UXEnhancer herunterladen und als Ordner UXEnhancer neben den Launcher entpacken. Danach öffnet der Launcher Server.exe, Anno, den Watcher und diese Seite automatisch.",
+      note: "Externe, experimentelle Software. Kein Code-Injection: sie erfasst nur das Fenster und liest nur den gerade sichtbaren Statistiken-Tab. Kann Visual C++ oder Windows-Rechte verlangen.",
+      download: "Externen Extraktor herunterladen",
     },
   },
   connect: {
@@ -1218,6 +1288,20 @@ const de: UiDict = {
     fixBuilding: "Setz {0} dahin, wo die Karte sagt, mit Straße.",
   },
   buddyLang: "Antworte auf Deutsch, als ruhiger Sofa-Kumpel, ohne Tabellen.",
+  nativeProbe: {
+    unreachable: "OCR-Server nicht erkannt",
+    invalidResponse: "Der Server hat geantwortet, aber ich konnte die Daten nicht lesen",
+    populationGuidance: "Server verbunden · öffne Produktion und Finanzen",
+    unknownGuidance: "Ich konnte den Tab nicht erkennen",
+    historical: "Frühere Evidenz · der Server antwortet gerade nicht",
+    confirmed: "Bestätigt",
+    inferred: "Abgeleitet",
+    fresh: "Aktuell",
+    stale: "Veraltet",
+    reasonTimeout: "keine Antwort rechtzeitig",
+    reasonConnectionRefused: "Server nicht gefunden",
+    reasonBadPayload: "unbekannte Daten",
+  },
 };
 
 export const UI: Record<Locale, UiDict> = { es, en, it, de };

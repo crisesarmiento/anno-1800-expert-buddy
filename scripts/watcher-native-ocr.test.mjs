@@ -37,3 +37,46 @@ describe("optional UXEnhancer OCR bridge", () => {
     assert.ok(schema.properties.telemetry.properties.production);
   });
 });
+
+describe("connection.nativeProbe (technical probe facts, separate from connection.native)", () => {
+  it("classifies probe failures as timeout or connection_refused, never leaking .NET exception text", () => {
+    assert.match(watcher, /function Get-NativeProbeReason/);
+    assert.match(watcher, /System\.Net\.WebExceptionStatus\]::Timeout/);
+    assert.match(watcher, /"timeout"/);
+    assert.match(watcher, /"connection_refused"/);
+    assert.match(watcher, /"bad_payload"/);
+    assert.match(watcher, /"invalid_response"/);
+  });
+
+  it("never writes game-state words into the probe, only technical state", () => {
+    assert.doesNotMatch(watcher, /state\s*=\s*"starting"/);
+    assert.doesNotMatch(watcher, /state\s*=\s*"missing"/);
+    assert.doesNotMatch(watcher, /state\s*=\s*"stale"/);
+    assert.doesNotMatch(watcher, /state\s*=\s*"wrong_view"/);
+  });
+
+  it("dedupes rewrites on an identical failure and heartbeats otherwise", () => {
+    assert.match(watcher, /nativeLastSignature/);
+    assert.match(watcher, /nativeHeartbeatSeconds\s*=\s*45/);
+    assert.match(watcher, /if \(\$signature -eq \$script:nativeLastSignature -and -not \$heartbeatDue\) \{ return \}/);
+  });
+
+  it("carries connection.native + telemetry.production forward on a save-triggered rewrite", () => {
+    assert.match(watcher, /if \(\$previousPayload\.connection\.native\) \{ \$payload\.connection\.native = \$previousPayload\.connection\.native \}/);
+    assert.match(watcher, /if \(\$previousPayload\.connection\.nativeProbe\) \{ \$payload\.connection\.nativeProbe = \$previousPayload\.connection\.nativeProbe \}/);
+  });
+
+  it("tracks buildingCountObservedAt independent of production's observedAt", () => {
+    assert.match(watcher, /nativeCountsObservedAtByIsland/);
+    assert.match(watcher, /buildingCountObservedAt/);
+  });
+
+  it("schema and types expose nativeProbe as optional, backward compatible", () => {
+    assert.equal(schema.properties.connection.properties.nativeProbe.properties.provider.const, "ux-enhancer-ocr");
+    assert.deepEqual(schema.properties.connection.properties.nativeProbe.required, [
+      "provider",
+      "state",
+      "lastProbeAt",
+    ]);
+  });
+});
