@@ -26,6 +26,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `telemetry.islands`   | GUIDs de sesión (Europe / New World / …)                                                                                                  |                                                                                                                                                                                                                                                                                                     |
 | `telemetry.hints`     | residencias farmer/worker/…                                                                                                               |                                                                                                                                                                                                                                                                                                     |
 | `telemetry.goods`     | `StrgLrg` pares GUID+amount                                                                                                               | Stock. Sandbox lo muestra; la campaña no hereda tips de producción.                                                                                                                                                                                                                                 |
+| `telemetry.goodsChanges` | Diferencia de `telemetry.goods` contra el guardado anterior de la misma sesión                                                          | Evidencia global: monto anterior, actual, delta y `previousSavedAt`. Sirve para señalar bienes que caen en una ruta, pero no demuestra causalidad ni throughput.                                                                                                                                     |
 | `telemetry.routes`    | `SessionTradeRouteManager/RouteMap`                                                                                                       | Sólo rutas del jugador (`ownerId = 0`): nombre, número de barcos, paradas y bienes configurados. Todavía no afirma dirección ni rendimiento.                                                                                                                                                        |
 | `connection.native`   | UXEnhancer `Server.exe` por loopback                                                                                                      | Evidencia OCR: proveedor, pestaña visible, isla y hora. No implica lectura de memoria. Ver `docs/native-telemetry.md`.                                                                                                                                                                               |
 | `telemetry.production` | Pantallas Producción + Finanzas por OCR                                                                                                  | Demanda/productividad y conteo por isla. Taller sólo aconseja si ambas muestras existen y conoce el ritmo del GUID.                                                                                                                                                                                 |
@@ -43,6 +44,15 @@ No se agregan aunque el `.a7s` “los tenga” por dentro:
 - Write al `.a7s`.
 
 Si un JSON trae `population`, `goods`, `warehouse`, `tradeRoutes` (en raíz) u otros extras, el ingest **los tira** y sigue con el contrato de arriba. Las rutas válidas viven en `telemetry.routes`.
+
+## Salud de rutas
+
+- **Confirmado:** sin barco, menos de dos paradas o sin bienes configurados. Sale directamente de
+  `telemetry.routes`.
+- **Observar:** un bien configurado en la ruta cayó al menos 5 unidades y 10% entre dos guardados
+  consecutivos de la misma sesión. Sale de `telemetry.goodsChanges`.
+- **No se afirma:** qué parada carga/descarga, tiempos de viaje, capacidad usada ni que la ruta haya
+  causado la caída. Producción, consumo y otras rutas también mueven el stock global.
 
 ## Escritura crash-safe
 

@@ -1,18 +1,34 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Anchor, CheckCircle2, Route, Ship, Warehouse } from "lucide-react";
+import {
+  AlertTriangle,
+  Anchor,
+  CheckCircle2,
+  Route,
+  Ship,
+  TrendingDown,
+  Warehouse,
+} from "lucide-react";
 import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
 import { LiveStatus } from "@/components/live-status";
 import { Badge } from "@/components/ui/badge";
 import { useHarbor } from "@/lib/store";
-import { tradeRouteIssue, uniqueTradeGoods } from "@/lib/trade-route-health";
+import { tradeRouteHealth, uniqueTradeGoods } from "@/lib/trade-route-health";
 
 export function TradeRoutes() {
   const snapshot = useHarbor((state) => state.liveSnapshot);
   const routes = (snapshot?.telemetry?.routes ?? []).filter(
     (route) => route.ownerId == null || route.ownerId === 0,
   );
-  const issues = routes.filter(tradeRouteIssue).length;
+  const goodsChanges = snapshot?.telemetry?.goodsChanges ?? [];
+  const routeRows = routes.map((route) => ({
+    route,
+    health: tradeRouteHealth(route, goodsChanges),
+    goods: uniqueTradeGoods(route),
+  }));
+  const confirmedIssues = routeRows.filter((row) => row.health.level === "confirmed").length;
+  const stockSignals = routeRows.filter((row) => row.health.level === "watch").length;
+  const issues = confirmedIssues + stockSignals;
   const ships = routes.reduce((total, route) => total + route.shipCount, 0);
 
   return (
@@ -63,14 +79,13 @@ export function TradeRoutes() {
               <HarborCard
                 kicker="Revisar"
                 title={String(issues)}
+                hint={`${confirmedIssues} de configuración · ${stockSignals} por stock global`}
                 icon={<AlertTriangle className="size-5" />}
               />
             </div>
 
             <section className="flex flex-col gap-3" aria-label="Rutas del jugador">
-              {routes.map((route, index) => {
-                const issue = tradeRouteIssue(route);
-                const goods = uniqueTradeGoods(route);
+              {routeRows.map(({ route, health, goods }, index) => {
                 return (
                   <article
                     key={route.id ?? `${route.name}-${index}`}
@@ -82,8 +97,13 @@ export function TradeRoutes() {
                           <h2 className="font-display text-xl font-medium tracking-tight">
                             {route.name}
                           </h2>
-                          {issue ? (
-                            <Badge>{issue}</Badge>
+                          {health.level === "confirmed" ? (
+                            <Badge>{health.message}</Badge>
+                          ) : health.level === "watch" ? (
+                            <Badge variant="outline">
+                              <TrendingDown className="size-3.5" aria-hidden="true" />
+                              {health.message}
+                            </Badge>
                           ) : (
                             <Badge variant="ok">
                               <CheckCircle2 className="size-3.5" aria-hidden="true" />
@@ -108,6 +128,18 @@ export function TradeRoutes() {
                         )}
                       </div>
                     </div>
+                    {health.level === "watch" ? (
+                      <div className="mt-4 rounded-lg border border-ochre/30 bg-ochre/10 p-3">
+                        <p className="text-sm font-medium">
+                          Entre guardados: {health.change.previousAmount} → {health.change.amount} (
+                          {health.change.delta})
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          Es stock global del save. Revisá carga y descarga, pero también producción
+                          y consumo: esta señal no prueba que la ruta sea la causa.
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {route.stops.map((stop, stopIndex) => (
                         <div
@@ -143,8 +175,9 @@ export function TradeRoutes() {
         )}
 
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Esta versión confirma la estructura de cada ruta. Todavía no afirma carga, descarga ni
-          rendimiento: esos datos requieren la telemetría nativa.
+          “Sin barco”, “una parada” y “sin bienes” son fallos confirmados por el save. Una caída de
+          stock sólo es una señal global entre guardados: no mide viajes ni prueba que esa ruta sea
+          la causa.
         </p>
       </main>
     </div>

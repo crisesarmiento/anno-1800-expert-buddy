@@ -43,6 +43,16 @@
     "chains": [{ "id": "wood", "name": "Madera" }],
     "islands": [{ "id": "bright-sands", "name": "Bright Sands" }],
     "hints": ["farmers", "taxes"],
+    "goodsChanges": [
+      {
+        "id": "timber",
+        "name": "Tablones",
+        "previousAmount": 48,
+        "amount": 31,
+        "delta": -17,
+        "previousSavedAt": "2026-09-15T11:55:00.000Z"
+      }
+    ],
     "routes": [
       {
         "id": 26,
@@ -50,8 +60,8 @@
         "ownerId": 0,
         "shipCount": 1,
         "stops": [
-          { "areaId": 8451, "goods": [{ "guid": 1010196, "name": "Tablones", "amount": 20 }] },
-          { "areaId": 9219, "goods": [{ "guid": 1010196, "name": "Tablones", "amount": 20 }] }
+          { "areaId": 8451, "goods": [{ "guid": 1010196, "id": "timber", "name": "Tablones", "amount": 20 }] },
+          { "areaId": 9219, "goods": [{ "guid": 1010196, "id": "timber", "name": "Tablones", "amount": 20 }] }
         ]
       },
       {

@@ -512,6 +512,10 @@ while ($true) {
     $lastStamp = $stamp
     $bytes = [System.IO.File]::ReadAllBytes($save.FullName)
     $scan = [HarborBuddy.A7sScan]::Run($bytes, $guidJson) | ConvertFrom-Json
+    $previousPayload = $null
+    if (Test-Path -LiteralPath $outJson) {
+      try { $previousPayload = Get-Content -LiteralPath $outJson -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
+    }
     $prevMoney = $null
     if (Test-Path -LiteralPath $moneyStatePath) {
       try {
@@ -545,6 +549,8 @@ while ($true) {
         foreach ($good in @($stop.goods)) {
           if ($good.guid) {
             $routeGood = [ordered]@{ guid = [int]$good.guid; amount = [int]$good.amount }
+            $knownGood = $guidByNumber[[string]$good.guid]
+            if ($knownGood -and $knownGood.id) { $routeGood.id = [string]$knownGood.id }
             if ($good.name) { $routeGood.name = [string]$good.name }
             $routeGoods += $routeGood
           }
@@ -561,6 +567,35 @@ while ($true) {
       if ($route.id -ne $null) { $routeOut.id = [int]$route.id }
       if ($route.ownerId -ne $null) { $routeOut.ownerId = [int]$route.ownerId }
       $routes += $routeOut
+    }
+    $currentSavedAt = $save.LastWriteTimeUtc.ToString("o")
+    $goodsChanges = @()
+    if (
+      $previousPayload -and
+      [string]$previousPayload.sessionName -eq $sessionName -and
+      [string]$previousPayload.savedAt -and
+      [string]$previousPayload.savedAt -ne $currentSavedAt -and
+      $previousPayload.telemetry -and
+      $previousPayload.telemetry.goods
+    ) {
+      $previousGoodsById = @{}
+      foreach ($previousGood in @($previousPayload.telemetry.goods)) {
+        if ($previousGood.id) { $previousGoodsById[[string]$previousGood.id] = $previousGood }
+      }
+      foreach ($good in $goods) {
+        $previousGood = $previousGoodsById[[string]$good.id]
+        if (-not $previousGood) { continue }
+        $delta = [int]$good.amount - [int]$previousGood.amount
+        if ($delta -eq 0) { continue }
+        $goodsChanges += [ordered]@{
+          id              = [string]$good.id
+          name            = [string]$good.name
+          previousAmount  = [int]$previousGood.amount
+          amount          = [int]$good.amount
+          delta           = $delta
+          previousSavedAt = [string]$previousPayload.savedAt
+        }
+      }
     }
     $chainMap = @{
       lumberjack = "wood"; sawmill = "wood"; fishery = "fish"; sheep = "clothes"; knitters = "clothes"
@@ -606,12 +641,13 @@ while ($true) {
       routes    = @($routes)
     }
     if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
+    if ($goodsChanges.Count -gt 0) { $telemetry.goodsChanges = @($goodsChanges) }
 
     $payload = [ordered]@{
       schema      = "harbor-live-v1"
       source      = "save"
       updatedAt   = (Get-Date).ToUniversalTime().ToString("o")
-      savedAt     = $save.LastWriteTimeUtc.ToString("o")
+      savedAt     = $currentSavedAt
       game        = "anno-1800"
       sessionName = $sessionName
       connection  = [ordered]@{

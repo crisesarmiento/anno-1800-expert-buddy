@@ -5,7 +5,12 @@ import { applyLiveToProgress } from "./apply.ts";
 import { matchLiveQuests } from "./match.ts";
 import { LIVE_MSG } from "./messages.ts";
 import { ingestLiveBytes, ingestLiveJsonText, normalizeSnapshot } from "./validate.ts";
-import { tradeRouteIssue, uniqueTradeGoods } from "../trade-route-health.ts";
+import {
+  routeStockDrop,
+  tradeRouteHealth,
+  tradeRouteIssue,
+  uniqueTradeGoods,
+} from "../trade-route-health.ts";
 
 const fixture = JSON.parse(
   readFileSync(new URL("./fixture.json", import.meta.url), "utf8"),
@@ -43,6 +48,8 @@ describe("harbor-live ingest", () => {
     assert.equal(result.snapshot.connection?.routeCount, 2);
     assert.equal(result.snapshot.telemetry?.routes?.[0]?.name, "Tablones La - Les");
     assert.equal(result.snapshot.telemetry?.routes?.[1]?.shipCount, 0);
+    assert.equal(result.snapshot.telemetry?.routes?.[0]?.stops[0]?.goods[0]?.id, "timber");
+    assert.equal(result.snapshot.telemetry?.goodsChanges?.[0]?.delta, -17);
   });
 
   it("keeps schema required keys and strips refused extras", () => {
@@ -64,6 +71,10 @@ describe("harbor-live ingest", () => {
     assert.ok(
       (schema.properties.telemetry as { properties?: { production?: unknown } }).properties
         ?.production,
+    );
+    assert.ok(
+      (schema.properties.telemetry as { properties?: { goodsChanges?: unknown } }).properties
+        ?.goodsChanges,
     );
     assert.equal(schema.properties.population, undefined);
     assert.equal(schema.properties.warehouse, undefined);
@@ -120,6 +131,31 @@ describe("harbor-live ingest", () => {
     assert.equal("count" in (buildings.find((row) => row.id === "marketplace") ?? {}), false);
     assert.equal("count" in (buildings.find((row) => row.id === "lumberjack") ?? {}), false);
     assert.equal("count" in (buildings.find((row) => row.id === "sawmill") ?? {}), false);
+  });
+
+  it("drops a goods change whose claimed delta does not match the two amounts", () => {
+    const result = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-18T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      telemetry: {
+        goodsChanges: [
+          {
+            id: "timber",
+            name: "Tablones",
+            previousAmount: 48,
+            amount: 31,
+            delta: -1,
+            previousSavedAt: "2026-09-18T11:50:00.000Z",
+          },
+        ],
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.telemetry?.goodsChanges, undefined);
   });
 
   it("still validates presence-only telemetry.buildings (no count at all)", () => {
@@ -274,8 +310,8 @@ describe("trade route structural health", () => {
     ownerId: 0,
     shipCount: 1,
     stops: [
-      { areaId: 8451, goods: [{ guid: 1010196, name: "Tablones", amount: 20 }] },
-      { areaId: 9219, goods: [{ guid: 1010196, name: "Tablones", amount: 20 }] },
+      { areaId: 8451, goods: [{ guid: 1010196, id: "timber", name: "Tablones", amount: 20 }] },
+      { areaId: 9219, goods: [{ guid: 1010196, id: "timber", name: "Tablones", amount: 20 }] },
     ],
   };
 
@@ -297,5 +333,64 @@ describe("trade route structural health", () => {
       }),
       "No tiene bienes configurados",
     );
+  });
+
+  it("flags a meaningful save-wide stock drop as observation, not confirmed failure", () => {
+    const changes = [
+      {
+        id: "timber",
+        name: "Tablones",
+        previousAmount: 48,
+        amount: 31,
+        delta: -17,
+        previousSavedAt: "2026-09-15T11:55:00.000Z",
+      },
+    ];
+    assert.equal(routeStockDrop(configured, changes)?.delta, -17);
+    assert.deepEqual(tradeRouteHealth(configured, changes), {
+      level: "watch",
+      message: "Stock global de Tablones bajó",
+      change: changes[0],
+    });
+  });
+
+  it("ignores small noise, increases and unrelated stock changes", () => {
+    const changes = [
+      {
+        id: "timber",
+        name: "Tablones",
+        previousAmount: 48,
+        amount: 45,
+        delta: -3,
+        previousSavedAt: "2026-09-15T11:55:00.000Z",
+      },
+      {
+        id: "fish",
+        name: "Pescado",
+        previousAmount: 20,
+        amount: 5,
+        delta: -15,
+        previousSavedAt: "2026-09-15T11:55:00.000Z",
+      },
+    ];
+    assert.equal(routeStockDrop(configured, changes), null);
+    assert.equal(tradeRouteHealth(configured, changes).level, "ok");
+  });
+
+  it("keeps a structural failure above a matching stock signal", () => {
+    const health = tradeRouteHealth(
+      { ...configured, shipCount: 0 },
+      [
+        {
+          id: "timber",
+          name: "Tablones",
+          previousAmount: 48,
+          amount: 31,
+          delta: -17,
+          previousSavedAt: "2026-09-15T11:55:00.000Z",
+        },
+      ],
+    );
+    assert.deepEqual(health, { level: "confirmed", message: "Sin barco asignado" });
   });
 });

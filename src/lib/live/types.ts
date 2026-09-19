@@ -38,8 +38,19 @@ export type LiveGoodHit = {
 
 export type LiveTradeRouteGood = {
   guid: number;
+  id?: string;
   name?: string;
   amount: number;
+};
+
+/** Change in save-wide stock between two distinct saves from the same session. */
+export type LiveGoodChange = {
+  id: string;
+  name: string;
+  previousAmount: number;
+  amount: number;
+  delta: number;
+  previousSavedAt: string;
 };
 
 export type LiveTradeRouteStop = {
@@ -97,6 +108,7 @@ export type LiveTelemetry = {
   islands?: LiveNamedHit[];
   hints?: string[];
   goods?: LiveGoodHit[];
+  goodsChanges?: LiveGoodChange[];
   routes?: LiveTradeRoute[];
   production?: LiveProductionMetric[];
 };
