@@ -11,7 +11,7 @@ const schema = JSON.parse(
 describe("optional UXEnhancer OCR bridge", () => {
   it("polls loopback only and degrades to the save reader", () => {
     assert.match(watcher, /http:\/\/127\.0\.0\.1:8000\/AnnoServer\/Population/);
-    assert.match(watcher, /Invoke-RestMethod[^\n]+-TimeoutSec 2/);
+    assert.match(watcher, /Invoke-WebRequest[^\n]+-TimeoutSec 8/);
     assert.match(watcher, /OCR desconectado; sigo leyendo saves/);
     assert.doesNotMatch(watcher, /0\.0\.0\.0:8000|https:\/\/.*AnnoServer/);
   });

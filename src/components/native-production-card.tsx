@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
@@ -43,14 +43,35 @@ export function NativeProductionCard() {
   const connection = snapshot?.connection;
   const native = connection?.native;
   const nativeProbe = connection?.nativeProbe;
-  const evidence = nativeProductionEvidence(snapshot);
-  const rows = analyzeNativeProduction(snapshot);
+  const scopedSnapshot = snapshot
+    ? {
+        ...snapshot,
+        telemetry: {
+          production: (snapshot.telemetry?.production ?? []).filter(
+            (row) =>
+              Boolean(native?.islandName) &&
+              row.islandName === native?.islandName &&
+              row.productivity != null,
+          ),
+        },
+      }
+    : null;
+  const evidence = nativeProductionEvidence(scopedSnapshot);
+  const rows = analyzeNativeProduction(scopedSnapshot);
   const cardState = nativeCardState(connection);
-  const now = Date.now();
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   if (cardState === "never-tried") {
     return (
-      <article id="native-production" className="stamp-paper p-5 sm:p-7" data-native-production="off">
+      <article
+        id="native-production"
+        className="stamp-paper p-5 sm:p-7"
+        data-native-production="off"
+      >
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           Telemetría opcional
         </p>
@@ -83,7 +104,9 @@ export function NativeProductionCard() {
         </p>
         <h2 className="font-display mt-2 flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <WifiOff className="size-5 text-muted-foreground" aria-hidden="true" />
-          {t.nativeProbe.unreachable}
+          {nativeProbe?.state === "invalid_response"
+            ? t.nativeProbe.invalidResponse
+            : t.nativeProbe.unreachable}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           Sigo leyendo tus guardados igual. Si abriste el extractor recién ahora, puede tardar unos
@@ -143,7 +166,11 @@ export function NativeProductionCard() {
         </EvidencePrompt>
       ) : cardState === "guidance-unknown" ? (
         <EvidencePrompt icon={<AlertTriangle className="size-5" />}>
-          {t.nativeProbe.unknownGuidance}
+          {nativeProbe?.result === "no_window"
+            ? t.nativeProbe.noWindow
+            : nativeProbe?.result === "no_observation"
+              ? t.nativeProbe.noObservation
+              : t.nativeProbe.unknownGuidance}
         </EvidencePrompt>
       ) : needsProduction ? (
         <EvidencePrompt icon={<Factory className="size-5" />}>
@@ -167,7 +194,7 @@ export function NativeProductionCard() {
               savedAt: snapshot?.savedAt,
               now,
             });
-            const countObservedAt = row.buildingCountObservedAt ?? row.observedAt;
+            const countObservedAt = row.buildingCountObservedAt;
             const countStale = isOcrSampleStale({
               observedAt: countObservedAt,
               savedAt: snapshot?.savedAt,
@@ -205,11 +232,13 @@ export function NativeProductionCard() {
                   <span className="mr-1 text-xs font-medium text-muted-foreground uppercase">
                     {t.nativeProbe.inferred}:
                   </span>
-                  {row.status === "falta"
-                    ? `Falta capacidad: apuntá a ${row.recommendedCount} edificios.`
-                    : row.status === "sobra"
-                      ? `Podés pausar ${row.pauseCount} y revisar si el almacén sigue estable.`
-                      : "Está ajustada a la demanda leída; no construyas otra."}
+                  {countStale || productivityStale
+                    ? t.nativeProbe.refreshEvidence
+                    : row.status === "falta"
+                      ? `Falta capacidad: apuntá a ${row.recommendedCount} edificios.`
+                      : row.status === "sobra"
+                        ? `Podés pausar ${row.pauseCount} y revisar si el almacén sigue estable.`
+                        : "Está ajustada a la demanda leída; no construyas otra."}
                 </p>
                 <p className="mt-1 text-xs tabular-nums text-muted-foreground">
                   Capacidad {row.capacityTMin.toFixed(1)} t/min · demanda{" "}

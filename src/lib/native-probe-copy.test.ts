@@ -5,6 +5,28 @@ import type { LiveConnection } from "./live/types.ts";
 
 const base: LiveConnection = { mode: "documents-save" };
 
+it("a reachable server without an observation never reports ready, even with old evidence", () => {
+  for (const result of ["no_observation", "no_window"] as const) {
+    assert.equal(
+      nativeCardState({
+        ...base,
+        native: {
+          provider: "ux-enhancer-ocr",
+          view: "production",
+          observedAt: "2026-09-19T00:00:00Z",
+        },
+        nativeProbe: {
+          provider: "ux-enhancer-ocr",
+          state: "reachable",
+          result,
+          lastProbeAt: "2026-09-19T00:05:00Z",
+        },
+      }),
+      "guidance-unknown",
+    );
+  }
+});
+
 describe("native OCR card state (pure, no game-state words)", () => {
   it("is never-tried with no nativeProbe and no native at all", () => {
     assert.equal(nativeCardState(base), "never-tried");

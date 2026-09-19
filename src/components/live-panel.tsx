@@ -9,12 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import fixture from "@/lib/live/fixture.json";
 import {
-  LIVE_POLL_MS,
   liveChipLabel,
   persistLiveHandle,
   readPersistedLiveHandle,
-  refreshLiveHandle,
-  tickLiveHandle,
   type LiveFileHandle,
 } from "@/lib/live/handle-store";
 import {
@@ -24,6 +21,7 @@ import {
   snapshotFromSession,
   type LiveSnapshot,
 } from "@/lib/live";
+import { liveReader, startLiveReader, resumeLiveReader, useLiveReader } from "@/lib/live-reader";
 import { isLiveLocked, useHarbor } from "@/lib/store";
 import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
@@ -42,6 +40,7 @@ export function applyLiveExample(
     setLiveBanner(result.message, true);
     return;
   }
+  liveReader.stop();
   applyLiveSnapshot(result.snapshot, "fixture.json");
 }
 
@@ -82,11 +81,6 @@ export function PowerUpSection() {
   // Chromium File System Access only. Starts false so SSR/hydration match; other
   // browsers (Firefox, Safari) never flip it — honest degrade, no dead chip.
   const [hasFsAccess, setHasFsAccess] = useState(false);
-  const watchTimer = useRef<number | null>(null);
-  const lastModified = useRef(0);
-  const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
-  const setLiveBanner = useHarbor((s) => s.setLiveBanner);
-  const locale = useHarbor((s) => s.locale);
   const steps = [t.power.s1, t.power.s2, t.power.s3];
 
   useEffect(() => {
@@ -94,38 +88,7 @@ export function PowerUpSection() {
     void readPersistedLiveHandle().then((handle) => {
       if (handle) setHasHandle(true);
     });
-    return () => {
-      if (watchTimer.current) window.clearInterval(watchTimer.current);
-    };
   }, []);
-
-  const applyFile = async (file: File, opts: { silent?: boolean } = {}) => {
-    const result = await ingestLiveFile(file, locale);
-    if (!result.ok) {
-      if (result.kind === "broken") return;
-      if (!opts.silent) setLiveBanner(result.message, true);
-      return;
-    }
-    applyLiveSnapshot(result.snapshot, file.name);
-  };
-
-  const startPoll = (handle: LiveFileHandle) => {
-    if (watchTimer.current) window.clearInterval(watchTimer.current);
-    lastModified.current = 0;
-    const tick = async () => {
-      try {
-        lastModified.current = await tickLiveHandle(handle, lastModified.current, (file) =>
-          applyFile(file, { silent: true }),
-        );
-      } catch {
-        /* stay calm */
-      }
-    };
-    void tick();
-    watchTimer.current = window.setInterval(() => {
-      void tick();
-    }, LIVE_POLL_MS);
-  };
 
   const pickLiveHandle = async () => {
     const picker = pickerApi();
@@ -148,16 +111,12 @@ export function PowerUpSection() {
     try {
       const existing = await readPersistedLiveHandle();
       if (existing) {
-        const file = await refreshLiveHandle();
-        if (file) await applyFile(file);
-        startPoll(existing);
+        await startLiveReader(existing);
         return;
       }
       const handle = await pickLiveHandle();
       if (!handle) return;
-      const file = await refreshLiveHandle();
-      if (file) await applyFile(file);
-      startPoll(handle);
+      await startLiveReader(handle);
     } catch {
       /* stay calm */
     }
@@ -218,7 +177,7 @@ export function PowerUpSection() {
           <LivePanel
             onHandlePinned={(handle) => {
               setHasHandle(true);
-              startPoll(handle);
+              void startLiveReader(handle);
             }}
           />
         </div>
@@ -238,8 +197,7 @@ export function LivePanel({
   const [dragging, setDragging] = useState(false);
   const [paste, setPaste] = useState("");
   const [help, setHelp] = useState(false);
-  const [watching, setWatching] = useState(false);
-  const watchTimer = useRef<number | null>(null);
+  const watching = useLiveReader((state) => state.status === "watching");
 
   const applyLiveSnapshot = useHarbor((s) => s.applyLiveSnapshot);
   const clearLive = useHarbor((s) => s.clearLive);
@@ -257,12 +215,6 @@ export function LivePanel({
   const locale = useHarbor((s) => s.locale);
   const t = useT();
 
-  useEffect(() => {
-    return () => {
-      if (watchTimer.current) window.clearInterval(watchTimer.current);
-    };
-  }, []);
-
   async function onFile(file: File | undefined, opts: { silent?: boolean } = {}) {
     if (!file) return;
     const result = await ingestLiveFile(file, locale);
@@ -271,6 +223,7 @@ export function LivePanel({
       if (!opts.silent) setLiveBanner(result.message, true);
       return;
     }
+    liveReader.stop();
     applyLiveSnapshot(result.snapshot, file.name);
   }
 
@@ -281,6 +234,7 @@ export function LivePanel({
       setLiveBanner(result.message, true);
       return;
     }
+    liveReader.stop();
     applyLiveSnapshot(result.snapshot, "pegado.json");
   }
 
@@ -304,24 +258,11 @@ export function LivePanel({
         types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
       });
       await persistLiveHandle(handle);
-      setWatching(true);
       if (onHandlePinned) {
         onHandlePinned(handle);
         return;
       }
-      if (watchTimer.current) window.clearInterval(watchTimer.current);
-      let last = 0;
-      const tick = async () => {
-        try {
-          last = await tickLiveHandle(handle, last, (file) => onFile(file, { silent: true }));
-        } catch {
-          /* ignore */
-        }
-      };
-      await tick();
-      watchTimer.current = window.setInterval(() => {
-        void tick();
-      }, LIVE_POLL_MS);
+      await startLiveReader(handle);
     } catch {
       /* cancelled */
     }
@@ -427,11 +368,26 @@ export function LivePanel({
           <button
             type="button"
             className="inline-flex h-11 items-center text-foreground"
-            onClick={() => setLiveEnabled(!liveEnabled)}
+            onClick={() => {
+              if (liveEnabled) {
+                liveReader.stop();
+                setLiveEnabled(false);
+              } else {
+                setLiveEnabled(true);
+                void resumeLiveReader();
+              }
+            }}
           >
             {liveEnabled ? t.live.pause : t.live.resume}
           </button>
-          <button type="button" className="inline-flex h-11 items-center" onClick={clearLive}>
+          <button
+            type="button"
+            className="inline-flex h-11 items-center"
+            onClick={() => {
+              liveReader.stop();
+              clearLive();
+            }}
+          >
             {t.live.remove}
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { LiveReaderLifecycle } from "@/components/live-reader-lifecycle";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Anno 1800 Buddy";
@@ -39,6 +40,7 @@ export const Route = createRootRoute({
       <body className="bg-background text-foreground font-sans">
         <PreviewHostBridge />
         <AuthProvider>
+          <LiveReaderLifecycle />
           <Outlet />
         </AuthProvider>
         <Scripts />

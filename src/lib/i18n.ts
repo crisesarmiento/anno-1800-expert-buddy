@@ -323,6 +323,12 @@ const es = {
   },
   buddyLang: "Respondé en español rioplatense, de compañero, sin planillas.",
   nativeProbe: {
+    noWindow:
+      "El servidor responde, pero no encuentra la ventana de Anno. Dejá Estadísticas visible en modo sin bordes.",
+    noObservation:
+      "El servidor responde, pero no reconoce la isla. Abrí Producción o Finanzas con una sola isla seleccionada. La lectura anterior no se actualizó.",
+    refreshEvidence:
+      "Evidencia anterior: abrí Producción y Finanzas en esta isla antes de construir o pausar.",
     unreachable: "Servidor OCR no detectado",
     invalidResponse: "El servidor respondió, pero no reconocí los datos",
     populationGuidance: "Servidor conectado · abrí Producción y Finanzas",
@@ -644,6 +650,12 @@ const en: UiDict = {
   },
   buddyLang: "Reply in English, as a calm sofa buddy, no spreadsheets.",
   nativeProbe: {
+    noWindow:
+      "The server responds but cannot find the Anno window. Keep Statistics visible in borderless mode.",
+    noObservation:
+      "The server responds but cannot recognize the island. Open Production or Finance with one island selected. Previous evidence was not refreshed.",
+    refreshEvidence:
+      "Previous evidence: open Production and Finance on this island before building or pausing.",
     unreachable: "OCR server not detected",
     invalidResponse: "The server answered, but I didn't recognize the data",
     populationGuidance: "Server connected · open Production and Finance",
@@ -967,6 +979,12 @@ const it: UiDict = {
   },
   buddyLang: "Rispondi in italiano, da compagno calmo, senza fogli di calcolo.",
   nativeProbe: {
+    noWindow:
+      "Il server risponde ma non trova la finestra di Anno. Lascia visibili le Statistiche in modalità senza bordi.",
+    noObservation:
+      "Il server risponde ma non riconosce l’isola. Apri Produzione o Finanze con una sola isola selezionata. I dati precedenti non sono stati aggiornati.",
+    refreshEvidence:
+      "Dati precedenti: apri Produzione e Finanze su questa isola prima di costruire o sospendere.",
     unreachable: "Server OCR non rilevato",
     invalidResponse: "Il server ha risposto, ma non ho riconosciuto i dati",
     populationGuidance: "Server connesso · apri Produzione e Finanze",
@@ -1289,6 +1307,12 @@ const de: UiDict = {
   },
   buddyLang: "Antworte auf Deutsch, als ruhiger Sofa-Kumpel, ohne Tabellen.",
   nativeProbe: {
+    noWindow:
+      "Der Server antwortet, findet aber das Anno-Fenster nicht. Lass die Statistik im randlosen Modus sichtbar.",
+    noObservation:
+      "Der Server antwortet, erkennt aber die Insel nicht. Öffne Produktion oder Finanzen mit genau einer ausgewählten Insel. Frühere Daten wurden nicht aktualisiert.",
+    refreshEvidence:
+      "Frühere Daten: Öffne Produktion und Finanzen auf dieser Insel, bevor du baust oder pausierst.",
     unreachable: "OCR-Server nicht erkannt",
     invalidResponse: "Der Server hat geantwortet, aber ich konnte die Daten nicht lesen",
     populationGuidance: "Server verbunden · öffne Produktion und Finanzen",

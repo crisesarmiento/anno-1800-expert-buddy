@@ -118,7 +118,8 @@ describe("second screen only — never overlay the game", () => {
 
   it("live JSON opt-in watch fails silent and keeps last good snapshot", () => {
     const panel = source("../components/live-panel.tsx");
-    assert.match(panel, /onFile\(file, \{ silent: true \}\)/);
+    assert.match(panel, /startLiveReader\(handle\)/);
+    assert.match(source("./live-reader.ts"), /if \(!result.ok\) return null/);
     assert.match(panel, /if \(!opts\.silent\) setLiveBanner/);
     const bad = ingestLiveJsonText("{not json");
     assert.equal(liveWatchSnapshot(bad), null);

@@ -103,6 +103,8 @@ export type LiveNativeProbe = {
   lastProbeAt: string;
   lastSuccessAt?: string;
   reason?: LiveNativeProbeReason;
+  /** HTTP reachability does not imply a recognized game observation. */
+  result?: "observation" | "no_observation" | "no_window";
 };
 
 /** OCR sample from Anno's statistics screen. Values stay raw and evidence-stamped. */

@@ -56,6 +56,17 @@ La última observación OCR queda fechada y la UI no la presenta como lectura de
 
 ## Sondeo y reescritura
 
+- `nativeProbe.result` es opcional: `observation`, `no_observation` (HTTP 200 con versión pero
+  sin isla/métricas reconocidas), o `no_window` (HTTP 204). Los dos últimos indican un servidor
+  accesible, no un JSON inválido. No reemplazan `native` ni `production` ni sus fechas.
+- `lastSuccessAt` confirma una respuesta válida del servidor, **no** una observación útil.
+  La fecha de evidencia sigue siendo exclusivamente `native.observedAt` / la de cada muestra.
+- El timeout HTTP es de 8 segundos: la cadencia es ~4 segundos **más** el tiempo del sondeo y
+  del procesamiento del save, no una garantía de tiempo real.
+- La web mantiene un solo lector del archivo seleccionado durante la navegación. Tras recargar
+  el navegador se requiere Actualizar; pausar o importar una muestra manual cancela el lector.
+  Al volver a la pestaña se reintenta, sujeto a permisos del navegador.
+
 - El vigilante sondea `Server.exe` cada ~4 segundos; eso está bien, no sobrecarga el proceso local.
 - Sólo reescribe `harbor-live.json` cuando cambia el `state`/vista/observación útil del sondeo, o
   pasó un heartbeat de 30–60 segundos sin cambios. Una falla idéntica repetida (mismo `state` y
