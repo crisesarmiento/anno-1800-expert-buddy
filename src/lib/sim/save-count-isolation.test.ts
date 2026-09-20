@@ -5,7 +5,9 @@ import type { LiveSnapshot } from "../live/types.ts";
 import {
   SAVE_COUNT_CHIP_LABEL,
   applySaveCountsChip,
+  isExampleCampaignSeed,
 } from "./save-count-chip.ts";
+import campaignCh1 from "./fixtures/campaign-ch1.json" with { type: "json" };
 import { mapSaveCountsToCitySeed } from "./save-count-seed.ts";
 import type { CitySeed } from "./types.ts";
 
@@ -150,5 +152,19 @@ describe("save-count isolation", () => {
     assert.equal(campaign.buildings.lumberjack, 1);
     assert.equal(campaign.buildings.charcoal, undefined);
     assert.equal(sandbox.buildings.charcoal, 2);
+  });
+
+  it("does not treat the example campaign seed as a real-save diagnosis", () => {
+    const example = structuredClone(campaignCh1) as CitySeed;
+    assert.equal(isExampleCampaignSeed(example), true);
+    assert.equal(isExampleCampaignSeed(MANUAL), false);
+    const ontoExample = applySaveCountsChip({ seed: example, live: liveCounts });
+    assert.equal(ontoExample.diagnosis, "mixed");
+    assert.notEqual(ontoExample.diagnosis, "save");
+    const ontoManual = applySaveCountsChip({ seed: structuredClone(MANUAL), live: liveCounts });
+    assert.equal(ontoManual.diagnosis, "save");
+    const exampleOnly = applySaveCountsChip({ seed: example, live: liveMissing });
+    assert.equal(exampleOnly.diagnosis, "example-seed");
+    assert.equal(exampleOnly.applied, false);
   });
 });

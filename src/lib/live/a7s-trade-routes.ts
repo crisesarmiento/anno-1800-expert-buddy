@@ -25,6 +25,7 @@ export type ExtractedRouteVisit = {
   routeId: number;
   executionTime: number;
   finalized: boolean;
+  areaId: number | null;
   goods: { guid: number; amount: number }[];
 };
 
@@ -35,12 +36,22 @@ export type ExtractedRouteDeliveryGood = {
   lastAmount: number;
 };
 
+export type ExtractedStationDelivery = {
+  areaId: number | null;
+  guid: number;
+  visitCount: number;
+  medianAbsAmount: number;
+  lastAmount: number;
+  intervalMsMedian: number | null;
+};
+
 export type ExtractedRouteDelivery = {
   routeId: number;
   visitCount: number;
   lastExecutionTime: number;
   intervalMsMedian: number | null;
   goods: ExtractedRouteDeliveryGood[];
+  stations: ExtractedStationDelivery[];
 };
 
 function child(node: FileDbNode, tag: string): FileDbNode | undefined {
@@ -174,6 +185,7 @@ export function extractRouteVisits(dataBytes: Buffer): ExtractedRouteVisit[] {
       routeId,
       executionTime,
       finalized: finalizedBytes && finalizedBytes.length > 0 ? finalizedBytes[0] !== 0 : false,
+      areaId: leafInt(node, "AreaID") ?? leafInt(node, "Identifier"),
       goods,
     });
   });
@@ -208,6 +220,41 @@ export function summarizeRouteDeliveries(
         goodsByGuid.set(good.guid, row);
       }
     }
+    const stationMap = new Map<
+      string,
+      { areaId: number | null; guid: number; times: number[]; amounts: number[]; last: number }
+    >();
+    for (const visit of sorted) {
+      for (const good of visit.goods) {
+        const key = `${visit.areaId ?? "x"}:${good.guid}`;
+        const row = stationMap.get(key) ?? {
+          areaId: visit.areaId,
+          guid: good.guid,
+          times: [],
+          amounts: [],
+          last: good.amount,
+        };
+        row.times.push(visit.executionTime);
+        row.amounts.push(good.amount);
+        row.last = good.amount;
+        stationMap.set(key, row);
+      }
+    }
+    const stations: ExtractedStationDelivery[] = [...stationMap.values()].map((row) => {
+      const stationIntervals: number[] = [];
+      for (let i = 1; i < row.times.length; i++) {
+        const delta = row.times[i]! - row.times[i - 1]!;
+        if (delta > 0) stationIntervals.push(delta);
+      }
+      return {
+        areaId: row.areaId,
+        guid: row.guid,
+        visitCount: row.amounts.length,
+        medianAbsAmount: medianInt(row.amounts.map((n) => Math.abs(n))) ?? 0,
+        lastAmount: row.last,
+        intervalMsMedian: medianInt(stationIntervals),
+      };
+    });
     out.push({
       routeId,
       visitCount: sorted.length,
@@ -219,6 +266,7 @@ export function summarizeRouteDeliveries(
         medianAbsAmount: medianInt(row.amounts.map((n) => Math.abs(n))) ?? 0,
         lastAmount: row.last,
       })),
+      stations,
     });
   }
   return out;

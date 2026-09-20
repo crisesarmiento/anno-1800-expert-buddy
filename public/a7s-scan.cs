@@ -177,7 +177,25 @@ namespace HarborBuddy {
             if (!string.IsNullOrEmpty(good.Name)) sb.Append(",\"name\":\"").Append(Esc(good.Name)).Append("\"");
             sb.Append("}");
           }
-          sb.Append("]}");
+          sb.Append("]");
+          if (delivery.Stations.Count > 0) {
+            sb.Append(",\"stations\":[");
+            bool firstSt = true;
+            foreach (var station in delivery.Stations) {
+              if (!firstSt) sb.Append(",");
+              firstSt = false;
+              sb.Append("{\"guid\":").Append(station.Guid)
+                .Append(",\"visitCount\":").Append(station.VisitCount)
+                .Append(",\"medianAbsAmount\":").Append(station.MedianAbsAmount)
+                .Append(",\"lastAmount\":").Append(station.LastAmount);
+              if (station.AreaId.HasValue) sb.Append(",\"areaId\":").Append(station.AreaId.Value);
+              if (station.IntervalMsMedian.HasValue) sb.Append(",\"intervalMsMedian\":").Append(station.IntervalMsMedian.Value);
+              if (!string.IsNullOrEmpty(station.Name)) sb.Append(",\"name\":\"").Append(Esc(station.Name)).Append("\"");
+              sb.Append("}");
+            }
+            sb.Append("]");
+          }
+          sb.Append("}");
         }
         sb.Append("}");
       }
@@ -293,15 +311,26 @@ namespace HarborBuddy {
       public int MedianAbsAmount;
       public int LastAmount;
     }
+    sealed class RouteStationDelivery {
+      public int? AreaId;
+      public int Guid;
+      public string Name;
+      public int VisitCount;
+      public int MedianAbsAmount;
+      public int LastAmount;
+      public long? IntervalMsMedian;
+    }
     sealed class RouteDelivery {
       public int VisitCount;
       public long LastExecutionTime;
       public long? IntervalMsMedian;
       public readonly List<RouteDeliveryGood> Goods = new List<RouteDeliveryGood>();
+      public readonly List<RouteStationDelivery> Stations = new List<RouteStationDelivery>();
     }
     sealed class RouteVisit {
       public long Time;
       public bool Finalized;
+      public int? AreaId;
       public readonly List<int> Guids = new List<int>();
       public readonly List<int> Amounts = new List<int>();
     }
@@ -538,7 +567,12 @@ namespace HarborBuddy {
             }
             var trade = Child(node, "PropertyTradeRouteVehicle");
             var routeId = trade != null ? LeafInt(trade, "TradeRouteID") : null;
-            string key = metaId.HasValue ? ("meta:" + metaId.Value) : ("name:" + name + ":g:" + (guid.HasValue ? guid.Value : 0) + ":a:" + (areaId.HasValue ? areaId.Value : 0));
+            var objectId = LeafInt64(node, "ID") ?? LeafInt64(node, "id");
+            string key = metaId.HasValue
+              ? ("meta:" + metaId.Value)
+              : objectId.HasValue
+                ? ("obj:" + objectId.Value)
+                : ("slot:" + output.Count + ":g:" + (guid.HasValue ? guid.Value : 0) + ":a:" + (areaId.HasValue ? areaId.Value : 0));
             if (!seen.Contains(key)) {
               seen.Add(key);
               var ship = new FleetShip {
@@ -598,7 +632,8 @@ namespace HarborBuddy {
         var finalized = Leaf(node, "Finalized");
         var visit = new RouteVisit {
           Time = time.Value,
-          Finalized = finalized != null && finalized.Length > 0 && finalized[0] != 0
+          Finalized = finalized != null && finalized.Length > 0 && finalized[0] != 0,
+          AreaId = LeafInt(node, "AreaID") ?? LeafInt(node, "Identifier")
         };
         foreach (var goodNode in goods.Children) {
           var guid = LeafInt(goodNode, "GoodGuid");
@@ -673,6 +708,49 @@ namespace HarborBuddy {
           VisitCount = kv.Value.Count,
           MedianAbsAmount = MedianInt(abs),
           LastAmount = lastAmount[kv.Key]
+        });
+      }
+      var stationTimes = new Dictionary<string, List<long>>();
+      var stationAmounts = new Dictionary<string, List<int>>();
+      var stationLast = new Dictionary<string, int>();
+      var stationArea = new Dictionary<string, int?>();
+      var stationGuid = new Dictionary<string, int>();
+      foreach (var visit in finalized) {
+        for (int i = 0; i < visit.Guids.Count; i++) {
+          int guid = visit.Guids[i];
+          string key = (visit.AreaId.HasValue ? visit.AreaId.Value.ToString() : "x") + ":" + guid;
+          List<long> times;
+          if (!stationTimes.TryGetValue(key, out times)) {
+            times = new List<long>();
+            stationTimes[key] = times;
+            stationAmounts[key] = new List<int>();
+            stationArea[key] = visit.AreaId;
+            stationGuid[key] = guid;
+          }
+          times.Add(visit.Time);
+          stationAmounts[key].Add(visit.Amounts[i]);
+          stationLast[key] = visit.Amounts[i];
+        }
+      }
+      foreach (var kv in stationTimes) {
+        var times = kv.Value;
+        var stationIntervals = new List<long>();
+        for (int i = 1; i < times.Count; i++) {
+          long delta = times[i] - times[i - 1];
+          if (delta > 0) stationIntervals.Add(delta);
+        }
+        var abs = new List<int>();
+        foreach (var amt in stationAmounts[kv.Key]) abs.Add(Math.Abs(amt));
+        GuidRow guidRow;
+        int guid = stationGuid[kv.Key];
+        delivery.Stations.Add(new RouteStationDelivery {
+          AreaId = stationArea[kv.Key],
+          Guid = guid,
+          Name = guids.TryGetValue(guid, out guidRow) && guidRow.kind == "good" ? guidRow.name : "",
+          VisitCount = stationAmounts[kv.Key].Count,
+          MedianAbsAmount = MedianInt(abs),
+          LastAmount = stationLast[kv.Key],
+          IntervalMsMedian = stationIntervals.Count > 0 ? MedianLong(stationIntervals) : (long?)null
         });
       }
       return delivery;

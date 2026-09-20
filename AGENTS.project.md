@@ -62,8 +62,9 @@ See `docs/native-telemetry.md`.
 - `IsLoading` is published only when present (`true` load, `false` unload). An omitted field is
   unknown — do not default it to load.
 - `delivery` is a compact summary of finalized `TradeRouteEntries` (visit count, median |amount|,
-  last signed amount, median `ExecutionTime` interval). Configured quantity, realized delivery and
-  inferred t/min stay separate. Nominal ship capacity is unknown.
+  last signed amount, median `ExecutionTime` interval) plus optional `stations[]` per
+  destination/good. Inferred t/min uses that station series, never a mixed load/unload interval.
+  Configured quantity, realized delivery and inferred t/min stay separate. Nominal ship capacity is unknown.
 - A configured route without observed deliveries is not guaranteed supply. Partial loads do not
   become full-warehouse claims.
 - `telemetry.goodsChanges` compares global stock across two distinct saves from the same session.
@@ -85,7 +86,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Save/OCR writer: `public/watch-harbor-live.ps1` (Windows). `src/lib/live/a7s-snapshot.ts` is a research util, not the Windows writer.
 - Honesty helpers: `src/lib/live/evidence.ts`
 - Verified missions (three channels, frozen timer, suggested reserves): `src/lib/missions`
-- Player fleet (owner 0, catalog upkeep inferred, escort never surplus): `src/lib/fleet`
+- Player fleet (owner 0, catalog upkeep inferred, escort never surplus, same name ≠ one hull, roles per campaign): `src/lib/fleet`
 - Local campaign history (IndexedDB, not the shared JSON): `src/lib/history`
 - Production analysis: `src/lib/native-production.ts`
 - Produce-or-import scenarios (pure, inferred): `src/lib/scenario/`

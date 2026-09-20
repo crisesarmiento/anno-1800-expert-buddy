@@ -26,6 +26,7 @@ function missingLabel(t: UiDict, key: MissingDatum) {
     fertility: t.scenario.nextFertility,
     resource: t.scenario.nextResource,
     workforce: t.scenario.nextWorkforce,
+    inputs: t.scenario.nextInputs,
     "origin-demand": t.scenario.nextSurplus,
     "origin-capacity": t.scenario.nextSurplus,
     "transport-capacity": t.scenario.nextTransport,
@@ -105,7 +106,10 @@ export function TallerScenarioCard() {
         stop.goods.some((good) => liveGoodToCatalog(good.id) === resolvedGood),
       );
       if (!hasIsland || !hasGood) continue;
-      const tmin = inferredDeliveryTMin(route.delivery);
+      const guid = route.stops
+        .flatMap((stop) => stop.goods)
+        .find((good) => liveGoodToCatalog(good.id) === resolvedGood)?.guid;
+      const tmin = inferredDeliveryTMin(route.delivery, { areaId: island.areaId, guid });
       if (tmin == null) continue;
       best = best == null ? tmin : Math.max(best, tmin);
     }

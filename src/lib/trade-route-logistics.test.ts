@@ -114,7 +114,7 @@ describe("configured is not guaranteed supply", () => {
     assert.equal(logistics.ships[0], "Conflicto");
     assert.equal(logistics.quantities[0]?.configured, 20);
     assert.equal(logistics.quantities[0]?.realizedMedian, 12);
-    assert.equal(logistics.observedTMin, 3);
+    assert.equal(logistics.observedTMin, null);
     assert.equal(logistics.islandByAreaId.get(8451)?.name, "La Costa");
   });
 
@@ -143,7 +143,7 @@ describe("configured is not guaranteed supply", () => {
 });
 
 describe("observed throughput stays inferred", () => {
-  it("needs both interval and realized amount", () => {
+  it("needs both interval and realized amount for a destination/good", () => {
     assert.equal(inferredDeliveryTMin(undefined), null);
     assert.equal(
       inferredDeliveryTMin({
@@ -153,5 +153,35 @@ describe("observed throughput stays inferred", () => {
       }),
       null,
     );
+  });
+
+  it("does not treat an alternating load/unload as the destination rate", () => {
+    const delivery = {
+      visitCount: 4,
+      lastExecutionTime: 180_000,
+      intervalMsMedian: 60_000,
+      goods: [{ guid: 1010196, visitCount: 4, medianAbsAmount: 10, lastAmount: -10 }],
+      stations: [
+        {
+          areaId: 8451,
+          guid: 1010196,
+          visitCount: 2,
+          medianAbsAmount: 10,
+          lastAmount: 10,
+          intervalMsMedian: 120_000,
+        },
+        {
+          areaId: 9219,
+          guid: 1010196,
+          visitCount: 2,
+          medianAbsAmount: 10,
+          lastAmount: -10,
+          intervalMsMedian: 120_000,
+        },
+      ],
+    };
+    assert.equal(inferredDeliveryTMin(delivery), null);
+    assert.equal(inferredDeliveryTMin(delivery, { areaId: 9219, guid: 1010196 }), 5);
+    assert.notEqual(inferredDeliveryTMin(delivery, { areaId: 9219, guid: 1010196 }), 10);
   });
 });

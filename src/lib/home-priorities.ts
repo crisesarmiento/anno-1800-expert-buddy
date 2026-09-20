@@ -156,7 +156,10 @@ export function homePriorities(
       : [];
   const essential: HomePriority[] = essentialStockDrops(branch).map((row) => ({
     kind: "essential",
-    key: `essential-${row.id}`,
+    key:
+      row.scope === "island"
+        ? `essential-${row.campaignId}-${row.branchId}-${row.regionId}-${row.areaId}-${row.id}`
+        : `essential-${row.campaignId}-${row.branchId}-global-${row.id}`,
     name: row.name,
     before: row.from,
     after: row.to,

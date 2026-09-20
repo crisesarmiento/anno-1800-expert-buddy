@@ -88,6 +88,93 @@ describe("essentialStockDrops", () => {
     ];
     assert.equal(essentialStockDrops(rows).length, 0);
   });
+
+  it("does not add two one-off island drops into one global alert", () => {
+    const at = (simTime: number) => new Date(Date.UTC(2026, 8, 20, 12, simTime)).toISOString();
+    function multi(
+      id: string,
+      simTime: number,
+      costa: number,
+      other: number,
+    ): HistorySample {
+      const stamp = at(simTime);
+      return {
+        id,
+        campaignId: "camp",
+        branchId: "main",
+        recordedAt: stamp,
+        contentHash: id,
+        simTime,
+        savedAt: stamp,
+        summary: {
+          islands: [
+            {
+              regionId: 180023,
+              areaId: 8451,
+              ownerId: 0,
+              name: "La Costa",
+              stock: [{ id: "wood", name: "Timber", amount: costa }],
+            },
+            {
+              regionId: 180023,
+              areaId: 9219,
+              ownerId: 0,
+              name: "Otra",
+              stock: [{ id: "wood", name: "Timber", amount: other }],
+            },
+          ],
+        },
+      };
+    }
+    const drops = essentialStockDrops([
+      multi("a", 100, 80, 80),
+      multi("b", 200, 50, 80),
+      multi("c", 300, 50, 40),
+    ]);
+    assert.equal(drops.length, 0);
+  });
+
+  it("keeps a repeated drop on one island and a global total as separate series", () => {
+    const at = (simTime: number) => new Date(Date.UTC(2026, 8, 20, 12, simTime)).toISOString();
+    function row(
+      id: string,
+      simTime: number,
+      islandWood: number,
+      globalWood: number,
+    ): HistorySample {
+      const stamp = at(simTime);
+      return {
+        id,
+        campaignId: "camp",
+        branchId: "main",
+        recordedAt: stamp,
+        contentHash: id,
+        simTime,
+        savedAt: stamp,
+        summary: {
+          islands: [
+            {
+              regionId: 180023,
+              areaId: 8451,
+              ownerId: 0,
+              name: "La Costa",
+              stock: [{ id: "wood", name: "Timber", amount: islandWood }],
+            },
+          ],
+          globalGoods: [{ id: "wood", name: "Timber", amount: globalWood }],
+        },
+      };
+    }
+    const drops = essentialStockDrops([
+      row("a", 100, 80, 200),
+      row("b", 200, 50, 180),
+      row("c", 300, 20, 150),
+    ]);
+    assert.equal(drops.length, 2);
+    assert.equal(drops.filter((item) => item.scope === "island").length, 1);
+    assert.equal(drops.filter((item) => item.scope === "global").length, 1);
+    assert.equal(drops.find((item) => item.scope === "island")?.areaId, 8451);
+  });
 });
 
 describe("follow-up store", () => {

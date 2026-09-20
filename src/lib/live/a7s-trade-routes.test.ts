@@ -236,6 +236,7 @@ function buildLogisticsA7s(): Buffer {
     { close: true },
     { open: UNNAMED_TAG },
     { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(8451) },
     { leaf: ATTRS.ExecutionTime, payload: i64(10_000) },
     { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
     { open: TAGS.TradedGoods },
@@ -247,6 +248,7 @@ function buildLogisticsA7s(): Buffer {
     { close: true },
     { open: UNNAMED_TAG },
     { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(9219) },
     { leaf: ATTRS.ExecutionTime, payload: i64(22_000) },
     { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
     { open: TAGS.TradedGoods },
@@ -283,5 +285,85 @@ describe("stage 4 route fields from FileDB", () => {
     assert.equal(summary[0]?.intervalMsMedian, 12_000);
     assert.equal(summary[0]?.goods[0]?.medianAbsAmount, 12);
     assert.equal(summary[0]?.goods[0]?.lastAmount, 11);
+    assert.equal(summary[0]?.stations.length, 2);
+    assert.equal(summary[0]?.stations.find((row) => row.areaId === 9219)?.medianAbsAmount, 11);
+  });
+});
+
+function buildAlternatingVisitsA7s(): Buffer {
+  const recs: Rec[] = [
+    { open: TAGS.MetaGameManager },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(8451) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(0) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(10) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(9219) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(60_000) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(-10) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(8451) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(120_000) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(10) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.AreaID, payload: i32(9219) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(180_000) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(-10) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+  ];
+  const tagNames = Object.fromEntries(Object.entries(TAGS).map(([name, id]) => [id, name]));
+  const attrNames = Object.fromEntries(Object.entries(ATTRS).map(([name, id]) => [id, name]));
+  return encodeFileDb(recs, tagNames, attrNames);
+}
+
+describe("P1-A deliveries per destination and good", () => {
+  it("does not report 10 t/min when the destination receives 10 t every two minutes", () => {
+    const visits = extractRouteVisits(buildAlternatingVisitsA7s());
+    assert.equal(visits.length, 4);
+    const summary = summarizeRouteDeliveries(visits);
+    const dest = summary[0]?.stations.find((row) => row.areaId === 9219 && row.guid === 1010196);
+    assert.equal(dest?.intervalMsMedian, 120_000);
+    assert.equal(dest?.medianAbsAmount, 10);
+    assert.equal(summary[0]?.intervalMsMedian, 60_000);
+    const destTMin = dest?.intervalMsMedian
+      ? dest.medianAbsAmount / (dest.intervalMsMedian / 60_000)
+      : null;
+    const mixedTMin = summary[0]?.intervalMsMedian
+      ? 10 / (summary[0].intervalMsMedian / 60_000)
+      : null;
+    assert.equal(destTMin, 5);
+    assert.equal(mixedTMin, 10);
   });
 });

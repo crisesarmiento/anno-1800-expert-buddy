@@ -309,3 +309,162 @@ describe("scenario honesty", () => {
     assert.equal(result.cutAdvice.recommendCut, false);
   });
 });
+
+describe("P1-A incremental capacity", () => {
+  it("does not treat one existing fishery as if three were missing from zero", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "fish",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "La Costa",
+          demandTMin: 6,
+          capacityTMin: 2,
+          buildingCount: 1,
+          buildings: { fishery: 1 },
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+      ],
+    });
+    assert.equal(result.neededTMin, 4);
+    const chain = result.alternatives.find((row) => row.kind === "build-local-chain");
+    const expand = result.alternatives.find((row) => row.kind === "expand-local");
+    assert.equal(chain?.buildingsToAdd.fishery, 2);
+    assert.equal(expand?.buildingsToAdd.fishery, 2);
+    assert.equal(chain?.allocatedTMin, 4);
+    assert.equal(expand?.allocatedTMin, 4);
+    assert.equal(chain?.coversNeed, true);
+    assert.notEqual(chain?.buildingsToAdd.fishery, 1);
+  });
+
+  it("keeps a partial schnapps chain and production below 100%", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "schnapps",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "La Costa",
+          demandTMin: 4,
+          capacityTMin: 1,
+          buildingCount: 1,
+          buildings: { distillery: 1 },
+          fertility: { potato: true },
+          workforceAvailable: { farmer: 200 },
+        }),
+      ],
+    });
+    const chain = result.alternatives.find((row) => row.kind === "build-local-chain");
+    assert.ok((chain?.buildingsToAdd.distillery ?? 0) >= 3);
+    assert.ok((chain?.buildingsToAdd.potato ?? 0) >= 3);
+    assert.equal(chain?.coversNeed, true);
+  });
+});
+
+describe("P1-A unknown reserves and origin transport", () => {
+  it("does not treat unknown reserved exports as zero surplus", () => {
+    const origin = island({
+      id: "180023:9",
+      name: "Origen",
+      demandTMin: 1,
+      capacityTMin: 6,
+      reservedExportTMin: null,
+      hasOtherConsumers: true,
+      transportToConsumerTMin: 4,
+      routeToConsumerOk: true,
+    });
+    assert.equal(verifiedSurplusTMin(origin), null);
+    const result = compareScenarios({
+      consumerId: "180023:2",
+      goodId: "fish",
+      islands: [
+        origin,
+        island({
+          id: "180023:2",
+          name: "Consumidora",
+          demandTMin: 2,
+          capacityTMin: 0,
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+      ],
+    });
+    const transport = result.alternatives.find((row) => row.kind === "transport-surplus");
+    const expand = result.alternatives.find((row) => row.kind === "expand-origin-and-transport");
+    assert.notEqual(transport?.coversNeed, true);
+    assert.ok(expand?.missing.includes("origin-demand"));
+    assert.notEqual(expand?.viability, "viable");
+  });
+
+  it("picks the origin with viable transport over a larger stranded surplus", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "fish",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "Consumidora",
+          demandTMin: 2,
+          capacityTMin: 0,
+          resources: { coastline: false },
+          workforceAvailable: { farmer: 80 },
+        }),
+        island({
+          id: "180023:8",
+          name: "Sin barco",
+          demandTMin: 0,
+          capacityTMin: 8,
+          reservedExportTMin: 0,
+          hasOtherConsumers: false,
+          transportToConsumerTMin: null,
+          routeToConsumerOk: null,
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+        island({
+          id: "180023:9",
+          name: "Con ruta",
+          demandTMin: 0,
+          capacityTMin: 2,
+          reservedExportTMin: 0,
+          hasOtherConsumers: false,
+          transportToConsumerTMin: 2,
+          routeToConsumerOk: true,
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+      ],
+    });
+    const transport = result.alternatives.find((row) => row.kind === "transport-surplus");
+    assert.equal(transport?.originId, "180023:9");
+    assert.equal(transport?.allocatedTMin, 2);
+    assert.equal(transport?.viability, "viable");
+  });
+});
+
+describe("P1-A inputs and free workforce", () => {
+  it("does not call expand-local viable when the extra factory has no inputs", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "schnapps",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "La Costa",
+          demandTMin: 4,
+          capacityTMin: 2,
+          buildingCount: 1,
+          buildings: { distillery: 1 },
+          fertility: { potato: true },
+          workforceAvailable: { farmer: 200 },
+        }),
+      ],
+    });
+    const expand = result.alternatives.find((row) => row.kind === "expand-local");
+    assert.equal(expand?.viability, "impossible");
+    assert.ok(expand?.blockers.some((row) => row.startsWith("inputs:")));
+  });
+});
+

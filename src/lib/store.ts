@@ -14,7 +14,11 @@ import {
   matchLiveSnapshot,
   type LiveSnapshot,
 } from "@/lib/live";
-import type { FleetManualRole, FleetRoleMap } from "@/lib/fleet";
+import {
+  setRoleOnCampaign,
+  type FleetManualRole,
+  type FleetRolesByCampaign,
+} from "@/lib/fleet";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
 import type { PulseSample } from "@/lib/dash";
 import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
@@ -60,7 +64,7 @@ type HarborState = {
   manualHistoryCampaignId: string | null;
   historyError: string | null;
   pendingCampaign: { candidates: CampaignCandidate[]; snapshot: LiveSnapshot } | null;
-  fleetRoles: FleetRoleMap;
+  fleetRolesByCampaign: FleetRolesByCampaign;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -120,7 +124,7 @@ export const useHarbor = create<HarborState>()(
       manualHistoryCampaignId: null,
       historyError: null,
       pendingCampaign: null,
-      fleetRoles: {},
+      fleetRolesByCampaign: {},
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         const prev = get().missionId;
@@ -342,12 +346,25 @@ export const useHarbor = create<HarborState>()(
       clearPendingCampaign: () => set({ pendingCampaign: null }),
       setFleetRole: (key, role) =>
         set((state) => ({
-          fleetRoles: { ...state.fleetRoles, [key]: role },
+          fleetRolesByCampaign: setRoleOnCampaign(
+            state.fleetRolesByCampaign,
+            state.historyCampaignId ?? state.manualHistoryCampaignId,
+            key,
+            role,
+          ),
         })),
     }),
     {
       name: "harbor-buddy-es",
       skipHydration: true,
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<HarborState>;
+        return {
+          ...current,
+          ...p,
+          fleetRolesByCampaign: p.fleetRolesByCampaign ?? {},
+        };
+      },
       partialize: (state) => ({
         missionId: state.missionId,
         spoilers: state.spoilers,
@@ -372,7 +389,7 @@ export const useHarbor = create<HarborState>()(
         activeIslandId: state.activeIslandId,
         historyCampaignId: state.historyCampaignId,
         manualHistoryCampaignId: state.manualHistoryCampaignId,
-        fleetRoles: state.fleetRoles,
+        fleetRolesByCampaign: state.fleetRolesByCampaign,
       }),
     },
   ),

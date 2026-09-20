@@ -695,6 +695,26 @@ while ($true) {
         if ($route.delivery.intervalMsMedian -ne $null) {
           $delivery.intervalMsMedian = [int64]$route.delivery.intervalMsMedian
         }
+        $deliveryStations = @()
+        foreach ($station in @($route.delivery.stations)) {
+          if ($station.guid -eq $null) { continue }
+          $stationRow = [ordered]@{
+            guid            = [int]$station.guid
+            visitCount      = [int]$station.visitCount
+            medianAbsAmount = [int]$station.medianAbsAmount
+            lastAmount      = [int]$station.lastAmount
+          }
+          if ($station.areaId -ne $null) { $stationRow.areaId = [int]$station.areaId }
+          if ($station.intervalMsMedian -ne $null) {
+            $stationRow.intervalMsMedian = [int64]$station.intervalMsMedian
+          }
+          $knownStation = $guidByNumber[[string]$station.guid]
+          if ($knownStation -and $knownStation.id) { $stationRow.id = [string]$knownStation.id }
+          if ($station.name) { $stationRow.name = [string]$station.name }
+          elseif ($knownStation -and $knownStation.name) { $stationRow.name = [string]$knownStation.name }
+          $deliveryStations += $stationRow
+        }
+        if ($deliveryStations.Count -gt 0) { $delivery.stations = @($deliveryStations) }
         $routeOut.delivery = $delivery
       }
       $routes += $routeOut

@@ -398,6 +398,7 @@ const es = {
     nextSurplus: "capacidad y demanda en el origen, no el stock",
     nextInvestment: "costo de construcción de los edificios que faltarían",
     nextPaused: "cuántas fábricas están pausadas",
+    nextInputs: "insumos de esa cadena en la isla; no doy por hecho que ya llegan",
     origin: "Origen: {0}",
     transportManual: "t/min de transporte (lo ponés vos)",
     transportManualHint:
@@ -929,6 +930,7 @@ const en: UiDict = {
     nextSurplus: "capacity and demand at the origin, not stock",
     nextInvestment: "construction cost of the buildings still missing",
     nextPaused: "how many factories are paused",
+    nextInputs: "chain inputs on that island; do not assume they already arrive",
     origin: "Origin: {0}",
     transportManual: "transport t/min (you type it)",
     transportManualHint:
@@ -1462,6 +1464,7 @@ const it: UiDict = {
     nextSurplus: "capacità e domanda all’origine, non lo stock",
     nextInvestment: "costo di costruzione degli edifici che mancano",
     nextPaused: "quante fabbriche sono in pausa",
+    nextInputs: "ingressi della catena su quell'isola; non do per scontato che arrivino già",
     origin: "Origine: {0}",
     transportManual: "t/min di trasporto (lo scrivi tu)",
     transportManualHint:
@@ -1994,6 +1997,7 @@ const de: UiDict = {
     nextSurplus: "Kapazität und Nachfrage am Ursprung, nicht der Bestand",
     nextInvestment: "Baukosten der noch fehlenden Gebäude",
     nextPaused: "wie viele Fabriken pausieren",
+    nextInputs: "Vorprodukte der Kette auf der Insel; nicht annehmen, dass sie schon da sind",
     origin: "Ursprung: {0}",
     transportManual: "Transport-t/min (von dir)",
     transportManualHint:

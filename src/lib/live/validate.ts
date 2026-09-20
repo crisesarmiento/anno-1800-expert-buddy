@@ -48,6 +48,7 @@ import {
   type LiveRouteDelivery,
   type LiveRouteDeliveryGood,
   type LiveRouteShip,
+  type LiveRouteStationDelivery,
   type LiveShipKind,
   type LiveTradeRoute,
   type LiveWorkforce,
@@ -121,14 +122,15 @@ function normalizeQuest(value: unknown, locale?: string | null): LiveQuest | { e
   const title = typeof value.title === "string" ? value.title.trim() : "";
   if (!title) return { error: msg("emptyTitle", locale) };
   if (title.length > LIVE_MAX_TITLE) return { error: msg("longTitle", locale) };
-  let state: LiveQuestState = "active";
   if (value.state !== undefined) {
     if (typeof value.state !== "string" || !QUEST_STATES.has(value.state as LiveQuestState)) {
       return { error: msg("badState", locale) };
     }
-    state = value.state as LiveQuestState;
   }
-  const quest: LiveQuest = { title, state };
+  const quest: LiveQuest = { title };
+  if (typeof value.state === "string" && QUEST_STATES.has(value.state as LiveQuestState)) {
+    quest.state = value.state as LiveQuestState;
+  }
   if (typeof value.objective === "string" && value.objective.trim()) {
     quest.objective = value.objective.trim().slice(0, 400);
   }
@@ -389,6 +391,38 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
               if (rowName) row.name = rowName;
               delivery.goods.push(row);
             }
+          }
+          if (Array.isArray(item.delivery.stations)) {
+            const stations: LiveRouteStationDelivery[] = [];
+            for (const stationValue of item.delivery.stations.slice(0, 40)) {
+              if (!asRecord(stationValue)) continue;
+              const guid = Number(stationValue.guid);
+              const goodVisits = Number(stationValue.visitCount);
+              const medianAbsAmount = Number(stationValue.medianAbsAmount);
+              const lastAmount = Number(stationValue.lastAmount);
+              if (!Number.isFinite(guid) || !Number.isFinite(goodVisits) || !Number.isFinite(medianAbsAmount)) {
+                continue;
+              }
+              if (!Number.isFinite(lastAmount)) continue;
+              const station: LiveRouteStationDelivery = {
+                guid: Math.trunc(guid),
+                visitCount: Math.max(0, Math.trunc(goodVisits)),
+                medianAbsAmount: Math.max(0, Math.trunc(medianAbsAmount)),
+                lastAmount: Math.trunc(lastAmount),
+              };
+              const areaId = Number(stationValue.areaId);
+              if (Number.isFinite(areaId)) station.areaId = Math.trunc(areaId);
+              const interval = Number(stationValue.intervalMsMedian);
+              if (Number.isFinite(interval) && interval > 0) {
+                station.intervalMsMedian = Math.trunc(interval);
+              }
+              const rowId = clipName(stationValue.id, 48);
+              const rowName = clipName(stationValue.name, 80);
+              if (rowId) station.id = rowId;
+              if (rowName) station.name = rowName;
+              stations.push(station);
+            }
+            if (stations.length) delivery.stations = stations;
           }
           route.delivery = delivery;
         }

@@ -31,11 +31,38 @@ export type ApplySaveCountsInput = {
   fill?: SaveCountFill;
 };
 
+export type DiagnosisSource = "save" | "example-seed" | "manual" | "mixed";
+
 export type ApplySaveCountsResult = {
   seed: CitySeed;
   applied: boolean;
   message: string | null;
+  diagnosis: DiagnosisSource;
 };
+
+export const EXAMPLE_SEED_ISLAND_ID = "la-inapetente";
+export const EXAMPLE_SEED_NOTES =
+  "primera isla, mercado cerca del puerto. Bright Sands es de Edvard.";
+
+export function isExampleCampaignSeed(seed: CitySeed): boolean {
+  const island = seed.islands[0];
+  return (
+    seed.chapterId === "ch1" &&
+    island?.id === EXAMPLE_SEED_ISLAND_ID &&
+    island?.notes === EXAMPLE_SEED_NOTES
+  );
+}
+
+export function diagnosisSourceOf(input: {
+  seed: CitySeed;
+  applied: boolean;
+}): DiagnosisSource {
+  const example = isExampleCampaignSeed(input.seed);
+  if (input.applied && example) return "mixed";
+  if (input.applied) return "save";
+  if (example) return "example-seed";
+  return "manual";
+}
 
 function overlayIsland(island: Island, houses: HouseCounts, buildings: BuildingCounts): Island {
   return {
@@ -66,11 +93,19 @@ export function applySaveCountsChip(input: ApplySaveCountsInput): ApplySaveCount
     manualSeed: input.seed,
   });
   if (mapped.degraded || mapped.keepManualSeed) {
-    return { seed: input.seed, applied: false, message: SAVE_COUNT_DEGRADE_ES };
+    return {
+      seed: input.seed,
+      applied: false,
+      message: SAVE_COUNT_DEGRADE_ES,
+      diagnosis: diagnosisSourceOf({ seed: input.seed, applied: false }),
+    };
   }
+  const next = overlaySeed(input.seed, mapped.houses, mapped.buildings);
+  const applied = true;
   return {
-    seed: overlaySeed(input.seed, mapped.houses, mapped.buildings),
-    applied: true,
+    seed: next,
+    applied,
     message: null,
+    diagnosis: diagnosisSourceOf({ seed: input.seed, applied }),
   };
 }

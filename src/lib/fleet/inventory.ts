@@ -3,27 +3,32 @@ import type { LiveFleetShip, LiveSnapshot, LiveTradeRoute } from "../live/types.
 import { lookupShipCatalog } from "./catalog.ts";
 import { honestyFromCoverage, type FleetInventoryShip, type FleetUpkeepSplit } from "./types.ts";
 
-export function shipInventoryKey(ship: LiveFleetShip): string {
+export function shipInventoryKey(ship: LiveFleetShip, fallbackIndex = 0): string {
   if (typeof ship.metaId === "number" && Number.isFinite(ship.metaId)) {
     return `meta:${Math.trunc(ship.metaId)}`;
   }
   const name = ship.name?.trim() ?? "";
   const guid = typeof ship.guid === "number" ? Math.trunc(ship.guid) : 0;
   const area = typeof ship.location?.areaId === "number" ? ship.location.areaId : "x";
-  return `name:${name}:guid:${guid}:area:${area}:owner:${ship.ownerId}`;
+  // A display name is not a hull id. Two schooners called Conflicto stay two hulls.
+  return `hull:${fallbackIndex}:guid:${guid}:area:${area}:owner:${ship.ownerId}:name:${name}`;
 }
 
 /**
  * Player ships only (Participant 0). One physical ship is counted once,
  * even if it also appears as a name on a trade route.
+ * Same display name is not proof of a single hull.
  */
 export function uniquePlayerShips(ships: readonly LiveFleetShip[] | undefined): LiveFleetShip[] {
   if (!ships?.length) return [];
   const seen = new Set<string>();
   const out: LiveFleetShip[] = [];
+  let anon = 0;
   for (const ship of ships) {
     if (!isPlayerParticipant(ship.ownerId)) continue;
-    const key = shipInventoryKey(ship);
+    const hasMeta = typeof ship.metaId === "number" && Number.isFinite(ship.metaId);
+    const key = shipInventoryKey(ship, hasMeta ? 0 : anon);
+    if (!hasMeta) anon += 1;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(ship);
@@ -47,17 +52,29 @@ export function inventoryFromSnapshot(snapshot: LiveSnapshot | null | undefined)
   if (!snapshot) return [];
   const routeNames = routeShipNames(snapshot.telemetry?.routes);
   const ships = uniquePlayerShips(snapshot.telemetry?.fleet);
+  const nameCounts = new Map<string, number>();
+  for (const ship of ships) {
+    const name = ship.name?.trim();
+    if (!name) continue;
+    nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1);
+  }
+  let anon = 0;
   return ships.map((ship) => {
     const catalog = lookupShipCatalog(ship.guid, ship.id);
+    const name = ship.name?.trim();
+    const nameUnique = Boolean(name && (nameCounts.get(name) ?? 0) === 1);
     const assigned =
       ship.assignment?.kind === "trade-route" ||
-      (ship.name != null && routeNames.has(ship.name.trim()));
+      (nameUnique && name != null && routeNames.has(name));
     const typeHonesty = ship.guid != null || ship.id ? (honestyFromCoverage(ship.coverage.type) ?? "confirmed") : null;
     const assignmentHonesty = assigned
       ? (honestyFromCoverage(ship.coverage.assignment) ?? "confirmed")
       : honestyFromCoverage(ship.coverage.assignment);
+    const hasMeta = typeof ship.metaId === "number" && Number.isFinite(ship.metaId);
+    const key = shipInventoryKey(ship, hasMeta ? 0 : anon);
+    if (!hasMeta) anon += 1;
     const row: FleetInventoryShip = {
-      key: shipInventoryKey(ship),
+      key,
       ship,
       honesty: {
         identity: honestyFromCoverage(ship.coverage.identity) ?? "confirmed",

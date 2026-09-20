@@ -31,8 +31,10 @@ describe("stage 4 watcher logistics fields", () => {
     assert.match(scanner, /TradedGoods/);
     assert.match(scanner, /ExecutionTime/);
     assert.match(scanner, /medianAbsAmount/);
+    assert.match(scanner, /RouteStationDelivery/);
     assert.doesNotMatch(scanner, /causedByRoute|routeCaused|causal/);
     assert.match(watcher, /\$routeOut\.delivery = \$delivery/);
+    assert.match(watcher, /\$delivery\.stations = @\(\$deliveryStations\)/);
     assert.doesNotMatch(watcher, /causedByRoute|routeCaused|causal/);
   });
 
@@ -41,6 +43,7 @@ describe("stage 4 watcher logistics fields", () => {
     assert.equal(route.stops.items.properties.goods.items.properties.isLoading.type, "boolean");
     assert.equal(route.ships.items.required[0], "name");
     assert.ok(route.delivery.required.includes("visitCount"));
+    assert.equal(route.delivery.properties.stations.items.properties.areaId.type, "integer");
   });
 
   it("ships the same fields in the standalone bat after pack:mod", () => {

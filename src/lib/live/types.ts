@@ -40,7 +40,8 @@ export type LiveQuestProgress = {
 
 export type LiveQuest = {
   title: string;
-  state: LiveQuestState;
+  /** Absent is not active. A GUID without state is identity only. */
+  state?: LiveQuestState;
   objective?: string;
   /** Distinguishes repeated instances that share the same GUID. */
   instanceId?: string;
@@ -99,14 +100,32 @@ export type LiveRouteDeliveryGood = {
 };
 
 /**
+ * Delivery of one good at one station. Interval is that series only —
+ * never mixed with the other stop of the same route.
+ */
+export type LiveRouteStationDelivery = {
+  guid: number;
+  id?: string;
+  name?: string;
+  visitCount: number;
+  medianAbsAmount: number;
+  lastAmount: number;
+  areaId?: number;
+  intervalMsMedian?: number;
+};
+
+/**
  * Compact history from PassiveTrade/History/TradeRouteEntries.
  * Signed lastAmount is the last finalized visit; it is not load/unload.
+ * Route-level goods stay a compact summary; station rows are the
+ * destination/good series used for inferred t/min.
  */
 export type LiveRouteDelivery = {
   visitCount: number;
   lastExecutionTime: number;
   intervalMsMedian?: number;
   goods: LiveRouteDeliveryGood[];
+  stations?: LiveRouteStationDelivery[];
 };
 
 /** Change in save-wide stock between two distinct saves from the same session. */

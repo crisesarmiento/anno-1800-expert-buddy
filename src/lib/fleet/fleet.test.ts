@@ -8,11 +8,14 @@ import {
   doubleCountRouteAndFleet,
   effectiveRole,
   fleetAdvice,
+  rolesForCampaign,
+  setRoleOnCampaign,
   fleetFixtures,
   fleetUpkeepSplit,
   inferSafetyFromAbsentEnemies,
   inventoryFromSnapshot,
   isSurplus,
+  playerShip,
   promiseCombatOutcome,
   recommendDismantleBecauseExpensive,
   surplusLabel,
@@ -131,5 +134,36 @@ describe("etapa 6 fleet honesty", () => {
       }),
     );
     assert.equal(missing.ok && missing.snapshot.telemetry?.fleet, undefined);
+  });
+});
+
+describe("P1-A hull identity and campaign-scoped roles", () => {
+  it("does not treat two ships with the same name as one hull", () => {
+    const snapshot = {
+      ...fleetFixtures.escortAndTrade,
+      telemetry: {
+        ...fleetFixtures.escortAndTrade.telemetry,
+        fleet: [
+          playerShip({ name: "Conflicto", guid: 100438, id: "schooner", metaId: undefined, location: { areaId: 8451 } }),
+          playerShip({ name: "Conflicto", guid: 100438, id: "schooner", metaId: undefined, location: { areaId: 8451 } }),
+        ],
+      },
+    };
+    const unique = uniquePlayerShips(snapshot.telemetry?.fleet);
+    assert.equal(unique.length, 2);
+    const rows = inventoryFromSnapshot(snapshot);
+    assert.equal(rows.length, 2);
+    assert.notEqual(rows[0]?.key, rows[1]?.key);
+  });
+
+  it("keeps military roles isolated per campaign", () => {
+    const escort = inventoryFromSnapshot(fleetFixtures.escortAndTrade).find(
+      (row) => row.ship.name === "Heraldo",
+    );
+    assert.ok(escort);
+    const stored = setRoleOnCampaign({}, "camp-a", escort.key, "escort");
+    assert.equal(rolesForCampaign(stored, "camp-a")[escort.key], "escort");
+    assert.equal(rolesForCampaign(stored, "camp-b")[escort.key], undefined);
+    assert.deepEqual(rolesForCampaign(stored, "camp-b"), {});
   });
 });

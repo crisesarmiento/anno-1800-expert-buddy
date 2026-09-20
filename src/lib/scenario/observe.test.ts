@@ -143,4 +143,27 @@ describe("observeScenario", () => {
     assert.equal(manual.islands.find((row) => row.id === "180023:8451")?.transportToConsumerTMin, 2);
     assert.equal(manual.islands.find((row) => row.id === "180023:9219")?.transportToConsumerTMin, null);
   });
+
+  it("does not copy population headcount as free workforce", () => {
+    const live = snap({
+      islandSnapshots: [
+        {
+          regionId: 180023,
+          areaId: 8451,
+          ownerId: 0,
+          name: "La Costa",
+          nameSource: "city-name",
+          population: { farmers: 80, workers: 40 },
+          coverage: { identity: { source: "save" }, population: { source: "save" } },
+        },
+      ],
+    });
+    const input = observeScenario({
+      snapshot: live,
+      consumerId: "180023:8451",
+      goodId: "fish",
+    });
+    assert.equal(input.islands[0]?.workforceAvailable.farmer, undefined);
+    assert.equal(input.islands[0]?.workforceAvailable.worker, undefined);
+  });
 });
