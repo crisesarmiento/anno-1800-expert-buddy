@@ -48,6 +48,12 @@ describe("editorial isolation: Inicio summarizes; Diario has zero OCR panel", ()
     assert.match(productionCard, /id="native-production"/);
   });
 
+  it("treasury detail lives on /taller, not Inicio or Diario", () => {
+    assert.match(taller, /TallerEconomyCard/);
+    assert.doesNotMatch(home, /TallerEconomyCard/);
+    assert.doesNotMatch(app, /TallerEconomyCard/);
+  });
+
   it("Inicio uses clear paper, blue ink and brass without a dark SaaS shell", () => {
     assert.match(styles, /\[data-visual="editorial"\]/);
     assert.match(styles, /\.editorial-home/);

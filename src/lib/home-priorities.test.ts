@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { homePriorities, routeAnchor } from "./home-priorities.ts";
 import { editorialCopy } from "./editorial-copy.ts";
+import type { HistorySample } from "./history/types.ts";
 import type { LiveSnapshot, LiveProductionMetric, LiveTradeRoute } from "./live/types.ts";
 
 const time = "2026-09-19T12:00:00Z";
@@ -189,6 +190,36 @@ describe("editorial operational priorities", () => {
     assert.ok(first.kind === "route");
     assert.equal(first.observedAt, undefined);
   });
+  it("puts recurrent cash losses first and ignores an isolated purchase", () => {
+    const cash = (id: string, treasury: number, simTime: number): HistorySample => ({
+      id,
+      campaignId: "camp",
+      branchId: "main",
+      recordedAt: `2026-09-20T12:0${simTime}:00.000Z`,
+      contentHash: id,
+      simTime,
+      savedAt: `2026-09-20T12:0${simTime}:00.000Z`,
+      summary: { islands: [], treasury },
+    });
+    const s = snapshot();
+    s.telemetry!.production = [];
+    s.telemetry!.routes = [];
+    s.telemetry!.goodsChanges = [];
+    const recurrent = homePriorities(s, now, true, [
+      cash("a", 5000, 1),
+      cash("b", 3000, 2),
+      cash("c", 1000, 3),
+    ]);
+    assert.equal(recurrent.priorities[0]?.kind, "treasury");
+    const isolated = homePriorities(s, now, false, [
+      cash("a", 5000, 1),
+      cash("b", 1200, 2),
+      cash("c", 1800, 3),
+    ]);
+    assert.ok(isolated.priorities.every((item) => item.kind !== "treasury"));
+    assert.equal(isolated.readiness, "historical");
+  });
+
   it("balanced data can yield no priorities without inventing a healthy-economy claim", () => {
     const s = snapshot();
     s.telemetry!.production![0].requiredTMin = 2;
