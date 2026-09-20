@@ -57,6 +57,12 @@ function i32(n: number): Buffer {
   return b;
 }
 
+function i64(n: number): Buffer {
+  const b = Buffer.alloc(8);
+  b.writeBigInt64LE(BigInt(n), 0);
+  return b;
+}
+
 function wide(s: string): Buffer {
   return Buffer.concat([Buffer.from(s, "utf16le"), Buffer.alloc(2)]);
 }
@@ -90,6 +96,7 @@ const INNER_ATTRS = {
   id: 4,
   StrgLrg: 5,
   GameTime: 6,
+  SessionTotalTime: 7,
 };
 
 function sessionInner(opts?: { renameSecond?: string }): Buffer {
@@ -100,6 +107,7 @@ function sessionInner(opts?: { renameSecond?: string }): Buffer {
     [
       { open: INNER_TAGS.GameSessionManager },
       { leaf: INNER_ATTRS.GameTime, payload: i32(12_000) },
+      { leaf: INNER_ATTRS.SessionTotalTime, payload: i64(31_807_800) },
       { open: INNER_TAGS.AreaInfo },
       { open: INNER_TAGS.None },
       { leaf: INNER_ATTRS.Identifier, payload: i32(8451) },
@@ -194,7 +202,7 @@ describe("extractIslands nested FileDB", () => {
   it("keeps the same good independent on two player islands", () => {
     const { islands, meta } = extractIslands(buildSave());
     assert.equal(islands.length, 2);
-    assert.equal(meta.simTime, 12_000);
+    assert.equal(meta.simTime, 31_807_800);
     const costa = islands.find((row) => row.areaId === 8451);
     const other = islands.find((row) => row.areaId === 9219);
     assert.equal(costa?.regionId, 180023);
@@ -228,6 +236,31 @@ describe("extractIslands nested FileDB", () => {
     assert.equal(islandByAreaId(islands, 8451)?.name, "La Costa");
     assert.equal(islandByAreaId(islands, 9219)?.name, "[999001]");
     assert.equal(islandByAreaId(islands, 1), null);
+  });
+
+  it("prefers lastSnapshot over session clocks when both exist", () => {
+    const inner = sessionInner();
+    const buf = encodeFileDb(
+      [
+        { open: OUTER_TAGS.MetaGameManager },
+        { leaf: 9, payload: i64(31_805_300) },
+        { open: OUTER_TAGS.GameSessions },
+        { open: OUTER_TAGS.None },
+        { open: OUTER_TAGS.SessionDesc },
+        { leaf: OUTER_ATTRS.SessionGUID, payload: i32(180023) },
+        { close: true },
+        { leaf: OUTER_ATTRS.SessionData, payload: inner },
+        { close: true },
+        { close: true },
+        { close: true },
+      ],
+      Object.fromEntries(Object.entries(OUTER_TAGS).map(([name, id]) => [id, name])),
+      {
+        ...Object.fromEntries(Object.entries(OUTER_ATTRS).map(([name, id]) => [id, name])),
+        9: "lastSnapshot",
+      },
+    );
+    assert.equal(extractIslands(buf).meta.simTime, 31_805_300);
   });
 
   it("keeps identity when the player later renames the island", () => {

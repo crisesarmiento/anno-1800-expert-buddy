@@ -121,13 +121,40 @@ it("recovers from transient getFile failures", async () => {
 it("route components share one root-owned lifecycle; manual imports stop it", () => {
   const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
   assert.match(read("../../routes/__root.tsx"), /<LiveReaderLifecycle/);
+  assert.match(
+    read("../../components/live-reader-lifecycle.tsx"),
+    /!state\.liveEnabled && previous\.liveEnabled/,
+  );
+  assert.match(read("../live-reader.ts"), /resetCampaign !== false/);
+  assert.match(read("../live-reader.ts"), /startLiveReader\(handle, \{ resetCampaign: false \}\)/);
+  assert.match(
+    read("../../components/live-panel.tsx"),
+    /startLiveReader\(existing, \{ resetCampaign: false \}\)/,
+  );
   assert.doesNotMatch(read("../../components/live-panel.tsx"), /watchTimer|tickLiveHandle/);
   assert.match(
     read("../../components/live-panel.tsx"),
-    /liveReader.stop\(\);\s*commitLiveSnapshot/g,
+    /liveReader\.stop\(\);[\s\S]*?commitLiveSnapshot/,
   );
   assert.doesNotMatch(
     read("../../components/editorial-home.tsx"),
     /tickLiveHandle|clearInterval\(timer/,
   );
+});
+
+it("stop is idle-safe and does not re-emit imported", async () => {
+  const statuses: string[] = [];
+  const reader = createLiveReader({
+    status: (status) => statuses.push(status),
+    intervalMs: 100000,
+    accept: async () => () => {},
+  });
+  reader.stop();
+  reader.stop();
+  assert.deepEqual(statuses, []);
+  await reader.start({ getFile: async () => file() });
+  reader.stop();
+  reader.stop();
+  assert.equal(statuses.at(-1), "imported");
+  assert.equal(statuses.filter((status) => status === "imported").length, 1);
 });

@@ -171,18 +171,28 @@ namespace HarborBuddy {
         if (island.Stock.Count > 0 && island.Stock.Count <= 24) {
           sb.Append(",\"stock\":[");
           bool firstStock = true;
-          int stockCount = 0;
           foreach (var good in island.Stock) {
-            if (stockCount >= 24) break;
-            stockCount++;
             if (!firstStock) sb.Append(",");
             firstStock = false;
             sb.Append("{\"id\":\"").Append(Esc(good.Id)).Append("\",\"name\":\"").Append(Esc(good.Name)).Append("\",\"amount\":").Append(good.Amount).Append("}");
           }
           sb.Append("]");
         }
+        if (island.Buildings.Count > 0 && island.Buildings.Count <= 40) {
+          sb.Append(",\"buildings\":[");
+          bool firstBuilding = true;
+          foreach (var building in island.Buildings) {
+            if (!firstBuilding) sb.Append(",");
+            firstBuilding = false;
+            sb.Append("{\"id\":\"").Append(Esc(building.Id)).Append("\",\"name\":\"").Append(Esc(building.Name)).Append("\"");
+            if (building.Count > 0) sb.Append(",\"count\":").Append(building.Count);
+            sb.Append("}");
+          }
+          sb.Append("]");
+        }
         sb.Append(",\"coverage\":{\"identity\":{\"source\":\"save\"}");
         if (island.Stock.Count > 0 && island.Stock.Count <= 24) sb.Append(",\"stock\":{\"source\":\"save\"}");
+        if (island.Buildings.Count > 0 && island.Buildings.Count <= 40) sb.Append(",\"buildings\":{\"source\":\"save\"}");
         sb.Append("}}");
       }
       sb.Append("]}");
@@ -209,6 +219,7 @@ namespace HarborBuddy {
       public readonly List<RouteStop> Stops = new List<RouteStop>();
     }
     sealed class IslandStock { public string Id; public string Name; public int Amount; }
+    sealed class IslandBuilding { public string Id; public string Name; public int Count; }
     sealed class IslandRow {
       public int RegionId;
       public int AreaId;
@@ -216,10 +227,11 @@ namespace HarborBuddy {
       public string Name;
       public string NameSource;
       public readonly List<IslandStock> Stock = new List<IslandStock>();
+      public readonly List<IslandBuilding> Buildings = new List<IslandBuilding>();
     }
     sealed class IslandExtract {
       public readonly List<IslandRow> Islands = new List<IslandRow>();
-      public int? SimTime;
+      public long? SimTime;
       public string SnapshotId;
     }
 
@@ -374,6 +386,27 @@ namespace HarborBuddy {
       return null;
     }
 
+    static long? AsInt64(byte[] p) {
+      if (p == null) return null;
+      if (p.Length == 8) return BitConverter.ToInt64(p, 0);
+      if (p.Length == 4) return BitConverter.ToInt32(p, 0);
+      if (p.Length == 2) return BitConverter.ToUInt16(p, 0);
+      return null;
+    }
+
+    static long? LeafInt64(DbNode node, string attr) { return AsInt64(Leaf(node, attr)); }
+
+    static long? FindLeafInt64(DbNode node, string attr, int depth) {
+      if (node == null || depth < 0) return null;
+      var direct = LeafInt64(node, attr);
+      if (direct.HasValue) return direct;
+      foreach (var item in node.Children) {
+        var hit = FindLeafInt64(item, attr, depth - 1);
+        if (hit.HasValue) return hit;
+      }
+      return null;
+    }
+
     static string FindLeafText(DbNode node, string attr, int depth) {
       if (node == null || depth < 0) return null;
       var text = Utf16(Leaf(node, attr));
@@ -397,32 +430,74 @@ namespace HarborBuddy {
       return "area-" + areaId;
     }
 
-    static List<IslandStock> StockFromManager(DbNode manager, Dictionary<int, GuidRow> guids) {
-      var output = new List<IslandStock>();
-      var storage = FindDescendant(manager, "AreaStorageManager");
-      if (storage == null) return output;
-      CollectStrg(storage, guids, output);
-      var seen = new HashSet<string>();
-      foreach (var item in output) {
-        if (item.Amount < 0 || !seen.Add(item.Id)) return new List<IslandStock>();
+    static void CollectAttr(DbNode node, string attr, List<byte[]> blobs) {
+      foreach (var leaf in node.Leaves) {
+        if (leaf.Attr == attr && leaf.Bytes != null && leaf.Bytes.Length > 0) blobs.Add(leaf.Bytes);
       }
-      return output;
+      foreach (var child in node.Children) CollectAttr(child, attr, blobs);
     }
 
-    static void CollectStrg(DbNode node, Dictionary<int, GuidRow> guids, List<IslandStock> output) {
-      foreach (var leaf in node.Leaves) {
-        if (leaf.Attr != "StrgLrg" || leaf.Bytes == null) continue;
-        var byId = new Dictionary<string, IslandStock>();
-        for (int i = 0; i + 8 <= leaf.Bytes.Length; i += 8) {
-          int g = BitConverter.ToInt32(leaf.Bytes, i);
-          int amt = BitConverter.ToInt32(leaf.Bytes, i + 4);
-          GuidRow row;
-          if (!guids.TryGetValue(g, out row) || row.kind != "good") continue;
-          byId[row.id] = new IslandStock { Id = row.id, Name = row.name, Amount = amt };
-        }
-        foreach (var item in byId.Values) output.Add(item);
+    static List<IslandStock> StockFromManager(DbNode manager, Dictionary<int, GuidRow> guids) {
+      var storage = FindDescendant(manager, "AreaStorageManager");
+      if (storage == null) return new List<IslandStock>();
+      var blobs = new List<byte[]>();
+      CollectAttr(storage, "StrgLrg", blobs);
+      if (blobs.Count != 1 || blobs[0] == null || blobs[0].Length % 8 != 0) return new List<IslandStock>();
+      var byId = new Dictionary<string, IslandStock>();
+      var bytes = blobs[0];
+      for (int i = 0; i + 8 <= bytes.Length; i += 8) {
+        int g = BitConverter.ToInt32(bytes, i);
+        int amt = BitConverter.ToInt32(bytes, i + 4);
+        GuidRow row;
+        if (!guids.TryGetValue(g, out row) || row.kind != "good") continue;
+        if (amt < 0 || byId.ContainsKey(row.id)) return new List<IslandStock>();
+        byId[row.id] = new IslandStock { Id = row.id, Name = row.name, Amount = amt };
       }
-      foreach (var child in node.Children) CollectStrg(child, guids, output);
+      return new List<IslandStock>(byId.Values);
+    }
+
+    static List<IslandBuilding> BuildingsFromManager(DbNode manager, Dictionary<int, GuidRow> guids) {
+      var counts = new Dictionary<string, IslandBuilding>();
+      WalkBuildingCounts(manager, guids, counts);
+      return new List<IslandBuilding>(counts.Values);
+    }
+
+    static void WalkBuildingCounts(DbNode node, Dictionary<int, GuidRow> guids, Dictionary<string, IslandBuilding> counts) {
+      bool inCounts = node.Tag == "CountsPerGUID" || (node.Tag != null && node.Tag.EndsWith("CountsPerGUID"));
+      if (inCounts) {
+        int? pending = null;
+        foreach (var leaf in node.Leaves) {
+          if (leaf.Bytes != null && leaf.Bytes.Length >= 8 && leaf.Bytes.Length % 8 == 0) {
+            for (int i = 0; i + 8 <= leaf.Bytes.Length; i += 8) {
+              AddBuildingCount(counts, guids, BitConverter.ToInt32(leaf.Bytes, i), BitConverter.ToInt32(leaf.Bytes, i + 4));
+            }
+            continue;
+          }
+          var value = AsI32(leaf.Bytes);
+          if (!value.HasValue) continue;
+          if (pending == null) pending = value;
+          else {
+            AddBuildingCount(counts, guids, pending.Value, value.Value);
+            pending = null;
+          }
+        }
+      }
+      foreach (var child in node.Children) WalkBuildingCounts(child, guids, counts);
+    }
+
+    static void AddBuildingCount(Dictionary<string, IslandBuilding> counts, Dictionary<int, GuidRow> guids, int guid, int amount) {
+      if (amount <= 0) return;
+      GuidRow row;
+      if (!guids.TryGetValue(guid, out row) || row.kind != "building") return;
+      IslandBuilding prev;
+      int next = amount;
+      if (counts.TryGetValue(row.id, out prev)) next += prev.Count;
+      counts[row.id] = new IslandBuilding { Id = row.id, Name = row.name, Count = next };
+    }
+
+    static void ConsiderSimTime(IslandExtract output, long? candidate) {
+      if (!candidate.HasValue || candidate.Value <= 0) return;
+      if (!output.SimTime.HasValue || candidate.Value > output.SimTime.Value) output.SimTime = candidate;
     }
 
     static IslandExtract ExtractIslands(byte[] data, Dictionary<int, GuidRow> guids) {
@@ -430,7 +505,6 @@ namespace HarborBuddy {
       var root = ParseTree(data);
       if (root == null) return output;
       var meta = Child(root, "MetaGameManager") ?? root;
-      output.SimTime = FindLeafInt(meta, "GameTime", 6) ?? FindLeafInt(meta, "SimulationTime", 6) ?? FindLeafInt(meta, "SessionTime", 6);
       output.SnapshotId = FindLeafText(meta, "SnapshotID", 6) ?? FindLeafText(meta, "SaveGUID", 6);
       var sessions = FindDescendant(root, "GameSessions");
       var sessionNodes = sessions != null ? sessions.Children : new List<DbNode>();
@@ -444,7 +518,8 @@ namespace HarborBuddy {
         if (!regionId.HasValue) continue;
         var manager = FindDescendant(sessionNode, "GameSessionManager");
         if (manager == null) continue;
-        if (!output.SimTime.HasValue) output.SimTime = LeafInt(manager, "GameTime");
+        ConsiderSimTime(output, LeafInt64(manager, "SessionTotalTime"));
+        ConsiderSimTime(output, LeafInt64(manager, "GameTime"));
         var areaInfo = Child(manager, "AreaInfo") ?? FindDescendant(manager, "AreaInfo");
         var areaManagers = Child(manager, "AreaManagers") ?? FindDescendant(manager, "AreaManagers");
         var managersByArea = new Dictionary<int, DbNode>();
@@ -486,9 +561,17 @@ namespace HarborBuddy {
           DbNode managerNode;
           if (ownerId.Value == 0 && managersByArea.TryGetValue(areaId.Value, out managerNode)) {
             foreach (var stock in StockFromManager(managerNode, guids)) row.Stock.Add(stock);
+            foreach (var building in BuildingsFromManager(managerNode, guids)) row.Buildings.Add(building);
           }
           output.Islands.Add(row);
         }
+      }
+      var lastSnapshot = FindLeafInt64(meta, "lastSnapshot", 8);
+      if (lastSnapshot.HasValue && lastSnapshot.Value > 0) output.SimTime = lastSnapshot;
+      if (!output.SimTime.HasValue) {
+        ConsiderSimTime(output, FindLeafInt64(meta, "GameTime", 6));
+        ConsiderSimTime(output, FindLeafInt64(meta, "SimulationTime", 6));
+        ConsiderSimTime(output, FindLeafInt64(meta, "SessionTime", 6));
       }
       return output;
     }

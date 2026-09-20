@@ -2,13 +2,20 @@ import { create } from "zustand";
 import { ingestSnapshotHistory } from "@/lib/history";
 import { useHarbor } from "@/lib/store";
 import { ingestLiveFile, type LiveSnapshot } from "@/lib/live";
+import { createLiveReader, type ReaderStatus } from "@/lib/live/reader";
+import {
+  ensureReadPermission,
+  readPersistedLiveHandle,
+  type LiveFileHandle,
+} from "@/lib/live/handle-store";
 
 export function commitLiveSnapshot(snapshot: LiveSnapshot, fileName?: string | null) {
   useHarbor.getState().applyLiveSnapshot(snapshot, fileName);
+  const harbor = useHarbor.getState();
   void ingestSnapshotHistory(snapshot, {
     explicitCampaignId: snapshot.campaignId
       ? undefined
-      : (useHarbor.getState().manualHistoryCampaignId ?? undefined),
+      : (harbor.manualHistoryCampaignId ?? harbor.historyCampaignId ?? undefined),
   })
     .then((history) => {
       if (useHarbor.getState().liveSnapshot !== snapshot) return;
@@ -22,12 +29,6 @@ export function commitLiveSnapshot(snapshot: LiveSnapshot, fileName?: string | n
       });
     });
 }
-import { createLiveReader, type ReaderStatus } from "@/lib/live/reader";
-import {
-  ensureReadPermission,
-  readPersistedLiveHandle,
-  type LiveFileHandle,
-} from "@/lib/live/handle-store";
 
 export const useLiveReader = create<{ status: ReaderStatus }>(() => ({ status: "imported" }));
 let authorization = 0;
@@ -48,15 +49,20 @@ export const liveReader = {
 };
 
 // These actions are only called from explicit picker/refresh button gestures.
-export async function startLiveReader(handle: LiveFileHandle) {
+export async function startLiveReader(
+  handle: LiveFileHandle,
+  opts?: { resetCampaign?: boolean },
+) {
   liveReader.stop();
-  // Each newly authorized file stream requires an explicit campaign selection
-  // unless the save supplies a verified campaign ID.
-  useHarbor.setState({
-    manualHistoryCampaignId: null,
-    pendingCampaign: null,
-    historyCampaignId: null,
-  });
+  // A newly picked file is a different stream. Resuming the same handle must
+  // keep the campaign the player already chose.
+  if (opts?.resetCampaign !== false) {
+    useHarbor.setState({
+      manualHistoryCampaignId: null,
+      pendingCampaign: null,
+      historyCampaignId: null,
+    });
+  }
   const token = authorization;
   let permission;
   try {
@@ -79,7 +85,7 @@ export async function resumeLiveReader() {
     const handle = await readPersistedLiveHandle();
     if (token !== authorization) return;
     if (!handle) throw new Error("No selected file");
-    await startLiveReader(handle);
+    await startLiveReader(handle, { resetCampaign: false });
   } catch {
     if (token !== authorization) return;
     liveReader.stop();
