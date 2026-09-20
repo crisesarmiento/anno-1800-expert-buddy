@@ -111,8 +111,7 @@ export function IslandHistoryCard() {
       >
         {historyError || readError ? (
           <p role="alert" className="text-sm text-destructive">
-            {historyError ??
-              "No se pudo leer el historial guardado. Reintentá al actualizar la partida."}
+            {historyError ?? t.islandsHistory.readError}
           </p>
         ) : null}
         {campaignId ? (
@@ -133,12 +132,12 @@ export function IslandHistoryCard() {
               }
             }}
           >
-            Cambiar campaña del historial
+            {t.islandsHistory.changeCampaign}
           </Button>
         ) : null}
         {samples.length > 0 ? (
           <label className="flex flex-col gap-2 text-sm">
-            Guardado a consultar
+            {t.islandsHistory.selectSave}
             <select
               className="min-h-11 w-full rounded-md border border-input bg-background p-2 text-foreground"
               value={selected?.id ?? ""}
@@ -147,7 +146,9 @@ export function IslandHistoryCard() {
               {[...samples].reverse().map((row) => (
                 <option key={row.id} value={row.id}>
                   {formatWhen(row.savedAt ?? row.recordedAt, locale)} ·{" "}
-                  {row.branchId === "main" ? "Inicio" : "Otra secuencia"}
+                  {row.branchId === "main"
+                    ? t.islandsHistory.branchMain
+                    : t.islandsHistory.branchOther}
                 </option>
               ))}
             </select>
@@ -155,8 +156,7 @@ export function IslandHistoryCard() {
         ) : null}
         {selected && selected.simTime == null ? (
           <p className="text-xs text-muted-foreground">
-            Sin reloj de juego verificado: conservamos cada lectura, sin calcular tasas ni
-            continuidad entre guardados.
+            {t.islandsHistory.noClock}
           </p>
         ) : null}
         {!shownIslands.length ? (
@@ -186,7 +186,7 @@ export function IslandHistoryCard() {
                   </ul>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Stock no disponible para esta isla en esta lectura.
+                    {t.islandsHistory.stockMissing}
                   </p>
                 )}
                 {previous && selected

@@ -334,6 +334,14 @@ const es = {
     pickCampaignHint: "El archivo no alcanza para saberlo. Elegí una o empezá una nueva.",
     newCampaign: "Nueva campaña",
     samples: "Historial local",
+    selectSave: "Guardado a consultar",
+    changeCampaign: "Cambiar de campaña",
+    branchMain: "Inicio",
+    branchOther: "Otra secuencia",
+    noClock:
+      "Sin reloj de juego verificado: conservamos cada lectura, sin calcular tasas ni continuidad entre guardados.",
+    stockMissing: "Stock no disponible para esta isla en esta lectura.",
+    readError: "No se pudo leer el historial guardado. Reintentá al actualizar la partida.",
   },
   buddyLang: "Respondé en español rioplatense, de compañero, sin planillas.",
   nativeProbe: {
@@ -675,6 +683,14 @@ const en: UiDict = {
     pickCampaignHint: "The file is not enough to tell. Pick one or start a new campaign.",
     newCampaign: "New campaign",
     samples: "Local history",
+    selectSave: "Save to inspect",
+    changeCampaign: "Switch campaign",
+    branchMain: "Main",
+    branchOther: "Other sequence",
+    noClock:
+      "No verified game clock: we keep each reading, without rates or continuity between saves.",
+    stockMissing: "Stock is not available for this island in this reading.",
+    readError: "Could not read the saved history. Try again when you refresh the save.",
   },
   buddyLang: "Reply in English, as a calm sofa buddy, no spreadsheets.",
   nativeProbe: {
@@ -1018,6 +1034,14 @@ const it: UiDict = {
     pickCampaignHint: "Il file non basta per saperlo. Scegline una o iniziane una nuova.",
     newCampaign: "Nuova campagna",
     samples: "Cronologia locale",
+    selectSave: "Salvataggio da consultare",
+    changeCampaign: "Cambia campagna",
+    branchMain: "Inizio",
+    branchOther: "Altra sequenza",
+    noClock:
+      "Senza orologio di gioco verificato: teniamo ogni lettura, senza tassi né continuità tra i salvataggi.",
+    stockMissing: "Scorte non disponibili per quest’isola in questa lettura.",
+    readError: "Non sono riuscito a leggere la cronologia. Riprova quando aggiorni il salvataggio.",
   },
   buddyLang: "Rispondi in italiano, da compagno calmo, senza fogli di calcolo.",
   nativeProbe: {
@@ -1360,6 +1384,14 @@ const de: UiDict = {
     pickCampaignHint: "Die Datei reicht nicht. Wähl eine oder starte eine neue.",
     newCampaign: "Neue Kampagne",
     samples: "Lokale Geschichte",
+    selectSave: "Spielstand zum Nachsehen",
+    changeCampaign: "Kampagne wechseln",
+    branchMain: "Anfang",
+    branchOther: "Andere Folge",
+    noClock:
+      "Ohne geprüfte Spieluhr: Wir behalten jede Lesung, ohne Raten oder Kontinuität zwischen Spielständen.",
+    stockMissing: "Vorrat für diese Insel in dieser Lesung nicht verfügbar.",
+    readError: "Die gespeicherte Geschichte ließ sich nicht lesen. Versuch es beim nächsten Aktualisieren.",
   },
   buddyLang: "Antworte auf Deutsch, als ruhiger Sofa-Kumpel, ohne Tabellen.",
   nativeProbe: {

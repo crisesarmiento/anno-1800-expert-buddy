@@ -54,9 +54,17 @@ test("nested FileDB islands are extracted by id, not by display name", () => {
     assert.match(src, /CityNameGuid/);
     assert.match(src, /AreaStorageManager/);
     assert.match(src, /islandSnapshots/);
+    assert.match(src, /SessionTotalTime/);
+    assert.match(src, /lastSnapshot/);
+    assert.match(src, /AsInt64/);
+    assert.match(src, /BuildingsFromManager/);
+    assert.doesNotMatch(src, /stockCount >= 24\) break/);
+    assert.match(src, /blobs\.Count != 1/);
   }
   assert.match(ps1, /islandSnapshots/);
   assert.match(ps1, /\$notRollback/);
+  assert.match(ps1, /\$islandOut\.buildings/);
+  assert.match(ps1, /\$stock\.Count -le 24/);
   assert.doesNotMatch(ps1, /campaignId\s*=\s*\$save\.Name/);
 });
 

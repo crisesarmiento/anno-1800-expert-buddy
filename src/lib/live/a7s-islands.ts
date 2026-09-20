@@ -244,10 +244,7 @@ export function extractIslands(dataBytes: Buffer): ExtractedSaveIslands {
   const metaManager = child(root, "MetaGameManager") ?? root;
   const snapshotId =
     findLeafText(metaManager, "SnapshotID") ?? findLeafText(metaManager, "SaveGUID");
-  const simTime =
-    findLeafInt(metaManager, "GameTime") ??
-    findLeafInt(metaManager, "SimulationTime") ??
-    findLeafInt(metaManager, "SessionTime");
+  const sessionTimes: number[] = [];
 
   const islands: ExtractedIsland[] = [];
   const sessions = findDescendant(root, "GameSessions");
@@ -262,6 +259,8 @@ export function extractIslands(dataBytes: Buffer): ExtractedSaveIslands {
     if (regionId == null) return;
     const manager = findDescendant(sessionNode, "GameSessionManager");
     if (!manager) return;
+    const sessionTotal = leafInt(manager, "SessionTotalTime") ?? leafInt(manager, "GameTime");
+    if (sessionTotal != null && sessionTotal > 0) sessionTimes.push(sessionTotal);
     const areaInfo = child(manager, "AreaInfo") ?? findDescendant(manager, "AreaInfo");
     const areaManagers = child(manager, "AreaManagers") ?? findDescendant(manager, "AreaManagers");
     const managersByArea = new Map<number, FileDbNode>();
@@ -312,6 +311,16 @@ export function extractIslands(dataBytes: Buffer): ExtractedSaveIslands {
     const manager = findDescendant(root, "GameSessionManager");
     if (manager) walkSession(manager);
   }
+
+  const lastSnapshot = findLeafInt(metaManager, "lastSnapshot");
+  const simTime =
+    lastSnapshot != null && lastSnapshot > 0
+      ? lastSnapshot
+      : sessionTimes.length
+        ? Math.max(...sessionTimes)
+        : (findLeafInt(metaManager, "GameTime") ??
+          findLeafInt(metaManager, "SimulationTime") ??
+          findLeafInt(metaManager, "SessionTime"));
 
   return {
     islands,

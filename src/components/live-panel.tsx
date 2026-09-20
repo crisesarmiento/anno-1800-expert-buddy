@@ -117,7 +117,7 @@ export function PowerUpSection() {
     try {
       const existing = await readPersistedLiveHandle();
       if (existing) {
-        await startLiveReader(existing);
+        await startLiveReader(existing, { resetCampaign: false });
         return;
       }
       const handle = await pickLiveHandle();
@@ -230,7 +230,11 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
-    useHarbor.setState({ manualHistoryCampaignId: null });
+    useHarbor.setState({
+      manualHistoryCampaignId: null,
+      pendingCampaign: null,
+      historyCampaignId: null,
+    });
     commitLiveSnapshot(result.snapshot, file.name);
   }
 
@@ -242,7 +246,11 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
-    useHarbor.setState({ manualHistoryCampaignId: null });
+    useHarbor.setState({
+      manualHistoryCampaignId: null,
+      pendingCampaign: null,
+      historyCampaignId: null,
+    });
     commitLiveSnapshot(result.snapshot, "pegado.json");
   }
 

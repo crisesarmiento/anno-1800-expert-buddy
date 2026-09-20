@@ -292,7 +292,7 @@ describe("campaign and timeline regressions", () => {
     const a = await store.record(snap({ savedAt: "2026-09-19T11:00:00Z" }));
     const b = await store.record(snap({ savedAt: "2026-09-20T11:00:00Z" }));
     assert.ok(a.ok && b.ok);
-    assert.equal(b.branched, true);
+    assert.equal(b.branched, false);
     assert.equal(islandStockDelta(a.sample, b.sample, 180023, 8451).ok, false);
   });
 });

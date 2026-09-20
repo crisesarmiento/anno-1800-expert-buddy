@@ -42,11 +42,12 @@ export function createLiveReader(options: {
     }
   }
   function stop() {
+    const wasActive = handle != null || timer != null;
     generation++;
     clearInterval(timer);
     timer = undefined;
     handle = undefined;
-    options.status("imported");
+    if (wasActive) options.status("imported");
   }
   async function start(next: LiveFileHandle) {
     stop();

@@ -45,7 +45,8 @@ function shouldBranch(tip: HistorySample | undefined, incoming: HistorySample) {
   const tipClock = tip.simTime;
   const nextClock = incoming.simTime;
   // Filesystem timestamps cannot demonstrate simulation order after a restore.
-  if (tipClock == null || nextClock == null) return true;
+  // Without a verified sim clock, keep the branch and refuse deltas instead.
+  if (typeof tipClock !== "number" || typeof nextClock !== "number") return false;
   return nextClock < tipClock;
 }
 

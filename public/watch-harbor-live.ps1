@@ -686,9 +686,21 @@ while ($true) {
         nameSource = $(if ($row.nameSource) { [string]$row.nameSource } else { "neutral" })
         coverage   = $coverage
       }
-      if ($stock.Count -gt 0) {
+      if ($stock.Count -gt 0 -and $stock.Count -le 24) {
         $islandOut.stock = @($stock)
         $coverage.stock = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "island" }
+      }
+      $buildings = @()
+      foreach ($hit in @($row.buildings)) {
+        if ($hit.id -and $hit.name) {
+          $building = [ordered]@{ id = [string]$hit.id; name = [string]$hit.name }
+          if ($hit.count -ne $null -and [int]$hit.count -gt 0) { $building.count = [int]$hit.count }
+          $buildings += $building
+        }
+      }
+      if ($buildings.Count -gt 0 -and $buildings.Count -le 40) {
+        $islandOut.buildings = @($buildings)
+        $coverage.buildings = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "island" }
       }
       $islandSnapshots += $islandOut
     }

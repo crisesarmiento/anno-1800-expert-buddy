@@ -364,6 +364,7 @@ export const useHarbor = create<HarborState>()(
         samples: state.samples,
         activeIslandId: state.activeIslandId,
         historyCampaignId: state.historyCampaignId,
+        manualHistoryCampaignId: state.manualHistoryCampaignId,
       }),
     },
   ),
