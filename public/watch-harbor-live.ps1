@@ -328,6 +328,110 @@ function Get-InflatedText([byte[]]$bytes) {
   return ($chunks -join "`n")
 }
 
+function Get-HarborReaderFromScan($scan) {
+  $caps = @(
+    "buildings", "playerGoods", "playerTreasury", "routes", "routeStations",
+    "islandSnapshots", "islandNames", "islandStock", "islandBuildings", "fleet"
+  )
+  $id = "harbor-watcher"
+  $version = "0.6.0"
+  $engine = "a7s-scan"
+  if ($scan -and ($scan.PSObject.Properties.Name -contains "reader") -and $scan.reader) {
+    if ($scan.reader.id) { $id = [string]$scan.reader.id }
+    if ($scan.reader.version) { $version = [string]$scan.reader.version }
+    if ($scan.reader.engine) { $engine = [string]$scan.reader.engine }
+    $fromScan = @()
+    foreach ($cap in @($scan.reader.capabilities)) {
+      if ($cap) { $fromScan += [string]$cap }
+    }
+    if ($fromScan.Count -gt 0) { $caps = $fromScan }
+  }
+  return [ordered]@{
+    id           = $id
+    version      = $version
+    engine       = $engine
+    capabilities = @($caps)
+  }
+}
+
+function Add-HarborCoverageField($fields, [string]$field, [string]$status, $count, [string]$reason) {
+  $row = [ordered]@{ field = $field; status = $status }
+  if ($status -eq "present" -and $count -ne $null -and [int]$count -gt 0) { $row.count = [int]$count }
+  if ($reason) { $row.reason = $reason }
+  [void]$fields.Add($row)
+}
+
+function Get-HarborCoverage($payload) {
+  $fields = New-Object System.Collections.Generic.List[object]
+  $islands = @()
+  if ($payload.islandSnapshots) { $islands = @($payload.islandSnapshots) }
+  $named = @($islands | Where-Object { $_.nameSource -eq "city-name" -or $_.nameSource -eq "city-name-guid" })
+  $stocked = @($islands | Where-Object { $_.stock -and @($_.stock).Count -gt 0 })
+  $built = @($islands | Where-Object { $_.buildings -and @($_.buildings).Count -gt 0 })
+  $routes = @()
+  if ($payload.telemetry -and $payload.telemetry.routes) { $routes = @($payload.telemetry.routes) }
+  $stationed = 0
+  foreach ($route in $routes) {
+    $hasStation = $false
+    if ($route.delivery -and $route.delivery.stations) {
+      foreach ($station in @($route.delivery.stations)) {
+        if ($station.areaId -ne $null) { $hasStation = $true; break }
+      }
+    }
+    if ($hasStation) { $stationed++ }
+  }
+  $buildings = 0
+  if ($payload.telemetry -and $payload.telemetry.buildings) { $buildings = @($payload.telemetry.buildings).Count }
+  $goods = 0
+  if ($payload.telemetry -and $payload.telemetry.goods) { $goods = @($payload.telemetry.goods).Count }
+  $fleet = 0
+  if ($payload.telemetry -and $payload.telemetry.fleet) { $fleet = @($payload.telemetry.fleet).Count }
+  $production = 0
+  if ($payload.telemetry -and $payload.telemetry.production) { $production = @($payload.telemetry.production).Count }
+  $quests = @()
+  if ($payload.quests) { $quests = @($payload.quests) }
+  $questsWithState = @($quests | Where-Object { $_.state }).Count
+
+  if ($buildings -gt 0) { Add-HarborCoverageField $fields "buildings" "present" $buildings $null }
+  else { Add-HarborCoverageField $fields "buildings" "absent" $null "not-extracted" }
+  if ($goods -gt 0) { Add-HarborCoverageField $fields "playerGoods" "present" $goods $null }
+  else { Add-HarborCoverageField $fields "playerGoods" "absent" $null "not-extracted" }
+  if ($payload.economy -and ($payload.economy.PSObject.Properties.Name -contains "treasury")) {
+    Add-HarborCoverageField $fields "playerTreasury" "present" $null $null
+  } else {
+    Add-HarborCoverageField $fields "playerTreasury" "absent" $null "no-player-owner"
+  }
+  if ($routes.Count -gt 0) { Add-HarborCoverageField $fields "routes" "present" $routes.Count $null }
+  else { Add-HarborCoverageField $fields "routes" "absent" $null "not-extracted" }
+  if ($stationed -gt 0) { Add-HarborCoverageField $fields "routeStations" "present" $stationed $null }
+  else { Add-HarborCoverageField $fields "routeStations" "absent" $null "no-area-id" }
+  if ($islands.Count -gt 0) { Add-HarborCoverageField $fields "islandSnapshots" "present" $islands.Count $null }
+  else { Add-HarborCoverageField $fields "islandSnapshots" "absent" $null "not-extracted" }
+  if ($named.Count -gt 0) { Add-HarborCoverageField $fields "islandNames" "present" $named.Count $null }
+  else { Add-HarborCoverageField $fields "islandNames" "absent" $null "no-city-name" }
+  if ($stocked.Count -gt 0) { Add-HarborCoverageField $fields "islandStock" "present" $stocked.Count $null }
+  else { Add-HarborCoverageField $fields "islandStock" "absent" $null "not-extracted" }
+  if ($built.Count -gt 0) { Add-HarborCoverageField $fields "islandBuildings" "present" $built.Count $null }
+  else { Add-HarborCoverageField $fields "islandBuildings" "absent" $null "not-extracted" }
+  if ($fleet -gt 0) { Add-HarborCoverageField $fields "fleet" "present" $fleet $null }
+  else { Add-HarborCoverageField $fields "fleet" "absent" $null "not-extracted" }
+  if ($questsWithState -gt 0) { Add-HarborCoverageField $fields "quests" "present" $questsWithState $null }
+  elseif ($quests.Count -gt 0) { Add-HarborCoverageField $fields "quests" "absent" $null "not-extracted" }
+  else { Add-HarborCoverageField $fields "quests" "unavailable" $null "empty-on-purpose" }
+  Add-HarborCoverageField $fields "income" "unavailable" $null "no-player-owner"
+  Add-HarborCoverageField $fields "maintenance" "unavailable" $null "no-player-owner"
+  if ($production -gt 0) { Add-HarborCoverageField $fields "ocrProduction" "present" $production $null }
+  elseif ($payload.connection -and $payload.connection.nativeProbe) {
+    Add-HarborCoverageField $fields "ocrProduction" "absent" $null "no-observation"
+  } else {
+    Add-HarborCoverageField $fields "ocrProduction" "unavailable" $null "not-extracted"
+  }
+
+  $coverage = [ordered]@{ fields = @($fields) }
+  if ($payload.savedAt) { $coverage.observedAt = [string]$payload.savedAt }
+  return $coverage
+}
+
 $utf8 = New-Object System.Text.UTF8Encoding $false
 $anno = Find-AnnoRoot
 $titlesPath = Find-Catalog
@@ -929,6 +1033,7 @@ while ($true) {
     }
     # Session/region name, not the player's colony. GUID presence is not an active quest.
     $payload.quests = @()
+    $payload.reader = Get-HarborReaderFromScan $scan
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
     $payload.pulseHint = $pulseHint
     # Preserve OCR evidence across a save-triggered rewrite: connection.native and
@@ -942,6 +1047,7 @@ while ($true) {
       if ($previousPayload.connection.nativeProbe) { $payload.connection.nativeProbe = $previousPayload.connection.nativeProbe }
     }
     $payload.telemetry = $telemetry
+    $payload.coverage = Get-HarborCoverage $payload
     $json = ($payload | ConvertTo-Json -Depth 10 -Compress)
     $null = $json | ConvertFrom-Json
     Write-HarborLiveCrashSafe $outJson ($json + "`n")

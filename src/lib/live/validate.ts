@@ -3,8 +3,15 @@ import { LIVE_MSG } from "./messages.ts";
 import { isPlayerParticipant } from "./evidence.ts";
 import { attachOcrIslandIdentity } from "./ocr-island.ts";
 import {
+  LIVE_READER_CAPABILITIES,
+  LIVE_READER_ENGINE,
+  LIVE_READER_ID,
+  buildCoverage,
+} from "./coverage.ts";
+import {
   LIVE_GAME,
   LIVE_MAX_BYTES,
+  LIVE_MAX_COVERAGE_FIELDS,
   LIVE_MAX_FLEET,
   LIVE_MAX_ISLAND_BUILDINGS,
   LIVE_MAX_ISLAND_SNAPSHOTS,
@@ -12,6 +19,7 @@ import {
   LIVE_MAX_INSTANCE_ID,
   LIVE_MAX_QUEST_OBJECTIVES,
   LIVE_MAX_QUESTS,
+  LIVE_MAX_READER_VERSION,
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
   LIVE_WORKFORCE_TIERS,
@@ -42,6 +50,8 @@ import {
   type LiveQuestState,
   type LiveQuestTimer,
   type LiveQuestType,
+  type LiveReader,
+  type LiveReaderCapability,
   type LiveSnapshot,
   type LiveSource,
   type LiveTelemetry,
@@ -84,6 +94,7 @@ const ISLAND_NAME_SOURCES = new Set<LiveIslandNameSource>([
   "city-name-guid",
   "neutral",
 ]);
+const READER_CAPABILITIES = new Set<LiveReaderCapability>(LIVE_READER_CAPABILITIES);
 
 function hasJsonExtension(filename: string) {
   return filename.toLowerCase().endsWith(".json");
@@ -563,6 +574,22 @@ function normalizeIslandRef(value: unknown): LiveIslandRef | undefined {
   return { regionId: Math.trunc(regionId), areaId: Math.trunc(areaId) };
 }
 
+function normalizeReader(value: unknown): LiveReader | undefined {
+  if (!asRecord(value)) return undefined;
+  if (value.id !== LIVE_READER_ID || value.engine !== LIVE_READER_ENGINE) return undefined;
+  const version = clipName(value.version, LIVE_MAX_READER_VERSION);
+  if (!version) return undefined;
+  if (!Array.isArray(value.capabilities)) return undefined;
+  const capabilities: LiveReaderCapability[] = [];
+  for (const item of value.capabilities.slice(0, LIVE_MAX_COVERAGE_FIELDS)) {
+    if (!READER_CAPABILITIES.has(item as LiveReaderCapability)) continue;
+    const cap = item as LiveReaderCapability;
+    if (!capabilities.includes(cap)) capabilities.push(cap);
+  }
+  if (!capabilities.length) return undefined;
+  return { id: LIVE_READER_ID, version, engine: LIVE_READER_ENGINE, capabilities };
+}
+
 function normalizeEconomy(value: unknown): LiveEconomy | undefined {
   if (!asRecord(value)) return undefined;
   const treasury = value.treasury;
@@ -822,7 +849,13 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   if (islandSnapshots) snapshot.islandSnapshots = islandSnapshots;
   const economy = normalizeEconomy(raw.economy);
   if (economy) snapshot.economy = economy;
-  return { ok: true, snapshot: attachOcrIslandIdentity(snapshot) };
+  const reader = normalizeReader(raw.reader);
+  if (reader) snapshot.reader = reader;
+  const identified = attachOcrIslandIdentity(snapshot);
+  // Recompute coverage from the accepted snapshot. A JSON claim of income/quests
+  // does not survive if those fields were stripped.
+  identified.coverage = buildCoverage(identified);
+  return { ok: true, snapshot: identified };
 }
 
 export function ingestLiveBytes(input: {

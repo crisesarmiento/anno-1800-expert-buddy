@@ -9,6 +9,9 @@ export const LIVE_MAX_ISLAND_SNAPSHOTS = 40;
 export const LIVE_MAX_ISLAND_STOCK = 24;
 export const LIVE_MAX_ISLAND_BUILDINGS = 40;
 export const LIVE_MAX_FLEET = 80;
+export const LIVE_MAX_READER_VERSION = 20;
+export const LIVE_MAX_COVERAGE_FIELDS = 24;
+export const LIVE_MAX_COVERAGE_REASON = 40;
 
 export type LiveSource = "telemetry" | "save" | "file";
 export type LiveQuestState = "active" | "ready" | "done" | "failed" | "expired";
@@ -250,6 +253,64 @@ export type LiveFieldCoverage = {
   scope?: string;
 };
 
+export type LiveReaderId = "harbor-watcher";
+export type LiveReaderEngine = "a7s-scan";
+export type LiveReaderCapability =
+  | "buildings"
+  | "playerGoods"
+  | "playerTreasury"
+  | "routes"
+  | "routeStations"
+  | "islandSnapshots"
+  | "islandNames"
+  | "islandStock"
+  | "islandBuildings"
+  | "fleet";
+
+/**
+ * Identity of the writer that produced this JSON.
+ * Capabilities are what the reader knows how to extract, not proof this save had them.
+ */
+export type LiveReader = {
+  id: LiveReaderId;
+  version: string;
+  engine: LiveReaderEngine;
+  capabilities: LiveReaderCapability[];
+};
+
+export type LiveCoverageField =
+  | LiveReaderCapability
+  | "quests"
+  | "income"
+  | "maintenance"
+  | "ocrProduction";
+
+export type LiveCoverageStatus = "present" | "absent" | "unavailable";
+export type LiveCoverageReason =
+  | "empty-on-purpose"
+  | "no-player-owner"
+  | "no-area-id"
+  | "no-city-name"
+  | "not-extracted"
+  | "no-observation";
+
+export type LiveCoverageRow = {
+  field: LiveCoverageField;
+  status: LiveCoverageStatus;
+  /** Present only when status is present and the field is a list. Never 0 for unavailable. */
+  count?: number;
+  reason?: LiveCoverageReason;
+};
+
+/**
+ * Snapshot-level diagnostics. Unavailable fields must not be shown as 0.
+ * Ingest recomputes this from the snapshot; a stale JSON claim does not survive.
+ */
+export type LiveCoverage = {
+  observedAt?: string;
+  fields: LiveCoverageRow[];
+};
+
 export type LiveShipKind = "trade" | "military" | "flagship" | "unknown";
 
 export type LiveShipAssignment = {
@@ -362,6 +423,10 @@ export type LiveSnapshot = {
    * Recurrent income/maintenance stay off the contract until owner-scoped.
    */
   economy?: LiveEconomy;
+  /** Watcher/scanner identity. Optional on inherited JSON. */
+  reader?: LiveReader;
+  /** Snapshot-level field coverage. Optional on inherited JSON; ingest fills it. */
+  coverage?: LiveCoverage;
 };
 
 export type LiveEconomy = {

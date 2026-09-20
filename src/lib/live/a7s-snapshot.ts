@@ -7,6 +7,7 @@ import {
   islandSnapshotFromExtracted,
   playerIslands,
 } from "./a7s-islands.ts";
+import { buildCoverage, harborWatcherReader } from "./coverage.ts";
 import { isPlayerParticipant, type StorageOwner } from "./evidence.ts";
 import type {
   LiveBuildingHit,
@@ -292,6 +293,7 @@ export function snapshotFromScan(
     updatedAt: new Date().toISOString(),
     game: "anno-1800",
     quests,
+    reader: harborWatcherReader(),
   };
   const sessionName = (opts.sessionName || scan.sessionName).slice(0, 200);
   if (sessionName) snapshot.sessionName = sessionName;
@@ -318,6 +320,7 @@ export function snapshotFromScan(
       },
     };
   }
+  snapshot.coverage = buildCoverage(snapshot);
   return snapshot;
 }
 

@@ -96,6 +96,14 @@ const es = {
     watchBtn: "Vigilar harbor-live.json",
     watching: "Vigilando el archivo…",
     watcherDl: "Descargar vigilante",
+    coverageKicker: "Qué se leyó",
+    coverageIslands: "{0} islas de colonia",
+    coverageStock: "{0} con stock por isla",
+    coverageNamed: "{0} con nombre de ciudad",
+    coverageNeutral: "Sin rename: queda [guid], no invento el nombre.",
+    coverageMissing: "Ingresos, mantenimiento y misiones reales: todavía no. Un hueco no es cero.",
+    coverageMod: "El XML vacío del mod no extrae nada. Esto sale del vigilante.",
+    readerLabel: "lector {0}",
   },
   finder: {
     kicker: "¿En qué misión estoy?",
@@ -111,9 +119,11 @@ const es = {
   install: {
     kicker: "Instalar el mod",
     title: "Instalar Anno 1800 Buddy en Anno",
-    hint: "Tranquilo, es simple: descargás, ejecutás el instalador y listo — el sitio no puede meter archivos en Anno por sí solo. Si Anno se cae, desactivá el mod y borrá la carpeta vieja, nada se pierde. El zip 0.2.0 no parchea el juego ni corre Lua.",
+    hint: "El diario lo escribe el vigilante, no el zip. El zip 0.2.0 es XML vacío: no extrae la partida, no parchea el juego ni corre Lua. Si Anno se cae, desactivá el mod y borrá la carpeta vieja.",
     dlZip: "1. Descargar mod (.zip)",
     dlZipCopy: "Un clic, sin cuenta. Dejá el zip en Descargas y seguimos.",
+    stubCopy:
+      "Opcional y vacío a propósito: no extrae la partida. El vigilante lee el save igual, con o sin este zip.",
     dlZipBtn: "Descargar mod.zip",
     dlInst: "2. Descargar instalador Windows",
     dlInstCopy:
@@ -124,6 +134,8 @@ const es = {
     ps1: "PowerShell (.ps1)",
     watchCopy:
       "Un solo archivo, doble clic y listo. Si en Descargas hay un watch-harbor-live.ps1 viejo, el .bat lo renombra a .old solo, no lo usa. Encuentra tu partida más reciente en Documentos\\Anno 1800\\accounts (nunca la abre a ciegas ni la modifica) — dejá la ventana abierta y guardá con Ctrl+F5 en Anno (o esperá el autoguardado).",
+    watchExtractor:
+      "Este es el extractor: lee el .a7s o el .save y escribe harbor-live.json. El XML del mod no hace eso.",
     watchBat: "Vigilante (.bat)",
     watchTitles: "Lista de títulos",
     done: "3. Ya lo instalé",
@@ -143,7 +155,7 @@ const es = {
       note: "Si el ID de Steam no coincide con tu Anno, abrí el .bat con el Bloc de notas y cambiá el número — dos minutos y listo.",
     },
     nativeOcr: {
-      kicker: "Telemetría real · opcional",
+      kicker: "Producción en pantalla · opcional",
       title: "Extractor OCR de Estadísticas",
       copy: "Una sola instalación manual: descargá UXEnhancer y extraelo como carpeta UXEnhancer junto al launcher. Después el launcher abre Server.exe, Anno, el vigilante y esta página automáticamente.",
       note: "Es software externo y experimental. No inyecta código: captura la ventana y sólo lee la pestaña de Estadísticas que tengas visible. Puede pedir Visual C++ y permisos de Windows.",
@@ -152,16 +164,16 @@ const es = {
   },
   connect: {
     kicker: "Cómo conectar Anno",
-    title: "Descargá. Instalador. Diario.",
-    hint: "El sitio no puede meter archivos en Anno. Descargás, ejecutás el instalador, listo.",
-    s1: "Instalar el mod → Descargar mod.zip (queda en Descargas).",
-    s2: "Descargá el instalador (.bat o .ps1). Windows puede avisar: Más info → Ejecutar de todas formas. Es un copiado de carpeta, no un cheat.",
-    s3: "El script pone el mod en Documentos\\Anno 1800\\mods\\harbor-buddy-telemetry",
-    s4: "Abrí Anno → Mods → activá Harbor Buddy Telemetry. Entrá a la campaña.",
-    s5: "Corré watch-harbor-live.bat (ventana abierta). En Anno, Ctrl+F5 (F5 es la cámara). El script también lee el autoguardado. Escribe Documentos\\Anno 1800\\harbor-live.json. Acá: Partida en vivo → soltá o vigilá ese archivo.",
-    s6: "Si el JSON viene vacío, usá \u201CEscribí lo que ves en el diario\u201D una vez. Si el instalador no encuentra Anno, copiá la carpeta a mano.",
+    title: "Vigilante. Diario. Zip vacío aparte.",
+    hint: "El vigilante lee el save y escribe harbor-live.json. El zip del mod está vacío: no extrae nada.",
+    s1: "Descargá watch-harbor-live.bat. Ese archivo es el extractor. El zip del mod es opcional y vacío.",
+    s2: "Doble clic al vigilante. Windows puede avisar: Más info → Ejecutar de todas formas. Lee el save; no lo modifica.",
+    s3: "En Anno, Ctrl+F5 (F5 es la cámara) o esperá el autoguardado. El vigilante escribe Documentos\\Anno 1800\\harbor-live.json.",
+    s4: "Acá: Partida en vivo → soltá o vigilá ese JSON. El navegador no abre el .a7s.",
+    s5: "El zip 0.2.0 es XML vacío. Si lo instalás, Anno no extrae datos con él. Si Anno se cae, desactivá el mod.",
+    s6: "Si el JSON viene vacío, usá \u201CEscribí lo que ves en el diario\u201D una vez. Producción por isla pide el OCR opcional, no el zip.",
     watcher:
-      "Un watcher de Windows, más adelante, puede escribir el mismo harbor-live.json desde un .a7s. Anno 1800 Buddy no abre el guardado acá.",
+      "El vigilante de Windows lee el .a7s o el .save de Ubisoft Cloud y escribe harbor-live.json. El XML vacío no es el extractor.",
     export: "Exportar dónde estoy: baja el JSON de esta sesión para llevarlo a otra PC.",
   },
   pulse: {
@@ -630,6 +642,14 @@ const en: UiDict = {
     watchBtn: "Watch harbor-live.json",
     watching: "Watching the file…",
     watcherDl: "Download watcher",
+    coverageKicker: "What was read",
+    coverageIslands: "{0} player islands",
+    coverageStock: "{0} with per-island stock",
+    coverageNamed: "{0} with a city name",
+    coverageNeutral: "No rename: it stays [guid]. I don't invent the name.",
+    coverageMissing: "Income, maintenance and real missions: not yet. A gap is not zero.",
+    coverageMod: "The empty mod XML extracts nothing. This comes from the watcher.",
+    readerLabel: "reader {0}",
   },
   finder: {
     kicker: "Which mission am I on?",
@@ -645,9 +665,11 @@ const en: UiDict = {
   install: {
     kicker: "Install the mod",
     title: "Install Anno 1800 Buddy in Anno",
-    hint: "The site cannot put files into Anno. You download, run the installer, done. If Anno crashes, disable the mod and delete the old folder. Zip 0.2.0 does not patch the game or run Lua.",
+    hint: "The watcher writes the journal, not the zip. Zip 0.2.0 is empty XML: it does not extract the save, patch the game, or run Lua. If Anno crashes, disable the mod and delete the old folder.",
     dlZip: "1. Download mod (.zip)",
     dlZipCopy: "One click. No account. Leave the zip in Downloads.",
+    stubCopy:
+      "Optional and empty on purpose: it does not extract the save. The watcher reads it with or without this zip.",
     dlZipBtn: "Download mod.zip",
     dlInst: "2. Download Windows installer",
     dlInstCopy: "Copies the zip to Documents\\Anno 1800\\mods. No admin. Does not touch saves.",
@@ -656,6 +678,8 @@ const en: UiDict = {
     ps1: "PowerShell (.ps1)",
     watchCopy:
       "One file. Double-click. If an old watch-harbor-live.ps1 is in Downloads, the .bat renames it to .old and ignores it. Leave the window open and Ctrl+F5 in Anno (or wait for autosave).",
+    watchExtractor:
+      "This is the extractor: it reads the .a7s or .save and writes harbor-live.json. The mod XML does not.",
     watchBat: "Watcher (.bat)",
     watchTitles: "Title list",
     done: "3. I already installed it",
@@ -675,7 +699,7 @@ const en: UiDict = {
       note: "If the Steam ID does not match your Anno, open the .bat in Notepad and change the number.",
     },
     nativeOcr: {
-      kicker: "Real production telemetry · optional",
+      kicker: "On-screen production · optional",
       title: "Statistics OCR extractor",
       copy: "One manual install: download UXEnhancer and extract it as a UXEnhancer folder next to the launcher. The launcher then opens Server.exe, Anno, the watcher, and this page automatically.",
       note: "External, experimental software. No code injection: it captures the window and only reads whichever Statistics tab you have visible. It may ask for Visual C++ or Windows permissions.",
@@ -684,16 +708,16 @@ const en: UiDict = {
   },
   connect: {
     kicker: "How to connect Anno",
-    title: "Download. Installer. Journal.",
-    hint: "The site cannot put files into Anno. You download, run the installer, done.",
-    s1: "Install the mod → Download mod.zip (it lands in Downloads).",
-    s2: "Download the installer (.bat or .ps1). Windows may warn: More info → Run anyway. Folder copy, not a cheat.",
-    s3: "The script puts the mod in Documents\\Anno 1800\\mods\\harbor-buddy-telemetry",
-    s4: "Open Anno → Mods → enable Harbor Buddy Telemetry. Enter the campaign.",
-    s5: "Run watch-harbor-live.bat (leave the window open). In Anno, Ctrl+F5 (F5 is the camera). The script also reads autosave. It writes Documents\\Anno 1800\\harbor-live.json. Here: Live session → drop or watch that file.",
-    s6: "If the JSON is empty, use \u201CType what you see in the journal\u201D once. If the installer cannot find Anno, copy the folder by hand.",
+    title: "Watcher. Journal. Empty zip aside.",
+    hint: "The watcher reads the save and writes harbor-live.json. The mod zip is empty: it extracts nothing.",
+    s1: "Download watch-harbor-live.bat. That file is the extractor. The mod zip is optional and empty.",
+    s2: "Double-click the watcher. Windows may warn: More info → Run anyway. It reads the save; it does not change it.",
+    s3: "In Anno, Ctrl+F5 (F5 is the camera) or wait for autosave. The watcher writes Documents\\Anno 1800\\harbor-live.json.",
+    s4: "Here: Live session → drop or watch that JSON. The browser does not open the .a7s.",
+    s5: "Zip 0.2.0 is empty XML. Installing it does not extract data. If Anno crashes, disable the mod.",
+    s6: "If the JSON is empty, use \u201CType what you see in the journal\u201D once. Per-island production needs the optional OCR, not the zip.",
     watcher:
-      "A later Windows watcher can write the same harbor-live.json from a .a7s. Anno 1800 Buddy does not open the save here.",
+      "The Windows watcher reads the .a7s or Ubisoft Cloud .save and writes harbor-live.json. The empty XML is not the extractor.",
     export: "Export where I am: download this session's JSON to take it to another PC.",
   },
   pulse: {
@@ -1161,6 +1185,14 @@ const it: UiDict = {
     watchBtn: "Osserva harbor-live.json",
     watching: "Osservando il file…",
     watcherDl: "Scarica watcher",
+    coverageKicker: "Cosa è stato letto",
+    coverageIslands: "{0} isole della colonia",
+    coverageStock: "{0} con stock per isola",
+    coverageNamed: "{0} con nome città",
+    coverageNeutral: "Niente rename: resta [guid], non invento il nome.",
+    coverageMissing: "Entrate, manutenzione e missioni reali: non ancora. Un buco non è zero.",
+    coverageMod: "L'XML vuoto della mod non estrae nulla. Questo viene dal watcher.",
+    readerLabel: "lettore {0}",
   },
   finder: {
     kicker: "In che missione sono?",
@@ -1179,6 +1211,8 @@ const it: UiDict = {
     hint: "Il sito non può mettere file in Anno. Scarichi, esegui l'installer, fatto. Se Anno crasha, disattiva la mod e cancella la cartella vecchia. Lo zip 0.2.0 non patcha il gioco e non esegue Lua.",
     dlZip: "1. Scarica mod (.zip)",
     dlZipCopy: "Un clic. Senza account. Lascia lo zip in Download.",
+    stubCopy:
+      "Opzionale e vuoto di proposito: non estrae la partita. Il watcher legge il save uguale, con o senza questo zip.",
     dlZipBtn: "Scarica mod.zip",
     dlInst: "2. Scarica installer Windows",
     dlInstCopy:
@@ -1189,6 +1223,8 @@ const it: UiDict = {
     ps1: "PowerShell (.ps1)",
     watchCopy:
       "Un solo file. Doppio clic. Se in Download c'è un vecchio watch-harbor-live.ps1, il .bat lo rinomina in .old e non lo usa. Lascia la finestra aperta e Ctrl+F5 in Anno (o l'autosalvataggio).",
+    watchExtractor:
+      "Questo è l'estrattore: legge il .a7s o il .save e scrive harbor-live.json. L'XML della mod non lo fa.",
     watchBat: "Watcher (.bat)",
     watchTitles: "Elenco titoli",
     done: "3. L'ho già installata",
@@ -1695,6 +1731,14 @@ const de: UiDict = {
     watchBtn: "harbor-live.json beobachten",
     watching: "Datei wird beobachtet…",
     watcherDl: "Watcher laden",
+    coverageKicker: "Was gelesen wurde",
+    coverageIslands: "{0} Kolonie-Inseln",
+    coverageStock: "{0} mit Insel-Lager",
+    coverageNamed: "{0} mit Stadtname",
+    coverageNeutral: "Kein Rename: bleibt [guid], ich erfinde den Namen nicht.",
+    coverageMissing: "Einkommen, Unterhalt und echte Missionen: noch nicht. Eine Lücke ist nicht null.",
+    coverageMod: "Das leere Mod-XML extrahiert nichts. Das kommt vom Watcher.",
+    readerLabel: "Leser {0}",
   },
   finder: {
     kicker: "In welcher Mission bin ich?",
@@ -1713,6 +1757,8 @@ const de: UiDict = {
     hint: "Die Seite kann keine Dateien in Anno legen. Du lädst herunter, startest den Installer, fertig. Wenn Anno abstürzt: Mod aus, alten Ordner löschen. Zip 0.2.0 patched das Spiel nicht und führt kein Lua aus.",
     dlZip: "1. Mod herunterladen (.zip)",
     dlZipCopy: "Ein Klick. Kein Konto. Zip in Downloads lassen.",
+    stubCopy:
+      "Optional und absichtlich leer: extrahiert den Spielstand nicht. Der Watcher liest den Save trotzdem, mit oder ohne dieses Zip.",
     dlZipBtn: "mod.zip herunterladen",
     dlInst: "2. Windows-Installer herunterladen",
     dlInstCopy:
@@ -1723,6 +1769,8 @@ const de: UiDict = {
     ps1: "PowerShell (.ps1)",
     watchCopy:
       "Eine Datei. Doppelklick. Liegt in Downloads ein altes watch-harbor-live.ps1, benennt die .bat es in .old um und ignoriert es. Fenster offen lassen und Strg+F5 in Anno (oder Autosave).",
+    watchExtractor:
+      "Das ist der Extraktor: liest .a7s oder .save und schreibt harbor-live.json. Das Mod-XML macht das nicht.",
     watchBat: "Watcher (.bat)",
     watchTitles: "Titelliste",
     done: "3. Schon installiert",

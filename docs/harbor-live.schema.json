@@ -19,6 +19,8 @@
     "snapshotId": { "type": "string", "minLength": 1, "maxLength": 120 },
     "simTime": { "type": "integer" },
     "economy": { "$ref": "#/$defs/economy" },
+    "reader": { "$ref": "#/$defs/reader" },
+    "coverage": { "$ref": "#/$defs/coverage" },
     "islandSnapshots": {
       "type": "array",
       "maxItems": 40,
@@ -423,6 +425,87 @@
           "properties": {
             "treasury": { "$ref": "#/$defs/fieldCoverage" }
           }
+        }
+      }
+    },
+    "reader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "engine", "capabilities"],
+      "properties": {
+        "id": { "const": "harbor-watcher" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "engine": { "const": "a7s-scan" },
+        "capabilities": {
+          "type": "array",
+          "maxItems": 24,
+          "items": {
+            "type": "string",
+            "enum": [
+              "buildings",
+              "playerGoods",
+              "playerTreasury",
+              "routes",
+              "routeStations",
+              "islandSnapshots",
+              "islandNames",
+              "islandStock",
+              "islandBuildings",
+              "fleet"
+            ]
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields"],
+      "properties": {
+        "observedAt": { "type": "string", "format": "date-time" },
+        "fields": {
+          "type": "array",
+          "maxItems": 24,
+          "items": { "$ref": "#/$defs/coverageRow" }
+        }
+      }
+    },
+    "coverageRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field", "status"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "enum": [
+            "buildings",
+            "playerGoods",
+            "playerTreasury",
+            "routes",
+            "routeStations",
+            "islandSnapshots",
+            "islandNames",
+            "islandStock",
+            "islandBuildings",
+            "fleet",
+            "quests",
+            "income",
+            "maintenance",
+            "ocrProduction"
+          ]
+        },
+        "status": { "type": "string", "enum": ["present", "absent", "unavailable"] },
+        "count": { "type": "integer", "exclusiveMinimum": 0 },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "empty-on-purpose",
+            "no-player-owner",
+            "no-area-id",
+            "no-city-name",
+            "not-extracted",
+            "no-observation"
+          ]
         }
       }
     },

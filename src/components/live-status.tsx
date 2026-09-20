@@ -1,7 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { Cloud, Database, Route, ScanLine, TimerReset } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { fill } from "@/lib/i18n";
+import { coverageRowFor } from "@/lib/live/coverage";
 import { useHarbor } from "@/lib/store";
+import { useT } from "@/lib/use-t";
 
 function relativeTime(iso: string | undefined, locale: string) {
   if (!iso) return null;
@@ -24,6 +27,7 @@ export function LiveStatus() {
   const liveEnabled = useHarbor((state) => state.liveEnabled);
   const fileName = useHarbor((state) => state.liveFileName);
   const locale = useHarbor((state) => state.locale);
+  const t = useT();
 
   if (!snapshot) {
     return (
@@ -105,6 +109,28 @@ export function LiveStatus() {
             {relativeTime(native.observedAt, locale) ?? "sin hora"}
           </Badge>
         ) : null}
+      </div>
+      <div className="mt-4 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs leading-relaxed" data-live-coverage="1">
+        <p className="font-medium text-foreground">{t.live.coverageKicker}</p>
+        <p className="mt-1 text-muted-foreground">
+          {fill(t.live.readerLabel, snapshot.reader?.version ?? "—")}
+          {(() => {
+            const islands = coverageRowFor(snapshot.coverage, "islandSnapshots");
+            const stock = coverageRowFor(snapshot.coverage, "islandStock");
+            const named = coverageRowFor(snapshot.coverage, "islandNames");
+            const bits: string[] = [];
+            if (islands?.status === "present" && islands.count)
+              bits.push(fill(t.live.coverageIslands, islands.count));
+            if (stock?.status === "present" && stock.count)
+              bits.push(fill(t.live.coverageStock, stock.count));
+            if (named?.status === "present" && named.count)
+              bits.push(fill(t.live.coverageNamed, named.count));
+            else if (named?.status === "absent") bits.push(t.live.coverageNeutral);
+            return bits.length ? ` · ${bits.join(" · ")}` : "";
+          })()}
+        </p>
+        <p className="mt-1 text-muted-foreground">{t.live.coverageMissing}</p>
+        <p className="mt-1 text-muted-foreground">{t.live.coverageMod}</p>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         {native
