@@ -77,4 +77,18 @@ Base de implementación: `62a54ea` (main, incluye etapa 6 #67 y el arreglo del B
 
 **Qué sigue condicionado:** ingresos/mantenimiento, mano de obra libre, reservas de exportación medidas, `AreaID` en cada visita de ruta, estado de quests desde el vigilante (`quests: []`), mantenimiento militar del save. Sin esos campos, la app declara el hueco; no completa con ceros.
 
-P1-B (telemetría C#/contrato/cobertura) y P2 (UI de escritorio, comparador, flota visible) quedan **pendiente**.
+P1-B (telemetría C#/contrato/cobertura): **hecho parcial** en esta rama (ver sección abajo). P2 (UI de escritorio, comparador, flota visible) queda **pendiente**.
+
+## P1-B telemetria (2026-09-20)
+
+Estado: **hecho parcial**.
+
+Hecho:
+- `reader` (id/version/engine/capabilities) + `coverage` snapshot-level en schema, types, validate, C#, watcher, a7s-snapshot, LiveStatus.
+- XML vacio del mod documentado como no-extractor.
+- income / maintenance / quests save-read: `unavailable` o empty-on-purpose; unknown ≠ 0.
+
+Limites / condicionado:
+- Cobertura describe lo que hay en el JSON de esta lectura; no prueba semántica de TaxBalance/Income.
+- Nombres de isla dependen de CityName/CityNameGuid en el save.
+- pack:mod debe regenerar bat/ps1 embebido tras tocar el watcher.

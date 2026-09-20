@@ -281,7 +281,7 @@ function packWatcherBundle() {
     "@echo off",
     "setlocal EnableExtensions",
     "cd /d \"%~dp0\"",
-    "echo Harbor Buddy vigilante 0.5.0 - un solo archivo",
+    "echo Harbor Buddy vigilante 0.6.0 - un solo archivo",
     // public/ is both source and generated output; never move the canonical .ps1 there.
     "if exist \"%~dp0..\\scripts\\pack-mod.mjs\" (",
     "  echo Esta carpeta es el codigo del buddy. Dejo el .ps1 donde esta.",

@@ -6,6 +6,26 @@ using System.Text;
 
 namespace HarborBuddy {
   public static class A7sScan {
+    public const string ReaderId = "harbor-watcher";
+    public const string ReaderVersion = "0.6.0";
+    public const string ReaderEngine = "a7s-scan";
+    static readonly string[] ReaderCapabilities = {
+      "buildings", "playerGoods", "playerTreasury", "routes", "routeStations",
+      "islandSnapshots", "islandNames", "islandStock", "islandBuildings", "fleet"
+    };
+
+    static void AppendReader(StringBuilder sb) {
+      sb.Append("\"reader\":{\"id\":\"").Append(ReaderId)
+        .Append("\",\"version\":\"").Append(ReaderVersion)
+        .Append("\",\"engine\":\"").Append(ReaderEngine)
+        .Append("\",\"capabilities\":[");
+      for (int i = 0; i < ReaderCapabilities.Length; i++) {
+        if (i > 0) sb.Append(",");
+        sb.Append("\"").Append(ReaderCapabilities[i]).Append("\"");
+      }
+      sb.Append("]}");
+    }
+
     public static string Run(byte[] buf, string guidJson) {
       buf = NormalizeArchive(buf);
       var guids = ParseGuids(guidJson);
@@ -84,7 +104,9 @@ namespace HarborBuddy {
         fleet = ExtractFleet(data, guids, routes);
       }
       var sb = new StringBuilder();
-      sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
+      sb.Append("{");
+      AppendReader(sb);
+      sb.Append(",\"sessionName\":\"").Append(Esc(session)).Append("\"");
       sb.Append(",\"storageOwner\":\"").Append(playerStorage ? "player" : "unknown").Append("\"");
       if (playerStorage && money.HasValue) sb.Append(",\"money\":").Append(money.Value);
       if (!playerStorage) goods.Clear();
