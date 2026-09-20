@@ -427,7 +427,7 @@ function Get-HarborCoverage($payload) {
     Add-HarborCoverageField $fields "ocrProduction" "unavailable" $null "not-extracted"
   }
 
-  $coverage = [ordered]@{ fields = @($fields) }
+  $coverage = [ordered]@{ fields = [object[]]$fields.ToArray() }
   if ($payload.savedAt) { $coverage.observedAt = [string]$payload.savedAt }
   return $coverage
 }
