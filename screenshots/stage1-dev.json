@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8080/taller",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Anno 1800 Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 1897,
+      "bodyTextHash": "03a9ff8c7ab43e3cc8eb177bdca277ca694cdcf9983f7a35081a3167ad09b9b0",
+      "bodyTextPrefix": "Anno 1800 Buddy Inicio Diario TALLER Umbral Falta pescado. ISLAS",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\stage1-dev.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Anno 1800 Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 1897,
+      "bodyTextHash": "03a9ff8c7ab43e3cc8eb177bdca277ca694cdcf9983f7a35081a3167ad09b9b0",
+      "bodyTextPrefix": "Anno 1800 Buddy Inicio Diario TALLER Umbral Falta pescado. ISLAS",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\stage1-dev-mobile.png"
+    }
+  },
+  "brandWarnings": [
+    "BRAND NOTE: no custom public/og.jpg — the platform will serve the og.grok.me placeholder. Custom cards are the default for games of every kind (DOM board/word games included), whimsical apps, creative tools, and brand-forward pages — only plain utilities (converters, CRUD trackers, admin dashboards) keep the placeholder. If this app is not a plain utility, finish the brand-asset pass per \\workspace\\.grok\\skills\\og\\SKILL.md."
+  ],
+  "authWarnings": [],
+  "verdictFile": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\stage1-dev.json"
+}

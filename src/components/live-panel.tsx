@@ -230,6 +230,7 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
+    useHarbor.setState({ manualHistoryCampaignId: null });
     commitLiveSnapshot(result.snapshot, file.name);
   }
 
@@ -241,6 +242,7 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
+    useHarbor.setState({ manualHistoryCampaignId: null });
     commitLiveSnapshot(result.snapshot, "pegado.json");
   }
 

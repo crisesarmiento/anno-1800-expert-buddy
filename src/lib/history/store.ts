@@ -1,5 +1,5 @@
 import type { LiveSnapshot } from "../live/types.ts";
-import { campaignFingerprint, resolveCampaignId, sampleClock } from "./campaign.ts";
+import { resolveCampaignId } from "./campaign.ts";
 import { contentHash, summarizeSnapshot } from "./summarize.ts";
 import {
   HISTORY_CAMPAIGNS_STORE,
@@ -32,11 +32,7 @@ function newId() {
 }
 
 function sortSamples(rows: HistorySample[]) {
-  return [...rows].sort((a, b) => {
-    const clockA = sampleClock(a) ?? Date.parse(a.recordedAt);
-    const clockB = sampleClock(b) ?? Date.parse(b.recordedAt);
-    return clockA - clockB;
-  });
+  return [...rows].sort((a, b) => Date.parse(a.recordedAt) - Date.parse(b.recordedAt));
 }
 
 function tipOfCampaign(samples: HistorySample[], campaignId: string): HistorySample | undefined {
@@ -46,9 +42,10 @@ function tipOfCampaign(samples: HistorySample[], campaignId: string): HistorySam
 
 function shouldBranch(tip: HistorySample | undefined, incoming: HistorySample) {
   if (!tip) return false;
-  const tipClock = sampleClock(tip);
-  const nextClock = sampleClock(incoming);
-  if (tipClock == null || nextClock == null) return false;
+  const tipClock = tip.simTime;
+  const nextClock = incoming.simTime;
+  // Filesystem timestamps cannot demonstrate simulation order after a restore.
+  if (tipClock == null || nextClock == null) return true;
   return nextClock < tipClock;
 }
 
@@ -59,7 +56,9 @@ export function createMemoryHistoryBacking(seed?: HistoryMemory): HistoryMemory 
   };
 }
 
-export function createMemoryHistoryStore(memory: HistoryMemory = createMemoryHistoryBacking()): HistoryStore {
+export function createMemoryHistoryStore(
+  memory: HistoryMemory = createMemoryHistoryBacking(),
+): HistoryStore {
   const allSamples = () => [...memory.samples.values()];
   const allCampaigns = () => [...memory.campaigns.values()];
 
@@ -75,7 +74,15 @@ export function createMemoryHistoryStore(memory: HistoryMemory = createMemoryHis
         return { ok: false, reason: "ambiguous", candidates: resolved.candidates, snapshot };
       }
       const summary = summarizeSnapshot(snapshot);
-      const recordedAt = opts?.now?.() ?? new Date().toISOString();
+      const previousTip =
+        memory.samples.get(memory.campaigns.get(resolved.campaignId)?.headId ?? "") ??
+        tipOfCampaign(allSamples(), resolved.campaignId);
+      const recordedAt = new Date(
+        Math.max(
+          Date.parse(opts?.now?.() ?? new Date().toISOString()),
+          previousTip ? Date.parse(previousTip.recordedAt) + 1 : 0,
+        ),
+      ).toISOString();
       const hash = contentHash(summary);
       const draft: HistorySample = {
         id: newId(),
@@ -89,16 +96,18 @@ export function createMemoryHistoryStore(memory: HistoryMemory = createMemoryHis
       if (typeof snapshot.simTime === "number") draft.simTime = snapshot.simTime;
       if (snapshot.snapshotId) draft.snapshotId = snapshot.snapshotId;
 
-      const existing = allSamples().filter((row) => row.campaignId === resolved.campaignId);
-      const dup = existing.find((row) => {
-        if (draft.snapshotId && row.snapshotId && draft.snapshotId === row.snapshotId) return true;
-        return row.contentHash === hash;
-      });
+      const dup = previousTip?.contentHash === hash ? previousTip : undefined;
       if (dup) {
-        return { ok: true, sample: dup, deduped: true, branched: false, campaignId: resolved.campaignId };
+        return {
+          ok: true,
+          sample: dup,
+          deduped: true,
+          branched: false,
+          campaignId: resolved.campaignId,
+        };
       }
 
-      const tip = tipOfCampaign(allSamples(), resolved.campaignId);
+      const tip = previousTip;
       let branched = false;
       if (shouldBranch(tip, draft)) {
         draft.branchId = newId();
@@ -107,13 +116,17 @@ export function createMemoryHistoryStore(memory: HistoryMemory = createMemoryHis
         draft.branchId = tip.branchId;
       }
 
-      if (!memory.campaigns.has(resolved.campaignId)) {
-        memory.campaigns.set(resolved.campaignId, {
-          id: resolved.campaignId,
-          fingerprint: campaignFingerprint(snapshot),
-          createdAt: recordedAt,
-        });
-      }
+      memory.campaigns.set(resolved.campaignId, {
+        ...memory.campaigns.get(resolved.campaignId),
+        id: resolved.campaignId,
+        fingerprint: null,
+        label:
+          memory.campaigns.get(resolved.campaignId)?.label ??
+          snapshot.sessionName ??
+          resolved.campaignId,
+        createdAt: memory.campaigns.get(resolved.campaignId)?.createdAt ?? recordedAt,
+        headId: draft.id,
+      });
 
       memory.samples.set(draft.id, draft);
       const campaignRows = sortSamples(
@@ -166,60 +179,87 @@ function requestToPromise<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+function transactionDone(tx: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error ?? new Error("No se pudo guardar el historial local."));
+    tx.onerror = () => reject(tx.error ?? new Error("No se pudo guardar el historial local."));
+  });
+}
+
 export function createIndexedDbHistoryStore(): HistoryStore {
-  const memory = createMemoryHistoryStore();
+  // Serialize read/modify/write across instances in this page. Web Locks also
+  // serializes other tabs on supported browsers.
+  const serial = <T>(work: () => Promise<T>): Promise<T> => {
+    const run = async (): Promise<T> =>
+      typeof navigator !== "undefined" && navigator.locks
+        ? await navigator.locks.request(HISTORY_DB, work)
+        : await work();
+    const result = historyWrites.then(run, run);
+    historyWrites = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  };
   return {
-    async record(snapshot, opts) {
-      try {
+    record(snapshot, opts) {
+      return serial(async () => {
         const db = await openHistoryDb();
-        const known = await requestToPromise(
-          db.transaction(HISTORY_CAMPAIGNS_STORE, "readonly").objectStore(HISTORY_CAMPAIGNS_STORE).getAll(),
-        ) as HistoryCampaign[];
-        const resolved = resolveCampaignId({
-          snapshot,
-          explicitCampaignId: opts?.explicitCampaignId,
-          known,
-        });
-        if (!resolved.ok) {
-          return { ok: false, reason: "ambiguous", candidates: resolved.candidates, snapshot };
+        try {
+          const known = (await requestToPromise(
+            db
+              .transaction(HISTORY_CAMPAIGNS_STORE, "readonly")
+              .objectStore(HISTORY_CAMPAIGNS_STORE)
+              .getAll(),
+          )) as HistoryCampaign[];
+          const resolved = resolveCampaignId({
+            snapshot,
+            explicitCampaignId: opts?.explicitCampaignId,
+            known,
+          });
+          if (!resolved.ok) {
+            return { ok: false, reason: "ambiguous", candidates: resolved.candidates, snapshot };
+          }
+          const samples = (await requestToPromise(
+            db
+              .transaction(HISTORY_SAMPLES_STORE, "readonly")
+              .objectStore(HISTORY_SAMPLES_STORE)
+              .index("campaignId")
+              .getAll(resolved.campaignId),
+          )) as HistorySample[];
+          const backing = createMemoryHistoryBacking({
+            samples: new Map(samples.map((row) => [row.id, row])),
+            campaigns: new Map(known.map((row) => [row.id, row])),
+          });
+          const local = createMemoryHistoryStore(backing);
+          const result = await local.record(snapshot, opts);
+          if (!result.ok) return result;
+          const kept = await local.list(result.campaignId);
+          const campaign = backing.campaigns.get(result.campaignId)!;
+          const write = db.transaction(
+            [HISTORY_SAMPLES_STORE, HISTORY_CAMPAIGNS_STORE],
+            "readwrite",
+          );
+          const done = transactionDone(write);
+          // Observe aborts even if a synchronous put throws before the await.
+          void done.catch(() => undefined);
+          write.objectStore(HISTORY_CAMPAIGNS_STORE).put(campaign);
+          write.objectStore(HISTORY_SAMPLES_STORE).put(result.sample);
+          const keptIds = new Set(kept.map((row) => row.id));
+          for (const row of samples) {
+            if (!keptIds.has(row.id)) write.objectStore(HISTORY_SAMPLES_STORE).delete(row.id);
+          }
+          await done;
+          return result;
+        } finally {
+          db.close();
         }
-        const samples = (await requestToPromise(
-          db
-            .transaction(HISTORY_SAMPLES_STORE, "readonly")
-            .objectStore(HISTORY_SAMPLES_STORE)
-            .index("campaignId")
-            .getAll(resolved.campaignId),
-        )) as HistorySample[];
-        const backing = createMemoryHistoryBacking({
-          samples: new Map(samples.map((row) => [row.id, row])),
-          campaigns: new Map(known.map((row) => [row.id, row])),
-        });
-        const local = createMemoryHistoryStore(backing);
-        const result = await local.record(snapshot, opts);
-        if (!result.ok) return result;
-        const write = db.transaction(
-          [HISTORY_SAMPLES_STORE, HISTORY_CAMPAIGNS_STORE],
-          "readwrite",
-        );
-        write.objectStore(HISTORY_CAMPAIGNS_STORE).put({
-          id: result.campaignId,
-          fingerprint: campaignFingerprint(snapshot),
-          createdAt: result.sample.recordedAt,
-        } satisfies HistoryCampaign);
-        write.objectStore(HISTORY_SAMPLES_STORE).put(result.sample);
-        const kept = await local.list(result.campaignId);
-        const keptIds = new Set(kept.map((row) => row.id));
-        for (const row of samples) {
-          if (!keptIds.has(row.id)) write.objectStore(HISTORY_SAMPLES_STORE).delete(row.id);
-        }
-        return result;
-      } catch {
-        return memory.record(snapshot, opts);
-      }
+      });
     },
     async list(campaignId) {
+      const db = await openHistoryDb();
       try {
-        const db = await openHistoryDb();
         const rows = (await requestToPromise(
           db
             .transaction(HISTORY_SAMPLES_STORE, "readonly")
@@ -228,38 +268,47 @@ export function createIndexedDbHistoryStore(): HistoryStore {
             .getAll(campaignId),
         )) as HistorySample[];
         return sortSamples(rows);
-      } catch {
-        return memory.list(campaignId);
+      } finally {
+        db.close();
       }
     },
     async campaigns() {
+      const db = await openHistoryDb();
       try {
-        const db = await openHistoryDb();
         return (await requestToPromise(
-          db.transaction(HISTORY_CAMPAIGNS_STORE, "readonly").objectStore(HISTORY_CAMPAIGNS_STORE).getAll(),
+          db
+            .transaction(HISTORY_CAMPAIGNS_STORE, "readonly")
+            .objectStore(HISTORY_CAMPAIGNS_STORE)
+            .getAll(),
         )) as HistoryCampaign[];
-      } catch {
-        return memory.campaigns();
+      } finally {
+        db.close();
       }
     },
     async get(id) {
+      const db = await openHistoryDb();
       try {
-        const db = await openHistoryDb();
         return (await requestToPromise(
-          db.transaction(HISTORY_SAMPLES_STORE, "readonly").objectStore(HISTORY_SAMPLES_STORE).get(id),
+          db
+            .transaction(HISTORY_SAMPLES_STORE, "readonly")
+            .objectStore(HISTORY_SAMPLES_STORE)
+            .get(id),
         )) as HistorySample | undefined;
-      } catch {
-        return memory.get(id);
+      } finally {
+        db.close();
       }
     },
   };
 }
 
+let historyWrites: Promise<void> = Promise.resolve();
+
 let defaultStore: HistoryStore | null = null;
 
 export function campaignHistoryStore(): HistoryStore {
   if (!defaultStore) {
-    defaultStore = typeof indexedDB === "undefined" ? createMemoryHistoryStore() : createIndexedDbHistoryStore();
+    defaultStore =
+      typeof window === "undefined" ? createMemoryHistoryStore() : createIndexedDbHistoryStore();
   }
   return defaultStore;
 }

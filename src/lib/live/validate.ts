@@ -342,7 +342,7 @@ function normalizeCoverage(value: unknown): LiveFieldCoverage | undefined {
 }
 
 function normalizeIslandStock(value: unknown): LiveIslandStock[] | undefined {
-  if (!Array.isArray(value)) return undefined;
+  if (!Array.isArray(value) || value.length > LIVE_MAX_ISLAND_STOCK) return undefined;
   const stock: LiveIslandStock[] = [];
   for (const item of value.slice(0, LIVE_MAX_ISLAND_STOCK)) {
     if (!asRecord(item)) continue;
@@ -352,7 +352,8 @@ function normalizeIslandStock(value: unknown): LiveIslandStock[] | undefined {
       typeof item.amount === "number" && Number.isFinite(item.amount)
         ? Math.trunc(item.amount)
         : null;
-    if (!id || !name || amount == null) continue;
+    if (!id || !name || amount == null || amount < 0) continue;
+    if (stock.some((row) => row.id === id)) return undefined;
     stock.push({ id, name, amount });
   }
   return stock.length ? stock : undefined;
@@ -375,10 +376,17 @@ function normalizeIslandSnapshots(value: unknown): LiveIslandSnapshot[] | undefi
   const islands: LiveIslandSnapshot[] = [];
   for (const item of value.slice(0, LIVE_MAX_ISLAND_SNAPSHOTS)) {
     if (!asRecord(item)) continue;
-    const regionId = Number(item.regionId);
-    const areaId = Number(item.areaId);
-    const ownerId = Number(item.ownerId);
-    if (!Number.isFinite(regionId) || !Number.isFinite(areaId) || !Number.isFinite(ownerId)) {
+    const regionId = item.regionId;
+    const areaId = item.areaId;
+    const ownerId = item.ownerId;
+    if (
+      typeof regionId !== "number" ||
+      typeof areaId !== "number" ||
+      typeof ownerId !== "number" ||
+      !Number.isSafeInteger(regionId) ||
+      !Number.isSafeInteger(areaId) ||
+      !Number.isSafeInteger(ownerId)
+    ) {
       continue;
     }
     const nameSource = ISLAND_NAME_SOURCES.has(item.nameSource as LiveIslandNameSource)
@@ -408,13 +416,14 @@ function normalizeIslandSnapshots(value: unknown): LiveIslandSnapshot[] | undefi
     }
     const stock = normalizeIslandStock(item.stock);
     if (stock) snapshot.stock = stock;
+    else delete snapshot.coverage.stock;
     const buildings = normalizeBuildingHits(item.buildings, LIVE_MAX_ISLAND_BUILDINGS);
     if (buildings) snapshot.buildings = buildings;
     const population = normalizeIslandPopulation(item.population);
     if (population) snapshot.population = population;
     if (asRecord(item.capacities)) {
-      const warehouse = Number(item.capacities.warehouse);
-      if (Number.isFinite(warehouse) && warehouse >= 0) {
+      const warehouse = item.capacities.warehouse;
+      if (typeof warehouse === "number" && Number.isFinite(warehouse) && warehouse >= 0) {
         snapshot.capacities = { warehouse: Math.trunc(warehouse) };
       }
     }

@@ -151,12 +151,13 @@ function stockFromManager(manager: FileDbNode): LiveIslandStock[] | undefined {
   if (!storage) return undefined;
   const blobs: Buffer[] = [];
   collectAttr(storage, "StrgLrg", blobs);
-  if (!blobs.length) return undefined;
+  if (blobs.length !== 1 || blobs[0].length % 8 !== 0) return undefined;
   const byId = new Map<string, LiveIslandStock>();
   for (const blob of blobs) {
     for (const pair of parseStrgPairs(blob)) {
       const row = lookupGuid(pair.guid);
       if (row?.kind !== "good") continue;
+      if (pair.amount < 0 || byId.has(row.id)) return undefined;
       byId.set(row.id, { id: row.id, name: row.name, amount: pair.amount });
     }
   }
@@ -164,11 +165,7 @@ function stockFromManager(manager: FileDbNode): LiveIslandStock[] | undefined {
   return stock.length ? stock : undefined;
 }
 
-function addBuildingCount(
-  counts: Map<string, LiveBuildingHit>,
-  guid: number,
-  amount: number,
-) {
+function addBuildingCount(counts: Map<string, LiveBuildingHit>, guid: number, amount: number) {
   if (amount <= 0) return;
   const row = lookupGuid(guid);
   if (row?.kind !== "building") return;
@@ -223,13 +220,13 @@ export function islandSnapshotFromExtracted(
     nameSource: island.nameSource,
     coverage: { identity },
   };
-  if (island.stock?.length) {
-    snapshot.stock = island.stock.slice(0, LIVE_MAX_ISLAND_STOCK);
+  if (island.stock?.length && island.stock.length <= LIVE_MAX_ISLAND_STOCK) {
+    snapshot.stock = island.stock;
     snapshot.coverage.stock = { ...saveCoverage() };
     if (observedAt) snapshot.coverage.stock.observedAt = observedAt;
   }
-  if (island.buildings?.length) {
-    snapshot.buildings = island.buildings.slice(0, LIVE_MAX_ISLAND_BUILDINGS);
+  if (island.buildings?.length && island.buildings.length <= LIVE_MAX_ISLAND_BUILDINGS) {
+    snapshot.buildings = island.buildings;
     snapshot.coverage.buildings = { ...saveCoverage() };
     if (observedAt) snapshot.coverage.buildings.observedAt = observedAt;
   }
@@ -283,9 +280,7 @@ export function extractIslands(dataBytes: Buffer): ExtractedSaveIslands {
       const ownerId = ownerNode ? leafInt(ownerNode, "id") : leafInt(record.node, "Owner");
       if (ownerId == null) continue;
       const areaId =
-        record.areaId ??
-        leafInt(record.node, "Identifier") ??
-        leafInt(record.node, "AreaID");
+        record.areaId ?? leafInt(record.node, "Identifier") ?? leafInt(record.node, "AreaID");
       if (areaId == null) continue;
       const cityNameBytes = leaf(record.node, "CityName");
       const cityName = cityNameBytes ? leafText(cityNameBytes).trim() || null : null;

@@ -1,0 +1,40 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Anno 1800 Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 899,
+      "bodyTextHash": "5c7cb42514b9d2ce14e608e3f6e72eac0c9b5b807c55898bd45ad233af0d4ced",
+      "bodyTextPrefix": "Ir al contenido Harbor Buddy Tu compañero en Anno 1800 Inicio Pr",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\editorial-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Anno 1800 Buddy",
+      "hasCanvas": false,
+      "bodyTextLen": 899,
+      "bodyTextHash": "5c7cb42514b9d2ce14e608e3f6e72eac0c9b5b807c55898bd45ad233af0d4ced",
+      "bodyTextPrefix": "Ir al contenido Harbor Buddy Tu compañero en Anno 1800 Inicio Pr",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\editorial-built-mobile.png"
+    }
+  },
+  "brandWarnings": [
+    "BRAND NOTE: no custom public/og.jpg — the platform will serve the og.grok.me placeholder. Custom cards are the default for games of every kind (DOM board/word games included), whimsical apps, creative tools, and brand-forward pages — only plain utilities (converters, CRUD trackers, admin dashboards) keep the placeholder. If this app is not a plain utility, finish the brand-asset pass per \\workspace\\.grok\\skills\\og\\SKILL.md."
+  ],
+  "authWarnings": [],
+  "verdictFile": "C:\\Users\\crist\\Desktop\\anno-1800-expert-buddy\\screenshots\\editorial-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

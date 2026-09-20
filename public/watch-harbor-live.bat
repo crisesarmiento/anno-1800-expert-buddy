@@ -1552,7 +1552,7 @@ namespace HarborBuddy {
           .Append(",\"ownerId\":").Append(island.OwnerId)
           .Append(",\"name\":\"").Append(Esc(island.Name)).Append("\"")
           .Append(",\"nameSource\":\"").Append(Esc(island.NameSource)).Append("\"");
-        if (island.Stock.Count > 0) {
+        if (island.Stock.Count > 0 && island.Stock.Count <= 24) {
           sb.Append(",\"stock\":[");
           bool firstStock = true;
           int stockCount = 0;
@@ -1566,7 +1566,7 @@ namespace HarborBuddy {
           sb.Append("]");
         }
         sb.Append(",\"coverage\":{\"identity\":{\"source\":\"save\"}");
-        if (island.Stock.Count > 0) sb.Append(",\"stock\":{\"source\":\"save\"}");
+        if (island.Stock.Count > 0 && island.Stock.Count <= 24) sb.Append(",\"stock\":{\"source\":\"save\"}");
         sb.Append("}}");
       }
       sb.Append("]}");
@@ -1786,6 +1786,10 @@ namespace HarborBuddy {
       var storage = FindDescendant(manager, "AreaStorageManager");
       if (storage == null) return output;
       CollectStrg(storage, guids, output);
+      var seen = new HashSet<string>();
+      foreach (var item in output) {
+        if (item.Amount < 0 || !seen.Add(item.Id)) return new List<IslandStock>();
+      }
       return output;
     }
 

@@ -18,6 +18,19 @@ const fixture = JSON.parse(
 
 const encoder = new TextEncoder();
 
+it("does not turn a null owner into player zero or keep ambiguous island stock", () => {
+  const islandFixture = JSON.parse(
+    readFileSync(new URL("./fixture-islands.json", import.meta.url), "utf8"),
+  );
+  islandFixture.islandSnapshots[0].ownerId = null;
+  islandFixture.islandSnapshots[1].stock.push({ ...islandFixture.islandSnapshots[1].stock[0] });
+  const result = ingestLiveJsonText(JSON.stringify(islandFixture));
+  assert.ok(result.ok);
+  assert.equal(result.snapshot.islandSnapshots?.length, 1);
+  assert.equal(result.snapshot.islandSnapshots?.[0]?.stock, undefined);
+  assert.equal(result.snapshot.islandSnapshots?.[0]?.coverage.stock, undefined);
+});
+
 it("preserves capture outcome separately from historical observation", () => {
   const raw = readFileSync(new URL("./fixture-no-observation.json", import.meta.url), "utf8");
   const result = ingestLiveJsonText(raw);

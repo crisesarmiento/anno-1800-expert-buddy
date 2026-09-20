@@ -56,6 +56,8 @@ type HarborState = {
   samples: PulseSample[];
   activeIslandId: string | null;
   historyCampaignId: string | null;
+  manualHistoryCampaignId: string | null;
+  historyError: string | null;
   pendingCampaign: { candidates: CampaignCandidate[]; snapshot: LiveSnapshot } | null;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
@@ -112,6 +114,8 @@ export const useHarbor = create<HarborState>()(
       samples: [],
       activeIslandId: null,
       historyCampaignId: null,
+      manualHistoryCampaignId: null,
+      historyError: null,
       pendingCampaign: null,
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
@@ -149,7 +153,9 @@ export const useHarbor = create<HarborState>()(
         }),
       acknowledgeMovedIn: () =>
         set({
-          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, { type: "acknowledgeMovedIn" }),
+          overbuildBrake: reduceOverbuildBrake(get().overbuildBrake, {
+            type: "acknowledgeMovedIn",
+          }),
         }),
       toggleCheck: (missionId, index) => {
         if (isLiveLocked(get())) return;
@@ -174,9 +180,7 @@ export const useHarbor = create<HarborState>()(
       },
       markComplete: (id) => {
         if (get().liveEnabled && get().liveSnapshot) return;
-        const completed = get().completed.includes(id)
-          ? get().completed
-          : [...get().completed, id];
+        const completed = get().completed.includes(id) ? get().completed : [...get().completed, id];
         const mission = missionsById[id];
         const chapterIds = mission
           ? Object.values(missionsById)
@@ -292,8 +296,7 @@ export const useHarbor = create<HarborState>()(
         }
         set({ liveEnabled: value });
       },
-      setLiveBanner: (text, failed = false) =>
-        set({ liveBanner: text, liveBannerFailed: failed }),
+      setLiveBanner: (text, failed = false) => set({ liveBanner: text, liveBannerFailed: failed }),
       setLocale: (value) => {
         const locale = isLocale(value) ? value : DEFAULT_LOCALE;
         if (typeof document !== "undefined") {
@@ -308,17 +311,30 @@ export const useHarbor = create<HarborState>()(
       setActiveIslandId: (id) => set({ activeIslandId: id }),
       applyHistoryResult: (result) => {
         if (result.ok) {
-          set({ historyCampaignId: result.campaignId, pendingCampaign: null });
+          set({ historyCampaignId: result.campaignId, pendingCampaign: null, historyError: null });
           return;
         }
-        set({ pendingCampaign: { candidates: result.candidates, snapshot: result.snapshot } });
+        set({
+          historyCampaignId: null,
+          historyError: null,
+          pendingCampaign: { candidates: result.candidates, snapshot: result.snapshot },
+        });
       },
       chooseCampaign: (id) => {
         const pending = get().pendingCampaign;
         if (!pending) return;
-        void ingestSnapshotHistory(pending.snapshot, { explicitCampaignId: id }).then((history) => {
-          get().applyHistoryResult(history);
-        });
+        set({ manualHistoryCampaignId: id });
+        void ingestSnapshotHistory(pending.snapshot, { explicitCampaignId: id })
+          .then((history) => {
+            if (get().liveSnapshot !== pending.snapshot) return;
+            get().applyHistoryResult(history);
+          })
+          .catch(() => {
+            set({
+              historyError:
+                "No se pudo guardar el historial en este navegador. La lectura de la partida sigue disponible.",
+            });
+          });
       },
       clearPendingCampaign: () => set({ pendingCampaign: null }),
     }),

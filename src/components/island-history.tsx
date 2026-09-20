@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
-import { campaignHistoryStore } from "@/lib/history";
+import { campaignHistoryStore, islandStockDelta, type HistorySample } from "@/lib/history";
 import { fill } from "@/lib/i18n";
 import { playerIslandsFromSave } from "@/lib/live/evidence.ts";
 import { islandKey } from "@/lib/live/island-key.ts";
@@ -25,7 +25,11 @@ export function CampaignPicker() {
   if (!pending) return null;
   return (
     <div data-campaign-picker="">
-      <HarborCard kicker={t.islandsHistory.kicker} title={t.islandsHistory.pickCampaign} hint={t.islandsHistory.pickCampaignHint}>
+      <HarborCard
+        kicker={t.islandsHistory.kicker}
+        title={t.islandsHistory.pickCampaign}
+        hint={t.islandsHistory.pickCampaignHint}
+      >
         <div className="flex flex-col gap-2">
           {pending.candidates.map((row) => (
             <Button
@@ -54,16 +58,21 @@ export function CampaignPicker() {
 export function IslandHistoryCard() {
   const snapshot = useHarbor((state) => state.liveSnapshot);
   const campaignId = useHarbor((state) => state.historyCampaignId);
+  const historyError = useHarbor((state) => state.historyError);
   const locale = useHarbor((state) => state.locale);
   const t = useT();
   const islands = playerIslandsFromSave(snapshot);
   const [sampleCount, setSampleCount] = useState(0);
   const [oldest, setOldest] = useState<string | null>(null);
+  const [samples, setSamples] = useState<HistorySample[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [readError, setReadError] = useState(false);
 
   useEffect(() => {
     if (!campaignId) {
       setSampleCount(0);
       setOldest(null);
+      setSamples([]);
       return;
     }
     let cancelled = false;
@@ -72,23 +81,89 @@ export function IslandHistoryCard() {
       .then((rows) => {
         if (cancelled) return;
         setSampleCount(rows.length);
+        setSamples(rows);
+        setReadError(false);
         setOldest(rows[0]?.savedAt ?? rows[0]?.recordedAt ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setReadError(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [campaignId, snapshot?.savedAt, snapshot?.simTime]);
+  }, [campaignId, snapshot]);
 
-  const observed = formatWhen(snapshot?.savedAt, locale);
+  const selected = samples.find((row) => row.id === selectedId) ?? samples.at(-1);
+  const previous = selected
+    ? samples
+        .filter((row) => row.branchId === selected.branchId && row.recordedAt < selected.recordedAt)
+        .at(-1)
+    : undefined;
+  const shownIslands = selected?.summary.islands ?? islands;
+  const observed = formatWhen(selected?.savedAt ?? snapshot?.savedAt, locale);
 
   return (
     <div data-island-history="">
-      <HarborCard kicker={t.islandsHistory.kicker} title={t.islandsHistory.title} hint={t.islandsHistory.hint}>
-        {!islands.length ? (
+      <HarborCard
+        kicker={t.islandsHistory.kicker}
+        title={t.islandsHistory.title}
+        hint={t.islandsHistory.hint}
+      >
+        {historyError || readError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {historyError ??
+              "No se pudo leer el historial guardado. Reintentá al actualizar la partida."}
+          </p>
+        ) : null}
+        {campaignId ? (
+          <Button
+            variant="outline"
+            className="min-h-11"
+            onClick={async () => {
+              if (!snapshot) return;
+              try {
+                const candidates = await campaignHistoryStore().campaigns();
+                useHarbor.setState({
+                  manualHistoryCampaignId: null,
+                  historyCampaignId: null,
+                  pendingCampaign: { snapshot, candidates },
+                });
+              } catch {
+                setReadError(true);
+              }
+            }}
+          >
+            Cambiar campaña del historial
+          </Button>
+        ) : null}
+        {samples.length > 0 ? (
+          <label className="flex flex-col gap-2 text-sm">
+            Guardado a consultar
+            <select
+              className="min-h-11 w-full rounded-md border border-input bg-background p-2 text-foreground"
+              value={selected?.id ?? ""}
+              onChange={(event) => setSelectedId(event.target.value)}
+            >
+              {[...samples].reverse().map((row) => (
+                <option key={row.id} value={row.id}>
+                  {formatWhen(row.savedAt ?? row.recordedAt, locale)} ·{" "}
+                  {row.branchId === "main" ? "Inicio" : "Otra secuencia"}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        {selected && selected.simTime == null ? (
+          <p className="text-xs text-muted-foreground">
+            Sin reloj de juego verificado: conservamos cada lectura, sin calcular tasas ni
+            continuidad entre guardados.
+          </p>
+        ) : null}
+        {!shownIslands.length ? (
           <p className="text-sm text-muted-foreground">{t.islandsHistory.empty}</p>
         ) : (
           <ul className="flex flex-col gap-4">
-            {islands.map((island) => (
+            {shownIslands.map((island) => (
               <li
                 key={islandKey(island.regionId, island.areaId)}
                 data-island-history-row={islandKey(island.regionId, island.areaId)}
@@ -96,7 +171,9 @@ export function IslandHistoryCard() {
               >
                 <p className="font-display font-semibold">{island.name}</p>
                 {observed ? (
-                  <p className="text-xs text-muted-foreground">{fill(t.islandsHistory.observed, observed)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {fill(t.islandsHistory.observed, observed)}
+                  </p>
                 ) : null}
                 {island.stock?.length ? (
                   <ul className="mt-2 flex flex-col gap-1 text-sm">
@@ -107,7 +184,29 @@ export function IslandHistoryCard() {
                       </li>
                     ))}
                   </ul>
-                ) : null}
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Stock no disponible para esta isla en esta lectura.
+                  </p>
+                )}
+                {previous && selected
+                  ? (() => {
+                      const delta = islandStockDelta(
+                        previous,
+                        selected,
+                        island.regionId,
+                        island.areaId,
+                      );
+                      return delta.ok && delta.changes.length ? (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Cambio observado:{" "}
+                          {delta.changes
+                            .map((good) => `${good.name} ${good.delta > 0 ? "+" : ""}${good.delta}`)
+                            .join(" · ")}
+                        </p>
+                      ) : null;
+                    })()
+                  : null}
               </li>
             ))}
           </ul>

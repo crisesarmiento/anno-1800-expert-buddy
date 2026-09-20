@@ -1,21 +1,19 @@
 import { islandKey } from "../live/island-key.ts";
-import { sampleClock } from "./campaign.ts";
-import type {
-  CompareStockResult,
-  HistoryIsland,
-  HistorySample,
-  StockDelta,
-} from "./types.ts";
+import type { CompareStockResult, HistoryIsland, HistorySample, StockDelta } from "./types.ts";
 
-export function canCompareSamples(previous: HistorySample, current: HistorySample): CompareStockResult {
+export function canCompareSamples(
+  previous: HistorySample,
+  current: HistorySample,
+): CompareStockResult {
   if (previous.campaignId !== current.campaignId) {
     return { ok: false, reason: "cross-campaign" };
   }
   if (previous.branchId !== current.branchId) {
     return { ok: false, reason: "cross-branch" };
   }
-  const prevClock = sampleClock(previous);
-  const nextClock = sampleClock(current);
+  const prevClock = previous.simTime;
+  const nextClock = current.simTime;
+  if (prevClock == null || nextClock == null) return { ok: false, reason: "missing-identity" };
   if (prevClock != null && nextClock != null && nextClock < prevClock) {
     return { ok: false, reason: "against-future" };
   }

@@ -1,15 +1,11 @@
 import { isPlayerParticipant } from "../live/evidence.ts";
 import { islandKey } from "../live/island-key.ts";
 import type { LiveSnapshot } from "../live/types.ts";
-import type {
-  CampaignCandidate,
-  CampaignResolveResult,
-  HistoryCampaign,
-} from "./types.ts";
+import type { CampaignCandidate, CampaignResolveResult, HistoryCampaign } from "./types.ts";
 
 /**
- * Stable campaign fingerprint from player island identities.
- * Filename, mtime and sessionName are never enough on their own.
+ * Legacy map signature, retained for reading old history metadata only.
+ * It must never identify a campaign: colonization and repeated maps collide.
  */
 export function campaignFingerprint(snapshot: LiveSnapshot): string | null {
   const keys = (snapshot.islandSnapshots ?? [])
@@ -25,6 +21,9 @@ export function resolveCampaignId(input: {
   explicitCampaignId?: string;
   known: HistoryCampaign[];
 }): CampaignResolveResult {
+  if (input.snapshot.campaignId?.trim()) {
+    return { ok: true, campaignId: input.snapshot.campaignId.trim(), method: "snapshot" };
+  }
   if (input.explicitCampaignId?.trim()) {
     return {
       ok: true,
@@ -32,25 +31,9 @@ export function resolveCampaignId(input: {
       method: "explicit",
     };
   }
-  if (input.snapshot.campaignId?.trim()) {
-    return { ok: true, campaignId: input.snapshot.campaignId.trim(), method: "snapshot" };
-  }
-  const fingerprint = campaignFingerprint(input.snapshot);
-  if (!fingerprint) {
-    return {
-      ok: false,
-      reason: "ambiguous",
-      candidates: asCandidates(input.known),
-    };
-  }
-  const matches = input.known.filter((row) => row.fingerprint === fingerprint);
-  if (matches.length === 1) {
-    return { ok: true, campaignId: matches[0]!.id, method: "fingerprint" };
-  }
-  if (matches.length === 0) {
-    return { ok: true, campaignId: fingerprint, method: "fingerprint" };
-  }
-  return { ok: false, reason: "ambiguous", candidates: asCandidates(matches) };
+  // Area IDs describe a map, not a campaign. Colonization changes the set and
+  // another playthrough can reuse the exact same IDs. Require explicit choice.
+  return { ok: false, reason: "ambiguous", candidates: asCandidates(input.known) };
 }
 
 function asCandidates(rows: HistoryCampaign[]): CampaignCandidate[] {
@@ -61,10 +44,7 @@ function asCandidates(rows: HistoryCampaign[]): CampaignCandidate[] {
   }));
 }
 
-export function sampleClock(sample: {
-  simTime?: number | null;
-  savedAt?: string;
-}): number | null {
+export function sampleClock(sample: { simTime?: number | null; savedAt?: string }): number | null {
   if (typeof sample.simTime === "number" && Number.isFinite(sample.simTime)) {
     return sample.simTime;
   }

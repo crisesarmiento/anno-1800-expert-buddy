@@ -6,7 +6,9 @@ import { islandStockDelta } from "./compare.ts";
 import { createMemoryHistoryBacking, createMemoryHistoryStore } from "./store.ts";
 import { HISTORY_MAX_SAMPLES } from "./types.ts";
 
-function island(over: Partial<LiveIslandSnapshot> & Pick<LiveIslandSnapshot, "areaId" | "name">): LiveIslandSnapshot {
+function island(
+  over: Partial<LiveIslandSnapshot> & Pick<LiveIslandSnapshot, "areaId" | "name">,
+): LiveIslandSnapshot {
   return {
     regionId: 180023,
     ownerId: 0,
@@ -23,6 +25,7 @@ function snap(over: Partial<LiveSnapshot> = {}): LiveSnapshot {
     updatedAt: "2026-09-19T12:00:00.000Z",
     game: "anno-1800",
     quests: [],
+    campaignId: "test-campaign",
     savedAt: "2026-09-19T11:00:00.000Z",
     islandSnapshots: [
       island({
@@ -45,6 +48,7 @@ describe("campaign identity", () => {
     const result = resolveCampaignId({
       snapshot: snap({
         sessionName: "Autosave",
+        campaignId: undefined,
         connection: { mode: "documents-save", fileName: "Autosave.a7s" },
         islandSnapshots: undefined,
         savedAt: "2026-09-19T11:00:00.000Z",
@@ -61,8 +65,16 @@ describe("campaign identity", () => {
     const renamed = campaignFingerprint(
       snap({
         islandSnapshots: [
-          island({ areaId: 8451, name: "Puerto Nuevo", stock: [{ id: "wood", name: "Timber", amount: 10 }] }),
-          island({ areaId: 9219, name: "Otra", stock: [{ id: "wood", name: "Timber", amount: 50 }] }),
+          island({
+            areaId: 8451,
+            name: "Puerto Nuevo",
+            stock: [{ id: "wood", name: "Timber", amount: 10 }],
+          }),
+          island({
+            areaId: 9219,
+            name: "Otra",
+            stock: [{ id: "wood", name: "Timber", amount: 50 }],
+          }),
         ],
       }),
     );
@@ -94,8 +106,16 @@ describe("IndexedDB-equivalent history", () => {
         simTime: 200,
         savedAt: "2026-09-19T12:00:00.000Z",
         islandSnapshots: [
-          island({ areaId: 8451, name: "Costa Renombrada", stock: [{ id: "wood", name: "Timber", amount: 12 }] }),
-          island({ areaId: 9219, name: "Otra", stock: [{ id: "wood", name: "Timber", amount: 40 }] }),
+          island({
+            areaId: 8451,
+            name: "Costa Renombrada",
+            stock: [{ id: "wood", name: "Timber", amount: 12 }],
+          }),
+          island({
+            areaId: 9219,
+            name: "Otra",
+            stock: [{ id: "wood", name: "Timber", amount: 40 }],
+          }),
         ],
       }),
     );
@@ -104,7 +124,10 @@ describe("IndexedDB-equivalent history", () => {
     const rows = await store.list(first.campaignId);
     assert.equal(rows.length, 2);
     assert.equal(rows[0]?.summary.islands.find((row) => row.areaId === 8451)?.name, "La Costa");
-    assert.equal(rows[1]?.summary.islands.find((row) => row.areaId === 8451)?.name, "Costa Renombrada");
+    assert.equal(
+      rows[1]?.summary.islands.find((row) => row.areaId === 8451)?.name,
+      "Costa Renombrada",
+    );
   });
 
   it("does not mix samples when switching campaign", async () => {
@@ -113,6 +136,7 @@ describe("IndexedDB-equivalent history", () => {
     const b = await store.record(
       snap({
         simTime: 1,
+        campaignId: "other-campaign",
         islandSnapshots: [
           island({
             regionId: 180025,
@@ -150,8 +174,16 @@ describe("IndexedDB-equivalent history", () => {
         simTime: 500,
         savedAt: "2026-09-19T15:00:00.000Z",
         islandSnapshots: [
-          island({ areaId: 8451, name: "La Costa", stock: [{ id: "wood", name: "Timber", amount: 80 }] }),
-          island({ areaId: 9219, name: "[999001]", stock: [{ id: "wood", name: "Timber", amount: 50 }] }),
+          island({
+            areaId: 8451,
+            name: "La Costa",
+            stock: [{ id: "wood", name: "Timber", amount: 80 }],
+          }),
+          island({
+            areaId: 9219,
+            name: "[999001]",
+            stock: [{ id: "wood", name: "Timber", amount: 50 }],
+          }),
         ],
       }),
     );
@@ -160,8 +192,16 @@ describe("IndexedDB-equivalent history", () => {
         simTime: 100,
         savedAt: "2026-09-19T11:00:00.000Z",
         islandSnapshots: [
-          island({ areaId: 8451, name: "La Costa", stock: [{ id: "wood", name: "Timber", amount: 10 }] }),
-          island({ areaId: 9219, name: "[999001]", stock: [{ id: "wood", name: "Timber", amount: 50 }] }),
+          island({
+            areaId: 8451,
+            name: "La Costa",
+            stock: [{ id: "wood", name: "Timber", amount: 10 }],
+          }),
+          island({
+            areaId: 9219,
+            name: "[999001]",
+            stock: [{ id: "wood", name: "Timber", amount: 50 }],
+          }),
         ],
       }),
     );
@@ -188,8 +228,16 @@ describe("IndexedDB-equivalent history", () => {
           simTime: i,
           snapshotId: `s${i}`,
           islandSnapshots: [
-            island({ areaId: 8451, name: "La Costa", stock: [{ id: "wood", name: "Timber", amount: i }] }),
-            island({ areaId: 9219, name: "[999001]", stock: [{ id: "wood", name: "Timber", amount: 50 }] }),
+            island({
+              areaId: 8451,
+              name: "La Costa",
+              stock: [{ id: "wood", name: "Timber", amount: i }],
+            }),
+            island({
+              areaId: 9219,
+              name: "[999001]",
+              stock: [{ id: "wood", name: "Timber", amount: 50 }],
+            }),
           ],
         }),
       );
@@ -197,5 +245,54 @@ describe("IndexedDB-equivalent history", () => {
     }
     const rows = await store.list(first.campaignId);
     assert.equal(rows.length, HISTORY_MAX_SAMPLES);
+  });
+});
+
+describe("campaign and timeline regressions", () => {
+  it("never merges distinct playthroughs just because they have identical islands", () => {
+    const result = resolveCampaignId({
+      snapshot: snap({ campaignId: undefined }),
+      known: [{ id: "old", fingerprint: campaignFingerprint(snap()), createdAt: "2026-01-01" }],
+    });
+    assert.equal(result.ok, false);
+  });
+
+  it("explicit campaign keeps colonization in the same history", async () => {
+    const store = createMemoryHistoryStore();
+    const a = await store.record(snap({ campaignId: undefined, simTime: 1 }), {
+      explicitCampaignId: "chosen",
+    });
+    const b = await store.record(
+      snap({
+        campaignId: undefined,
+        simTime: 2,
+        islandSnapshots: [...snap().islandSnapshots!, island({ areaId: 123, name: "New" })],
+      }),
+      { explicitCampaignId: "chosen" },
+    );
+    assert.ok(a.ok && b.ok);
+    assert.equal((await store.list("chosen")).length, 2);
+  });
+
+  it("continues a rollback branch instead of branching on every subsequent save", async () => {
+    const store = createMemoryHistoryStore();
+    const first = await store.record(snap({ simTime: 100, snapshotId: "old" }));
+    await store.record(snap({ simTime: 500 }));
+    const rollback = await store.record(snap({ simTime: 100, snapshotId: "old" }));
+    const next = await store.record(snap({ simTime: 200 }));
+    assert.ok(first.ok && rollback.ok && next.ok);
+    assert.equal(rollback.deduped, false);
+    assert.equal(rollback.branched, true);
+    assert.equal(next.branched, false);
+    assert.equal(next.sample.branchId, rollback.sample.branchId);
+  });
+
+  it("does not use file modification time as evidence of game chronology", async () => {
+    const store = createMemoryHistoryStore();
+    const a = await store.record(snap({ savedAt: "2026-09-19T11:00:00Z" }));
+    const b = await store.record(snap({ savedAt: "2026-09-20T11:00:00Z" }));
+    assert.ok(a.ok && b.ok);
+    assert.equal(b.branched, true);
+    assert.equal(islandStockDelta(a.sample, b.sample, 180023, 8451).ok, false);
   });
 });

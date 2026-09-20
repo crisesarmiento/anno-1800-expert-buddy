@@ -45,6 +45,7 @@ export type HistoryCampaign = {
   fingerprint: string | null;
   createdAt: string;
   label?: string;
+  headId?: string;
 };
 
 export type CampaignCandidate = {

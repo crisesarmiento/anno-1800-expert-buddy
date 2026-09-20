@@ -12,9 +12,11 @@ export function contentHash(summary: HistorySummary): string {
       regionId: island.regionId,
       areaId: island.areaId,
       ownerId: island.ownerId,
+      name: island.name,
       stock: island.stock ?? null,
       stockOmitted: island.stockOmitted ?? false,
     })),
+    globalGoods: summary.globalGoods ?? null,
   });
   let hash = 0x811c9dc5;
   for (let i = 0; i < payload.length; i++) {
