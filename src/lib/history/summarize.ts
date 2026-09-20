@@ -17,6 +17,7 @@ export function contentHash(summary: HistorySummary): string {
       stockOmitted: island.stockOmitted ?? false,
     })),
     globalGoods: summary.globalGoods ?? null,
+    treasury: summary.treasury ?? null,
   });
   let hash = 0x811c9dc5;
   for (let i = 0; i < payload.length; i++) {
@@ -71,6 +72,9 @@ export function summarizeSnapshot(snapshot: LiveSnapshot): HistorySummary {
       name: good.name,
       amount: good.amount,
     }));
+  }
+  if (typeof snapshot.economy?.treasury === "number") {
+    summary.treasury = snapshot.economy.treasury;
   }
   return summary;
 }

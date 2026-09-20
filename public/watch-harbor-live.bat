@@ -2127,7 +2127,7 @@ $guidByNumber = @{}
 foreach ($row in @($guidCatalog.rows)) { $guidByNumber[[string]$row.guid] = $row }
 Add-Type -TypeDefinition $scanCs
 $outJson = Join-Path $anno "harbor-live.json"
-# Internal only: last scanned money, for the coins delta. Never read by the browser/UI, never part of the harbor-live-v1 schema.
+# Last scanned money for the coins delta. Public JSON uses economy.treasury; this sidecar is not the schema.
 $moneyStatePath = Join-Path $anno "harbor-live.money.json"
 $utf8Enc = [System.Text.Encoding]::UTF8
 $utf16Enc = [System.Text.Encoding]::Unicode
@@ -2606,6 +2606,14 @@ while ($true) {
       $payload.playerId = [int]$scan.playerId
     }
     if ($islandSnapshots.Count -gt 0) { $payload.islandSnapshots = @($islandSnapshots) }
+    if ($playerStorage -and ($scan.PSObject.Properties.Name -contains "money")) {
+      $payload.economy = [ordered]@{
+        treasury = [int]$scan.money
+        coverage = [ordered]@{
+          treasury = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "player" }
+        }
+      }
+    }
     # Session/region name, not the player's colony. GUID presence is not an active quest.
     $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }

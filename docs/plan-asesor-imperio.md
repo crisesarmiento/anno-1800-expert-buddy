@@ -1,6 +1,6 @@
 # Plan de implementación: asesor económico, logístico y militar
 
-Fecha: 2026-09-20. Estado: Etapa 0 y etapa 1 en main. Este PR cierra el writer Windows (reloj `SessionTotalTime`/`lastSnapshot`, stock sin recorte silencioso, edificios por isla) y conserva la campaña al reanudar el mismo archivo. Etapas 2–6 no implementadas.
+Fecha: 2026-09-20. Estado: Etapa 0 y 1 en main. Etapa 2 contrato: tesorería del jugador en `economy.treasury`. Ingreso/mantenimiento no publicados (sin dueño). Producto Inicio/Taller pendiente. Etapas 3–6 no implementadas.
 Base revisada: main local `106afe1`. No se confirmó la punta remota por restricciones de conexión.
 
 ## Objetivo y decisiones

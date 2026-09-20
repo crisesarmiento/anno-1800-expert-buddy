@@ -89,12 +89,18 @@ describe("harbor-live ingest", () => {
     assert.equal(result.snapshot.islandSnapshots?.[0]?.coverage.identity.source, "save");
     assert.equal(result.snapshot.simTime, 12000);
     assert.equal(result.snapshot.playerId, 0);
+    assert.equal(result.snapshot.economy?.treasury, 18420);
+    assert.equal(result.snapshot.economy?.coverage.treasury.scope, "player");
   });
 
   it("keeps schema required keys and strips refused extras", () => {
     const schema = JSON.parse(
       readFileSync(new URL("../../../docs/harbor-live.schema.json", import.meta.url), "utf8"),
-    ) as { required: string[]; properties: Record<string, unknown> };
+    ) as {
+      required: string[];
+      properties: Record<string, unknown>;
+      $defs: { economy: { properties: Record<string, unknown>; required: string[] } };
+    };
     assert.deepEqual(schema.required, ["schema", "source", "updatedAt", "game", "quests"]);
     assert.ok(schema.properties.sessionName);
     assert.ok(schema.properties.islandName);
@@ -129,6 +135,10 @@ describe("harbor-live ingest", () => {
     assert.ok(schema.properties.islandSnapshots);
     assert.ok(schema.properties.campaignId);
     assert.ok(schema.properties.simTime);
+    assert.ok(schema.properties.economy);
+    assert.equal(schema.properties.money, undefined);
+    assert.equal(schema.$defs.economy.properties.income, undefined);
+    assert.equal(schema.$defs.economy.properties.maintenance, undefined);
 
     const result = normalizeSnapshot({
       schema: "harbor-live-v1",
@@ -155,6 +165,37 @@ describe("harbor-live ingest", () => {
     assert.equal("warehouse" in result.snapshot, false);
     assert.equal("goods" in result.snapshot, false);
     assert.equal("tradeRoutes" in result.snapshot, false);
+    assert.equal(result.snapshot.economy, undefined);
+  });
+
+  it("keeps player treasury and drops economy without a safe integer", () => {
+    const ok = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-20T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      economy: { treasury: 1200, coverage: { treasury: { source: "save", scope: "player" } } },
+    });
+    assert.equal(ok.ok && ok.snapshot.economy?.treasury, 1200);
+    const missing = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-20T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      economy: { coverage: { treasury: { source: "save" } } },
+    });
+    assert.equal(missing.ok && missing.snapshot.economy, undefined);
+    const debt = normalizeSnapshot({
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-20T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      economy: { treasury: -40, coverage: { treasury: { source: "save", scope: "player" } } },
+    });
+    assert.equal(debt.ok && debt.snapshot.economy?.treasury, -40);
   });
 
   it("preserves an optional building count, and drops a bad one without failing", () => {

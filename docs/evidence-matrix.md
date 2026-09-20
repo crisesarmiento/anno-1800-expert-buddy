@@ -53,12 +53,12 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 | `telemetry.goodsChanges` | Diff de `goods` entre dos saves de la misma `sessionName` | Global jugador; no prueba una ruta | delta + `previousSavedAt` | par de `savedAt` | Si hay dos muestras comparables | parcial |
 | `telemetry.routes` | `SessionTradeRouteManager/RouteMap`, `ownerId === 0` | Ruta del jugador; paradas con `areaId` crudo | barcos, paradas, GUIDs configurados | `savedAt` | Watcher C# | validado (estructura); no disponible (dirección/throughput) |
 | `telemetry.production` | OCR Producción + Finanzas | Isla seleccionada en pantalla | t/min leídos, % , conteo | `observedAt` / `buildingCountObservedAt` | OCR; consejo solo con ambos | parcial (lectura); **inferido** el consejo de construir/pausar |
-| Tesorería absoluta | Candidatos `GUID 1010017` en `StrgLrg` | Antes: máximo ciego (inválido). Ahora: solo participante 0, o ausente | monedas | — | No entra al JSON público | parcial |
+| `economy.treasury` | `GUID 1010017` en `StrgLrg` del **ParticipantID 0** | Jugador, tesorería global. Sidecar `harbor-live.money.json` sigue siendo solo el delta de `pulseHint.coins` | monedas (entero, puede ser negativo) | `savedAt` | Opcional; se omite si el dueño no es player. Ingreso/mantenimiento **no disponible** (`TaxBalance` vive en `ConstructionAI`, no en islas `ownerId=0`) | parcial |
 | Nombre de isla del jugador (`CityName`) | FileDB anidado `AreaInfo` | Isla / `Owner` | texto del jugador, o `[CityNameGuid]` si no hay traducción | `savedAt` | C# + TS leen `CityName` / `CityNameGuid`; sin traducción no se inventa nombre | parcial |
 | `islandSnapshots[]` | `GameSessions` → `SessionData` → `AreaInfo` + `AreaManager_{areaId}` | Clave `regionId`+`areaId`; stock por `AreaStorageManager` si está | enteros del save | `savedAt` | Opcional; JSON heredado sigue válido | parcial |
 | `campaignId` / `playerId` / `snapshotId` / `simTime` | Save cuando el campo existe. `simTime`: `lastSnapshot` global o el máximo `SessionTotalTime` (int64) por sesión | Campaña/jugador/reloj de simulación | id o tick | `savedAt` | `campaignId` no se lee del save; filename/mtime no identifican campaña ni orden. Sin reloj, el historial no abre rama ni calcula deltas | parcial |
-| Historial IndexedDB | Módulo `src/lib/history` | Por campaña y rama; no es `harbor-live.json` | resumen | `savedAt` / `simTime` / fecha de ingest | Local, ~200 muestras, dedupe, rama si el save es anterior | validado (código) |
-| Ingresos / mantenimiento / gasto militar | — | — | — | — | Etapa 2–6 | no disponible |
+| Historial IndexedDB | Módulo `src/lib/history` | Por campaña y rama; no es `harbor-live.json` | resumen + tesorería opcional | `savedAt` / `simTime` / fecha de ingest | Local, ~200 muestras, dedupe, rama si el save es anterior | validado (código) |
+| Ingresos / mantenimiento / gasto militar | `TaxBalance` / `Income` / `Expenses` / `ShipMaintenance` en FileDB | Sin dueño jugador demostrable (ConstructionAI / AreaManager_3, no colonias `ownerId=0`) | float32 o entero | — | Etapa 2 no los publica. Flota = etapa 6 | no disponible |
 | Estado real de misión (activa/hecha) | GUID en el save no prueba estado | Instancia | — | — | Watcher emite `quests: []` | no disponible |
 | Throughput de ruta | — | — | t/min reales | — | Ni save ni OCR | no disponible |
 
@@ -66,7 +66,7 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 
 1. **Quests.** El vigilante escribe `quests: []`. Un GUID de quest en el FileDB no se publica como `state: "active"`. El matcher por edificios es **sugerencia** (`kind: "suggested"`): no completa el diario ni traba la campaña. Solo un JSON con títulos explícitos puede confirmar una etapa.
 2. **Islas.** `islandName` y `telemetry.islands` son región/sesión. Las colonias viven en `islandSnapshots` (región + área). El OCR sólo se asocia si el nombre visible mapea a **una** isla; un nombre duplicado no basta.
-3. **Dinero y bienes.** Sin `ParticipantID === 0` no hay tesorería ni stock para diagnóstico. No se toma el máximo de todos los `StrgLrg`. `pulseHint.coins` queda `unknown`. Taller no inventa inventario a 0.
+3. **Dinero y bienes.** Sin `ParticipantID === 0` no hay tesorería ni stock para diagnóstico. No se toma el máximo de todos los `StrgLrg`. `economy.treasury` se omite; `pulseHint.coins` queda `unknown`. Taller no inventa inventario a 0. Ingreso/mantenimiento no se publican sin dueño jugador.
 4. **Producción.** Capacidad vs demanda del OCR es **inferida**. No afirma excedente exportable ni justifica pausar sin dependencias.
 5. **Mod vs lector.** XML vacío ≠ inject. El writer es el vigilante externo.
 
