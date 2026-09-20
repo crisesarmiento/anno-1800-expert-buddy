@@ -124,7 +124,7 @@ it("route components share one root-owned lifecycle; manual imports stop it", ()
   assert.doesNotMatch(read("../../components/live-panel.tsx"), /watchTimer|tickLiveHandle/);
   assert.match(
     read("../../components/live-panel.tsx"),
-    /liveReader.stop\(\);\s*applyLiveSnapshot/g,
+    /liveReader.stop\(\);\s*commitLiveSnapshot/g,
   );
   assert.doesNotMatch(
     read("../../components/editorial-home.tsx"),

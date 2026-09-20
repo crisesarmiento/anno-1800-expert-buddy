@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { CampaignPicker, IslandHistoryCard } from "@/components/island-history";
 import { NativeProductionCard } from "@/components/native-production-card";
 import { InkSeal } from "@/components/stamps";
 import { TallerCity } from "@/components/taller-city";
@@ -75,6 +76,8 @@ export function TallerBench() {
           <TallerStamp stamp={stamp} />
         </article>
         <TallerGoodsBalance mode={mode} seed={seed} stats={stats} />
+        <CampaignPicker />
+        <IslandHistoryCard />
         <NativeProductionCard />
         <TallerCity
           mode={mode}

@@ -1,6 +1,27 @@
 import { create } from "zustand";
+import { ingestSnapshotHistory } from "@/lib/history";
 import { useHarbor } from "@/lib/store";
-import { ingestLiveFile } from "@/lib/live";
+import { ingestLiveFile, type LiveSnapshot } from "@/lib/live";
+
+export function commitLiveSnapshot(snapshot: LiveSnapshot, fileName?: string | null) {
+  useHarbor.getState().applyLiveSnapshot(snapshot, fileName);
+  void ingestSnapshotHistory(snapshot, {
+    explicitCampaignId: snapshot.campaignId
+      ? undefined
+      : (useHarbor.getState().manualHistoryCampaignId ?? undefined),
+  })
+    .then((history) => {
+      if (useHarbor.getState().liveSnapshot !== snapshot) return;
+      useHarbor.getState().applyHistoryResult(history);
+    })
+    .catch(() => {
+      if (useHarbor.getState().liveSnapshot !== snapshot) return;
+      useHarbor.setState({
+        historyError:
+          "No se pudo guardar el historial en este navegador. La lectura de la partida sigue disponible.",
+      });
+    });
+}
 import { createLiveReader, type ReaderStatus } from "@/lib/live/reader";
 import {
   ensureReadPermission,
@@ -15,7 +36,7 @@ const reader = createLiveReader({
   accept: async (file) => {
     const result = await ingestLiveFile(file, useHarbor.getState().locale);
     if (!result.ok) return null;
-    return () => useHarbor.getState().applyLiveSnapshot(result.snapshot, file.name);
+    return () => commitLiveSnapshot(result.snapshot, file.name);
   },
 });
 export const liveReader = {
@@ -29,6 +50,13 @@ export const liveReader = {
 // These actions are only called from explicit picker/refresh button gestures.
 export async function startLiveReader(handle: LiveFileHandle) {
   liveReader.stop();
+  // Each newly authorized file stream requires an explicit campaign selection
+  // unless the save supplies a verified campaign ID.
+  useHarbor.setState({
+    manualHistoryCampaignId: null,
+    pendingCampaign: null,
+    historyCampaignId: null,
+  });
   const token = authorization;
   let permission;
   try {

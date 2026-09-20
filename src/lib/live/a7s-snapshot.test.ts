@@ -29,6 +29,9 @@ describe("GUID table and FileDB snapshot", () => {
       workers: false,
       artisans: false,
       engineers: false,
+      islandSnapshots: [],
+      snapshotId: null,
+      simTime: null,
     };
     const snap = snapshotFromScan(scan, { previousMoney: 9000, savedAt: "2026-09-03T00:00:00.000Z" });
     assert.equal(snap.schema, "harbor-live-v1");
@@ -65,6 +68,9 @@ function scanOf(over: Partial<SaveScan> = {}): SaveScan {
     workers: false,
     artisans: false,
     engineers: false,
+    islandSnapshots: [],
+    snapshotId: null,
+    simTime: null,
     ...over,
   };
 }
@@ -169,6 +175,40 @@ describe("evidence honesty from a save scan", () => {
       {},
     );
     assert.deepEqual(snap.quests, []);
+  });
+
+  it("publishes islandSnapshots without redefining islandName", () => {
+    const snap = snapshotFromScan(
+      scanOf({
+        islands: new Set(["old-world"]),
+        islandNames: new Map([["old-world", "Old World"]]),
+        islandSnapshots: [
+          {
+            regionId: 180023,
+            areaId: 8451,
+            ownerId: 0,
+            name: "La Costa",
+            nameSource: "city-name",
+            stock: [{ id: "wood", name: "Timber", amount: 10 }],
+            coverage: { identity: { source: "save" }, stock: { source: "save" } },
+          },
+          {
+            regionId: 180023,
+            areaId: 9219,
+            ownerId: 0,
+            name: "[999001]",
+            nameSource: "neutral",
+            stock: [{ id: "wood", name: "Timber", amount: 50 }],
+            coverage: { identity: { source: "save" }, stock: { source: "save" } },
+          },
+        ],
+      }),
+      {},
+    );
+    assert.equal(snap.islandName, "Old World");
+    assert.equal(snap.playerId, 0);
+    assert.equal(snap.islandSnapshots?.[0]?.stock?.[0]?.amount, 10);
+    assert.equal(snap.islandSnapshots?.[1]?.stock?.[0]?.amount, 50);
   });
 
   it("keeps islandName as the catalog session/region, not a player colony", () => {

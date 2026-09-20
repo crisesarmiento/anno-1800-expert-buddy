@@ -47,6 +47,19 @@ test("watcher keeps quests empty on purpose — GUID is not an active quest", ()
   assert.doesNotMatch(ps1, /QuestGUID|QuestID/);
 });
 
+test("nested FileDB islands are extracted by id, not by display name", () => {
+  for (const src of [scanCs, scanPublic]) {
+    assert.match(src, /ExtractIslands/);
+    assert.match(src, /IsNestedFileDb/);
+    assert.match(src, /CityNameGuid/);
+    assert.match(src, /AreaStorageManager/);
+    assert.match(src, /islandSnapshots/);
+  }
+  assert.match(ps1, /islandSnapshots/);
+  assert.match(ps1, /\$notRollback/);
+  assert.doesNotMatch(ps1, /campaignId\s*=\s*\$save\.Name/);
+});
+
 test("TypeScript research scanner does not label quest GUIDs active", () => {
   assert.match(snapshotTs, /Watcher emits quests: \[\]/);
   assert.doesNotMatch(snapshotTs, /quests\.push\(\{ title: row\.name, state: "active" \}\)/);

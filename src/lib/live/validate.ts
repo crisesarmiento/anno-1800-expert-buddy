@@ -1,16 +1,27 @@
 import { uiFor } from "../i18n.ts";
 import { LIVE_MSG } from "./messages.ts";
+import { attachOcrIslandIdentity } from "./ocr-island.ts";
 import {
   LIVE_GAME,
   LIVE_MAX_BYTES,
+  LIVE_MAX_ISLAND_BUILDINGS,
+  LIVE_MAX_ISLAND_SNAPSHOTS,
+  LIVE_MAX_ISLAND_STOCK,
   LIVE_MAX_QUESTS,
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
   LIVE_WORKFORCE_TIERS,
   type LiveBuildingHit,
   type LiveConnection,
+  type LiveEvidenceSource,
+  type LiveFieldCoverage,
   type LiveGoodChange,
   type LiveIngestResult,
+  type LiveIslandNameSource,
+  type LiveIslandPopulation,
+  type LiveIslandRef,
+  type LiveIslandSnapshot,
+  type LiveIslandStock,
   type LiveNamedHit,
   type LiveNativeConnection,
   type LiveNativeProbe,
@@ -49,6 +60,12 @@ const NATIVE_PROBE_REASONS = new Set<LiveNativeProbeReason>([
   "timeout",
   "connection_refused",
   "bad_payload",
+]);
+const EVIDENCE_SOURCES = new Set<LiveEvidenceSource>(["save", "ocr", "manual"]);
+const ISLAND_NAME_SOURCES = new Set<LiveIslandNameSource>([
+  "city-name",
+  "city-name-guid",
+  "neutral",
 ]);
 
 function hasJsonExtension(filename: string) {
@@ -278,6 +295,8 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
       }
       const buildingCountObservedAt = parseOptionalIso(item.buildingCountObservedAt);
       if (buildingCountObservedAt) metric.buildingCountObservedAt = buildingCountObservedAt;
+      const islandRef = normalizeIslandRef(item.islandRef);
+      if (islandRef) metric.islandRef = islandRef;
       production.push(metric);
     }
     if (production.length) telemetry.production = production;
@@ -297,7 +316,120 @@ function normalizeNativeConnection(value: unknown): LiveNativeConnection | undef
   const serverVersion = clipName(value.serverVersion, 40);
   if (islandName) native.islandName = islandName;
   if (serverVersion) native.serverVersion = serverVersion;
+  const islandRef = normalizeIslandRef(value.islandRef);
+  if (islandRef) native.islandRef = islandRef;
   return native;
+}
+
+function normalizeIslandRef(value: unknown): LiveIslandRef | undefined {
+  if (!asRecord(value)) return undefined;
+  const regionId = Number(value.regionId);
+  const areaId = Number(value.areaId);
+  if (!Number.isFinite(regionId) || !Number.isFinite(areaId)) return undefined;
+  return { regionId: Math.trunc(regionId), areaId: Math.trunc(areaId) };
+}
+
+function normalizeCoverage(value: unknown): LiveFieldCoverage | undefined {
+  if (!asRecord(value) || !EVIDENCE_SOURCES.has(value.source as LiveEvidenceSource)) {
+    return undefined;
+  }
+  const coverage: LiveFieldCoverage = { source: value.source as LiveEvidenceSource };
+  const observedAt = parseOptionalIso(value.observedAt);
+  if (observedAt) coverage.observedAt = observedAt;
+  const scope = clipName(value.scope, 80);
+  if (scope) coverage.scope = scope;
+  return coverage;
+}
+
+function normalizeIslandStock(value: unknown): LiveIslandStock[] | undefined {
+  if (!Array.isArray(value) || value.length > LIVE_MAX_ISLAND_STOCK) return undefined;
+  const stock: LiveIslandStock[] = [];
+  for (const item of value.slice(0, LIVE_MAX_ISLAND_STOCK)) {
+    if (!asRecord(item)) continue;
+    const id = clipName(item.id, 48);
+    const name = clipName(item.name, 80);
+    const amount =
+      typeof item.amount === "number" && Number.isFinite(item.amount)
+        ? Math.trunc(item.amount)
+        : null;
+    if (!id || !name || amount == null || amount < 0) continue;
+    if (stock.some((row) => row.id === id)) return undefined;
+    stock.push({ id, name, amount });
+  }
+  return stock.length ? stock : undefined;
+}
+
+function normalizeIslandPopulation(value: unknown): LiveIslandPopulation | undefined {
+  if (!asRecord(value)) return undefined;
+  const population: LiveIslandPopulation = {};
+  for (const key of ["farmers", "workers", "artisans", "engineers"] as const) {
+    const raw = value[key];
+    if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0) {
+      population[key] = Math.trunc(raw);
+    }
+  }
+  return Object.keys(population).length ? population : undefined;
+}
+
+function normalizeIslandSnapshots(value: unknown): LiveIslandSnapshot[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const islands: LiveIslandSnapshot[] = [];
+  for (const item of value.slice(0, LIVE_MAX_ISLAND_SNAPSHOTS)) {
+    if (!asRecord(item)) continue;
+    const regionId = item.regionId;
+    const areaId = item.areaId;
+    const ownerId = item.ownerId;
+    if (
+      typeof regionId !== "number" ||
+      typeof areaId !== "number" ||
+      typeof ownerId !== "number" ||
+      !Number.isSafeInteger(regionId) ||
+      !Number.isSafeInteger(areaId) ||
+      !Number.isSafeInteger(ownerId)
+    ) {
+      continue;
+    }
+    const nameSource = ISLAND_NAME_SOURCES.has(item.nameSource as LiveIslandNameSource)
+      ? (item.nameSource as LiveIslandNameSource)
+      : "neutral";
+    const name = clipName(item.name, LIVE_MAX_TITLE);
+    const identity = normalizeCoverage(
+      asRecord(item.coverage) ? item.coverage.identity : undefined,
+    ) ?? { source: "save" };
+    const snapshot: LiveIslandSnapshot = {
+      regionId: Math.trunc(regionId),
+      areaId: Math.trunc(areaId),
+      ownerId: Math.trunc(ownerId),
+      name: name || `area-${Math.trunc(areaId)}`,
+      nameSource,
+      coverage: { identity },
+    };
+    if (asRecord(item.coverage)) {
+      const stockCov = normalizeCoverage(item.coverage.stock);
+      const buildingsCov = normalizeCoverage(item.coverage.buildings);
+      const populationCov = normalizeCoverage(item.coverage.population);
+      const capacitiesCov = normalizeCoverage(item.coverage.capacities);
+      if (stockCov) snapshot.coverage.stock = stockCov;
+      if (buildingsCov) snapshot.coverage.buildings = buildingsCov;
+      if (populationCov) snapshot.coverage.population = populationCov;
+      if (capacitiesCov) snapshot.coverage.capacities = capacitiesCov;
+    }
+    const stock = normalizeIslandStock(item.stock);
+    if (stock) snapshot.stock = stock;
+    else delete snapshot.coverage.stock;
+    const buildings = normalizeBuildingHits(item.buildings, LIVE_MAX_ISLAND_BUILDINGS);
+    if (buildings) snapshot.buildings = buildings;
+    const population = normalizeIslandPopulation(item.population);
+    if (population) snapshot.population = population;
+    if (asRecord(item.capacities)) {
+      const warehouse = item.capacities.warehouse;
+      if (typeof warehouse === "number" && Number.isFinite(warehouse) && warehouse >= 0) {
+        snapshot.capacities = { warehouse: Math.trunc(warehouse) };
+      }
+    }
+    islands.push(snapshot);
+  }
+  return islands.length ? islands : undefined;
 }
 
 function normalizeNativeProbe(value: unknown): LiveNativeProbe | undefined {
@@ -429,7 +561,19 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   if (workforce) snapshot.workforce = workforce;
   const connection = normalizeConnection(raw.connection);
   if (connection) snapshot.connection = connection;
-  return { ok: true, snapshot };
+  const campaignId = clipName(raw.campaignId, 120);
+  if (campaignId) snapshot.campaignId = campaignId;
+  if (typeof raw.playerId === "number" && Number.isFinite(raw.playerId)) {
+    snapshot.playerId = Math.trunc(raw.playerId);
+  }
+  const snapshotId = clipName(raw.snapshotId, 120);
+  if (snapshotId) snapshot.snapshotId = snapshotId;
+  if (typeof raw.simTime === "number" && Number.isFinite(raw.simTime)) {
+    snapshot.simTime = Math.trunc(raw.simTime);
+  }
+  const islandSnapshots = normalizeIslandSnapshots(raw.islandSnapshots);
+  if (islandSnapshots) snapshot.islandSnapshots = islandSnapshots;
+  return { ok: true, snapshot: attachOcrIslandIdentity(snapshot) };
 }
 
 export function ingestLiveBytes(input: {

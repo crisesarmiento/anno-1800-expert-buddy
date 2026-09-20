@@ -110,5 +110,7 @@ describe("crash-safe harbor-live.json", () => {
     assert.match(ps, /schema\s+=\s+"harbor-live-v1"/);
     assert.match(ps, /accountdata\.a7s/);
     assert.match(ps, /HarborBuddy\.A7sScan/);
+    assert.match(ps, /islandSnapshots/);
+    assert.match(ps, /\$notRollback/);
   });
 });

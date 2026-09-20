@@ -1,0 +1,46 @@
+{
+  "schema": "harbor-live-v1",
+  "source": "save",
+  "updatedAt": "2026-09-19T12:00:00.000Z",
+  "savedAt": "2026-09-19T11:50:00.000Z",
+  "game": "anno-1800",
+  "sessionName": "Autosave",
+  "islandName": "Old World",
+  "playerId": 0,
+  "simTime": 12000,
+  "connection": {
+    "mode": "documents-save",
+    "fileName": "Autosave.a7s",
+    "islandCount": 1
+  },
+  "quests": [],
+  "telemetry": {
+    "islands": [{ "id": "old-world", "name": "Old World" }]
+  },
+  "islandSnapshots": [
+    {
+      "regionId": 180023,
+      "areaId": 8451,
+      "ownerId": 0,
+      "name": "La Costa",
+      "nameSource": "city-name",
+      "stock": [{ "id": "wood", "name": "Timber", "amount": 10 }],
+      "coverage": {
+        "identity": { "source": "save", "observedAt": "2026-09-19T11:50:00.000Z", "scope": "island" },
+        "stock": { "source": "save", "observedAt": "2026-09-19T11:50:00.000Z", "scope": "island" }
+      }
+    },
+    {
+      "regionId": 180023,
+      "areaId": 9219,
+      "ownerId": 0,
+      "name": "[999001]",
+      "nameSource": "neutral",
+      "stock": [{ "id": "wood", "name": "Timber", "amount": 50 }],
+      "coverage": {
+        "identity": { "source": "save", "observedAt": "2026-09-19T11:50:00.000Z", "scope": "island" },
+        "stock": { "source": "save", "observedAt": "2026-09-19T11:50:00.000Z", "scope": "island" }
+      }
+    }
+  ]
+}

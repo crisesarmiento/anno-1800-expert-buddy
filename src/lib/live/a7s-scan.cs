@@ -22,6 +22,7 @@ namespace HarborBuddy {
       string session = "";
       byte[] data = null;
       var routes = new List<RouteRow>();
+      var islandsExtract = new IslandExtract();
       foreach (var kv in files) {
         if (kv.Key == "meta.a7s") {
           Visit(kv.Value, (path, attr, payload) => {
@@ -78,6 +79,7 @@ namespace HarborBuddy {
           }
         });
         routes = ExtractRoutes(data, guids);
+        islandsExtract = ExtractIslands(data, guids);
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
@@ -144,6 +146,45 @@ namespace HarborBuddy {
         }
         sb.Append("]}");
       }
+      sb.Append("]");
+      if (islandsExtract.SimTime.HasValue) sb.Append(",\"simTime\":").Append(islandsExtract.SimTime.Value);
+      if (!string.IsNullOrEmpty(islandsExtract.SnapshotId)) {
+        sb.Append(",\"snapshotId\":\"").Append(Esc(islandsExtract.SnapshotId)).Append("\"");
+      }
+      bool anyPlayerIsland = false;
+      foreach (var island in islandsExtract.Islands) if (island.OwnerId == 0) anyPlayerIsland = true;
+      if (anyPlayerIsland) sb.Append(",\"playerId\":0");
+      sb.Append(",\"islandSnapshots\":[");
+      first = true;
+      int islandCount = 0;
+      foreach (var island in islandsExtract.Islands) {
+        if (island.OwnerId != 0) continue;
+        if (islandCount >= 40) break;
+        islandCount++;
+        if (!first) sb.Append(",");
+        first = false;
+        sb.Append("{\"regionId\":").Append(island.RegionId)
+          .Append(",\"areaId\":").Append(island.AreaId)
+          .Append(",\"ownerId\":").Append(island.OwnerId)
+          .Append(",\"name\":\"").Append(Esc(island.Name)).Append("\"")
+          .Append(",\"nameSource\":\"").Append(Esc(island.NameSource)).Append("\"");
+        if (island.Stock.Count > 0 && island.Stock.Count <= 24) {
+          sb.Append(",\"stock\":[");
+          bool firstStock = true;
+          int stockCount = 0;
+          foreach (var good in island.Stock) {
+            if (stockCount >= 24) break;
+            stockCount++;
+            if (!firstStock) sb.Append(",");
+            firstStock = false;
+            sb.Append("{\"id\":\"").Append(Esc(good.Id)).Append("\",\"name\":\"").Append(Esc(good.Name)).Append("\",\"amount\":").Append(good.Amount).Append("}");
+          }
+          sb.Append("]");
+        }
+        sb.Append(",\"coverage\":{\"identity\":{\"source\":\"save\"}");
+        if (island.Stock.Count > 0 && island.Stock.Count <= 24) sb.Append(",\"stock\":{\"source\":\"save\"}");
+        sb.Append("}}");
+      }
       sb.Append("]}");
       return sb.ToString();
     }
@@ -166,6 +207,20 @@ namespace HarborBuddy {
       public int? OwnerId;
       public int ShipCount;
       public readonly List<RouteStop> Stops = new List<RouteStop>();
+    }
+    sealed class IslandStock { public string Id; public string Name; public int Amount; }
+    sealed class IslandRow {
+      public int RegionId;
+      public int AreaId;
+      public int OwnerId;
+      public string Name;
+      public string NameSource;
+      public readonly List<IslandStock> Stock = new List<IslandStock>();
+    }
+    sealed class IslandExtract {
+      public readonly List<IslandRow> Islands = new List<IslandRow>();
+      public int? SimTime;
+      public string SnapshotId;
     }
 
     static Dictionary<int, GuidRow> ParseGuids(string json) {
@@ -293,6 +348,151 @@ namespace HarborBuddy {
       return output;
     }
 
+    static bool IsNestedFileDb(byte[] bytes) {
+      if (bytes == null || bytes.Length < 20) return false;
+      return BitConverter.ToUInt32(bytes, bytes.Length - 4) == 0xFFFFFFFD;
+    }
+
+    static DbNode FindDescendant(DbNode node, string tag) {
+      if (node == null) return null;
+      if (node.Tag == tag) return node;
+      foreach (var item in node.Children) {
+        var hit = FindDescendant(item, tag);
+        if (hit != null) return hit;
+      }
+      return null;
+    }
+
+    static int? FindLeafInt(DbNode node, string attr, int depth) {
+      if (node == null || depth < 0) return null;
+      var direct = LeafInt(node, attr);
+      if (direct.HasValue) return direct;
+      foreach (var item in node.Children) {
+        var hit = FindLeafInt(item, attr, depth - 1);
+        if (hit.HasValue) return hit;
+      }
+      return null;
+    }
+
+    static string FindLeafText(DbNode node, string attr, int depth) {
+      if (node == null || depth < 0) return null;
+      var text = Utf16(Leaf(node, attr));
+      if (!string.IsNullOrEmpty(text)) return text;
+      foreach (var item in node.Children) {
+        var hit = FindLeafText(item, attr, depth - 1);
+        if (!string.IsNullOrEmpty(hit)) return hit;
+      }
+      return null;
+    }
+
+    static int? AreaManagerId(string tag) {
+      if (string.IsNullOrEmpty(tag) || !tag.StartsWith("AreaManager_")) return null;
+      int id;
+      if (int.TryParse(tag.Substring("AreaManager_".Length), out id)) return id;
+      return null;
+    }
+
+    static string NeutralIslandName(int? cityNameGuid, int areaId) {
+      if (cityNameGuid.HasValue && cityNameGuid.Value != 0) return "[" + cityNameGuid.Value + "]";
+      return "area-" + areaId;
+    }
+
+    static List<IslandStock> StockFromManager(DbNode manager, Dictionary<int, GuidRow> guids) {
+      var output = new List<IslandStock>();
+      var storage = FindDescendant(manager, "AreaStorageManager");
+      if (storage == null) return output;
+      CollectStrg(storage, guids, output);
+      var seen = new HashSet<string>();
+      foreach (var item in output) {
+        if (item.Amount < 0 || !seen.Add(item.Id)) return new List<IslandStock>();
+      }
+      return output;
+    }
+
+    static void CollectStrg(DbNode node, Dictionary<int, GuidRow> guids, List<IslandStock> output) {
+      foreach (var leaf in node.Leaves) {
+        if (leaf.Attr != "StrgLrg" || leaf.Bytes == null) continue;
+        var byId = new Dictionary<string, IslandStock>();
+        for (int i = 0; i + 8 <= leaf.Bytes.Length; i += 8) {
+          int g = BitConverter.ToInt32(leaf.Bytes, i);
+          int amt = BitConverter.ToInt32(leaf.Bytes, i + 4);
+          GuidRow row;
+          if (!guids.TryGetValue(g, out row) || row.kind != "good") continue;
+          byId[row.id] = new IslandStock { Id = row.id, Name = row.name, Amount = amt };
+        }
+        foreach (var item in byId.Values) output.Add(item);
+      }
+      foreach (var child in node.Children) CollectStrg(child, guids, output);
+    }
+
+    static IslandExtract ExtractIslands(byte[] data, Dictionary<int, GuidRow> guids) {
+      var output = new IslandExtract();
+      var root = ParseTree(data);
+      if (root == null) return output;
+      var meta = Child(root, "MetaGameManager") ?? root;
+      output.SimTime = FindLeafInt(meta, "GameTime", 6) ?? FindLeafInt(meta, "SimulationTime", 6) ?? FindLeafInt(meta, "SessionTime", 6);
+      output.SnapshotId = FindLeafText(meta, "SnapshotID", 6) ?? FindLeafText(meta, "SaveGUID", 6);
+      var sessions = FindDescendant(root, "GameSessions");
+      var sessionNodes = sessions != null ? sessions.Children : new List<DbNode>();
+      if (sessionNodes.Count == 0) {
+        var only = FindDescendant(root, "GameSessionManager");
+        if (only != null) sessionNodes.Add(only);
+      }
+      foreach (var sessionNode in sessionNodes) {
+        var desc = Child(sessionNode, "SessionDesc") ?? sessionNode;
+        var regionId = LeafInt(desc, "SessionGUID") ?? LeafInt(sessionNode, "SessionGUID") ?? FindLeafInt(sessionNode, "SessionGUID", 4);
+        if (!regionId.HasValue) continue;
+        var manager = FindDescendant(sessionNode, "GameSessionManager");
+        if (manager == null) continue;
+        if (!output.SimTime.HasValue) output.SimTime = LeafInt(manager, "GameTime");
+        var areaInfo = Child(manager, "AreaInfo") ?? FindDescendant(manager, "AreaInfo");
+        var areaManagers = Child(manager, "AreaManagers") ?? FindDescendant(manager, "AreaManagers");
+        var managersByArea = new Dictionary<int, DbNode>();
+        if (areaManagers != null) {
+          foreach (var mgr in areaManagers.Children) {
+            var fromTag = AreaManagerId(mgr.Tag);
+            var fromLeaf = LeafInt(mgr, "Identifier") ?? LeafInt(mgr, "AreaID");
+            var areaId = fromTag ?? fromLeaf;
+            if (areaId.HasValue) managersByArea[areaId.Value] = mgr;
+          }
+        }
+        if (areaInfo == null) continue;
+        var idLeaves = new List<int>();
+        foreach (var leaf in areaInfo.Leaves) {
+          var value = AsI32(leaf.Bytes);
+          if (value.HasValue) idLeaves.Add(value.Value);
+        }
+        for (int i = 0; i < areaInfo.Children.Count; i++) {
+          var record = areaInfo.Children[i];
+          var owner = Child(record, "Owner");
+          var ownerId = owner != null ? LeafInt(owner, "id") : null;
+          if (!ownerId.HasValue) continue;
+          int? areaId = LeafInt(record, "Identifier") ?? LeafInt(record, "AreaID");
+          if (!areaId.HasValue && idLeaves.Count == areaInfo.Children.Count) areaId = idLeaves[i];
+          if (!areaId.HasValue) continue;
+          var cityName = Utf16(Leaf(record, "CityName"));
+          var cityNameGuid = LeafInt(record, "CityNameGuid");
+          string name;
+          string nameSource;
+          if (!string.IsNullOrEmpty(cityName)) { name = cityName; nameSource = "city-name"; }
+          else { name = NeutralIslandName(cityNameGuid, areaId.Value); nameSource = "neutral"; }
+          var row = new IslandRow {
+            RegionId = regionId.Value,
+            AreaId = areaId.Value,
+            OwnerId = ownerId.Value,
+            Name = name,
+            NameSource = nameSource
+          };
+          DbNode managerNode;
+          if (ownerId.Value == 0 && managersByArea.TryGetValue(areaId.Value, out managerNode)) {
+            foreach (var stock in StockFromManager(managerNode, guids)) row.Stock.Add(stock);
+          }
+          output.Islands.Add(row);
+        }
+      }
+      return output;
+    }
+
     static DbNode ParseTree(byte[] buf) {
       int magicAt;
       int tagOff;
@@ -320,6 +520,15 @@ namespace HarborBuddy {
           if (!attrs.TryGetValue(id, out attr) && !attrs.TryGetValue(id & 0x7FFF, out attr))
             attr = id == 0x8000 ? "None" : ("attr_" + id);
           stack[stack.Count - 1].Leaves.Add(new DbLeaf { Attr = attr, Bytes = payload });
+          if (IsNestedFileDb(payload)) {
+            var nested = ParseTree(payload);
+            if (nested != null) {
+              var wrap = new DbNode { Tag = attr };
+              wrap.Children.AddRange(nested.Children);
+              wrap.Leaves.AddRange(nested.Leaves);
+              stack[stack.Count - 1].Children.Add(wrap);
+            }
+          }
           continue;
         }
         string tag;

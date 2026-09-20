@@ -18,6 +18,19 @@ const fixture = JSON.parse(
 
 const encoder = new TextEncoder();
 
+it("does not turn a null owner into player zero or keep ambiguous island stock", () => {
+  const islandFixture = JSON.parse(
+    readFileSync(new URL("./fixture-islands.json", import.meta.url), "utf8"),
+  );
+  islandFixture.islandSnapshots[0].ownerId = null;
+  islandFixture.islandSnapshots[1].stock.push({ ...islandFixture.islandSnapshots[1].stock[0] });
+  const result = ingestLiveJsonText(JSON.stringify(islandFixture));
+  assert.ok(result.ok);
+  assert.equal(result.snapshot.islandSnapshots?.length, 1);
+  assert.equal(result.snapshot.islandSnapshots?.[0]?.stock, undefined);
+  assert.equal(result.snapshot.islandSnapshots?.[0]?.coverage.stock, undefined);
+});
+
 it("preserves capture outcome separately from historical observation", () => {
   const raw = readFileSync(new URL("./fixture-no-observation.json", import.meta.url), "utf8");
   const result = ingestLiveJsonText(raw);
@@ -61,6 +74,21 @@ describe("harbor-live ingest", () => {
     assert.equal(result.snapshot.telemetry?.routes?.[1]?.shipCount, 0);
     assert.equal(result.snapshot.telemetry?.routes?.[0]?.stops[0]?.goods[0]?.id, "timber");
     assert.equal(result.snapshot.telemetry?.goodsChanges?.[0]?.delta, -17);
+    assert.equal(result.snapshot.islandSnapshots, undefined);
+  });
+
+  it("accepts optional islandSnapshots without redefining islandName as a colony", () => {
+    const raw = readFileSync(new URL("./fixture-islands.json", import.meta.url), "utf8");
+    const result = ingestLiveJsonText(raw);
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.islandName, "Old World");
+    assert.equal(result.snapshot.islandSnapshots?.length, 2);
+    assert.equal(result.snapshot.islandSnapshots?.[0]?.stock?.[0]?.amount, 10);
+    assert.equal(result.snapshot.islandSnapshots?.[1]?.stock?.[0]?.amount, 50);
+    assert.equal(result.snapshot.islandSnapshots?.[0]?.coverage.identity.source, "save");
+    assert.equal(result.snapshot.simTime, 12000);
+    assert.equal(result.snapshot.playerId, 0);
   });
 
   it("keeps schema required keys and strips refused extras", () => {
@@ -98,6 +126,9 @@ describe("harbor-live ingest", () => {
     assert.equal(schema.properties.warehouse, undefined);
     assert.equal(schema.properties.goods, undefined);
     assert.equal(schema.properties.tradeRoutes, undefined);
+    assert.ok(schema.properties.islandSnapshots);
+    assert.ok(schema.properties.campaignId);
+    assert.ok(schema.properties.simTime);
 
     const result = normalizeSnapshot({
       schema: "harbor-live-v1",

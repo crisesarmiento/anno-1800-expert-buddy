@@ -666,8 +666,43 @@ while ($true) {
       $routes += $routeOut
     }
     $currentSavedAt = $save.LastWriteTimeUtc.ToString("o")
+    $islandSnapshots = @()
+    foreach ($row in @($scan.islandSnapshots)) {
+      if ($row.regionId -eq $null -or $row.areaId -eq $null -or $row.ownerId -eq $null) { continue }
+      $stock = @()
+      foreach ($good in @($row.stock)) {
+        if ($good.id -and $good.name -and $good.amount -ne $null) {
+          $stock += [ordered]@{ id = [string]$good.id; name = [string]$good.name; amount = [int]$good.amount }
+        }
+      }
+      $coverage = [ordered]@{
+        identity = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "island" }
+      }
+      $islandOut = [ordered]@{
+        regionId   = [int]$row.regionId
+        areaId     = [int]$row.areaId
+        ownerId    = [int]$row.ownerId
+        name       = $(if ($row.name) { [string]$row.name } else { "area-$([int]$row.areaId)" })
+        nameSource = $(if ($row.nameSource) { [string]$row.nameSource } else { "neutral" })
+        coverage   = $coverage
+      }
+      if ($stock.Count -gt 0) {
+        $islandOut.stock = @($stock)
+        $coverage.stock = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "island" }
+      }
+      $islandSnapshots += $islandOut
+    }
     $goodsChanges = @()
+    $previousSavedAt = $null
+    if ($previousPayload -and [string]$previousPayload.savedAt) {
+      try { $previousSavedAt = [datetime]$previousPayload.savedAt } catch { $previousSavedAt = $null }
+    }
+    $currentSavedStamp = $null
+    try { $currentSavedStamp = [datetime]$currentSavedAt } catch { $currentSavedStamp = $null }
+    $notRollback = $true
+    if ($previousSavedAt -and $currentSavedStamp -and $currentSavedStamp -lt $previousSavedAt) { $notRollback = $false }
     if (
+      $notRollback -and
       $previousPayload -and
       [string]$previousPayload.sessionName -eq $sessionName -and
       [string]$previousPayload.savedAt -and
@@ -761,6 +796,16 @@ while ($true) {
     $islandName = $null
     if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
     if ($islandName) { $payload.islandName = $islandName }
+    if ($scan.PSObject.Properties.Name -contains "simTime" -and $scan.simTime -ne $null) {
+      $payload.simTime = [int64]$scan.simTime
+    }
+    if ($scan.PSObject.Properties.Name -contains "snapshotId" -and $scan.snapshotId) {
+      $payload.snapshotId = [string]$scan.snapshotId
+    }
+    if ($scan.PSObject.Properties.Name -contains "playerId" -and $scan.playerId -ne $null) {
+      $payload.playerId = [int]$scan.playerId
+    }
+    if ($islandSnapshots.Count -gt 0) { $payload.islandSnapshots = @($islandSnapshots) }
     # Session/region name, not the player's colony. GUID presence is not an active quest.
     $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
@@ -776,7 +821,7 @@ while ($true) {
       if ($previousPayload.connection.nativeProbe) { $payload.connection.nativeProbe = $previousPayload.connection.nativeProbe }
     }
     $payload.telemetry = $telemetry
-    $json = ($payload | ConvertTo-Json -Depth 8 -Compress)
+    $json = ($payload | ConvertTo-Json -Depth 10 -Compress)
     $null = $json | ConvertFrom-Json
     Write-HarborLiveCrashSafe $outJson ($json + "`n")
     $bCount = @($telemetry.buildings).Count

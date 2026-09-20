@@ -16,7 +16,7 @@ No hay saves reales en este repositorio. Lo **validado** acá es semántica de c
 | Vigilante de Windows | `public/watch-harbor-live.ps1` → `.bat` empaquetado; `src/lib/live/a7s-scan.cs` (pack copia a `public/a7s-scan.cs`) | Producto: lee el `.a7s` / `.save` más reciente, solo lectura | Sí, único writer |
 | Ingest del navegador | `src/lib/live/validate.ts` | Normaliza JSON ya escrito. No parsea el save | No |
 | Utilidad TypeScript (investigación) | `src/lib/live/a7s-snapshot.ts`, `a7s-read.ts` | Recorre FileDB de primer nivel. **No** es el writer de Windows | No |
-| Spike anidado (investigación) | `src/lib/live/a7s-trade-routes.ts`, `scripts/filedb-probe.ts` | Rutas anidadas / `CityNameGuid`. No está cableado al snapshot de producto | No |
+| Spike anidado (investigación) | `src/lib/live/a7s-trade-routes.ts`, `src/lib/live/a7s-islands.ts`, `scripts/filedb-probe.ts` | Rutas + islas anidadas. El writer de Windows es C# + `.ps1` | No |
 | Mod XML | `mod/harbor-buddy-telemetry/.../assets.xml` | `<ModOps></ModOps>` vacío. No inyecta, no dump, no Lua | No |
 | OCR opcional | UXEnhancer `Server.exe` vía el vigilante | Pantalla Estadísticas de **una** isla visible | Enriquecer `connection.native` y `telemetry.production` |
 
@@ -54,8 +54,10 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 | `telemetry.routes` | `SessionTradeRouteManager/RouteMap`, `ownerId === 0` | Ruta del jugador; paradas con `areaId` crudo | barcos, paradas, GUIDs configurados | `savedAt` | Watcher C# | validado (estructura); no disponible (dirección/throughput) |
 | `telemetry.production` | OCR Producción + Finanzas | Isla seleccionada en pantalla | t/min leídos, % , conteo | `observedAt` / `buildingCountObservedAt` | OCR; consejo solo con ambos | parcial (lectura); **inferido** el consejo de construir/pausar |
 | Tesorería absoluta | Candidatos `GUID 1010017` en `StrgLrg` | Antes: máximo ciego (inválido). Ahora: solo participante 0, o ausente | monedas | — | No entra al JSON público | parcial |
-| Nombre de isla del jugador (`CityName`) | FileDB anidado `AreaInfo` | Isla / `Owner` | texto o guid loca | — | Spike: `CityNameGuid` sí, `CityName` poblado no contrastado | no disponible |
-| `islandSnapshots[]` | — | — | — | — | Etapa 1, no este PR | no disponible |
+| Nombre de isla del jugador (`CityName`) | FileDB anidado `AreaInfo` | Isla / `Owner` | texto del jugador, o `[CityNameGuid]` si no hay traducción | `savedAt` | C# + TS leen `CityName` / `CityNameGuid`; sin traducción no se inventa nombre | parcial |
+| `islandSnapshots[]` | `GameSessions` → `SessionData` → `AreaInfo` + `AreaManager_{areaId}` | Clave `regionId`+`areaId`; stock por `AreaStorageManager` si está | enteros del save | `savedAt` | Opcional; JSON heredado sigue válido | parcial |
+| `campaignId` / `playerId` / `snapshotId` / `simTime` | Save cuando el campo existe | Campaña/jugador/reloj de simulación | id o tick | `savedAt` | Se omite si no se verifica. Filename/mtime no identifican campaña | parcial |
+| Historial IndexedDB | Módulo `src/lib/history` | Por campaña y rama; no es `harbor-live.json` | resumen | `savedAt` / `simTime` / fecha de ingest | Local, ~200 muestras, dedupe, rama si el save es anterior | validado (código) |
 | Ingresos / mantenimiento / gasto militar | — | — | — | — | Etapa 2–6 | no disponible |
 | Estado real de misión (activa/hecha) | GUID en el save no prueba estado | Instancia | — | — | Watcher emite `quests: []` | no disponible |
 | Throughput de ruta | — | — | t/min reales | — | Ni save ni OCR | no disponible |
@@ -63,7 +65,7 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 ## Reglas de honestidad (código)
 
 1. **Quests.** El vigilante escribe `quests: []`. Un GUID de quest en el FileDB no se publica como `state: "active"`. El matcher por edificios es **sugerencia** (`kind: "suggested"`): no completa el diario ni traba la campaña. Solo un JSON con títulos explícitos puede confirmar una etapa.
-2. **Islas.** `islandName` y `telemetry.islands` son región/sesión. No se usan como identidad de colonia ni como foco de isla. El nombre OCR (`connection.native.islandName`) es la isla **visible** en Estadísticas, otra fuente.
+2. **Islas.** `islandName` y `telemetry.islands` son región/sesión. Las colonias viven en `islandSnapshots` (región + área). El OCR sólo se asocia si el nombre visible mapea a **una** isla; un nombre duplicado no basta.
 3. **Dinero y bienes.** Sin `ParticipantID === 0` no hay tesorería ni stock para diagnóstico. No se toma el máximo de todos los `StrgLrg`. `pulseHint.coins` queda `unknown`. Taller no inventa inventario a 0.
 4. **Producción.** Capacidad vs demanda del OCR es **inferida**. No afirma excedente exportable ni justifica pausar sin dependencias.
 5. **Mod vs lector.** XML vacío ≠ inject. El writer es el vigilante externo.
