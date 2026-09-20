@@ -16,4 +16,5 @@ export type {
   ScenarioIsland,
   ScenarioResult,
   ScenarioVerdict,
+  VerdictReason,
 } from "./types.ts";

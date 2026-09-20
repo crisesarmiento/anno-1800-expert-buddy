@@ -468,3 +468,105 @@ describe("P1-A inputs and free workforce", () => {
   });
 });
 
+describe("P2-B: full material bill, every origin, no lowest-investment shortcut", () => {
+  it("lists the direct input good for expand-local, not only the final good", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "schnapps",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "La Costa",
+          demandTMin: 4,
+          capacityTMin: 2,
+          buildingCount: 1,
+          buildings: { distillery: 1, potato: 50 },
+          fertility: { potato: true },
+          workforceAvailable: { farmer: 200 },
+        }),
+      ],
+    });
+    const expand = result.alternatives.find((row) => row.kind === "expand-local");
+    assert.ok((expand?.materialsNeeded.potato ?? 0) > 0);
+  });
+
+  it("compares every pertinent origin instead of a single picked one", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "fish",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "Consumidora",
+          demandTMin: 4,
+          capacityTMin: 0,
+          resources: { coastline: false },
+          workforceAvailable: { farmer: 80 },
+        }),
+        island({
+          id: "180023:8",
+          name: "Origen A",
+          demandTMin: 0,
+          capacityTMin: 3,
+          reservedExportTMin: 0,
+          hasOtherConsumers: false,
+          transportToConsumerTMin: 3,
+          routeToConsumerOk: true,
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+        island({
+          id: "180023:9",
+          name: "Origen B",
+          demandTMin: 0,
+          capacityTMin: 5,
+          reservedExportTMin: 0,
+          hasOtherConsumers: false,
+          transportToConsumerTMin: 5,
+          routeToConsumerOk: true,
+          resources: { coastline: true },
+          workforceAvailable: { farmer: 80 },
+        }),
+      ],
+    });
+    const transportAlts = result.alternatives.filter((row) => row.kind === "transport-surplus");
+    const expandAlts = result.alternatives.filter((row) => row.kind === "expand-origin-and-transport");
+    assert.equal(transportAlts.length, 2);
+    assert.equal(expandAlts.length, 2);
+    assert.deepEqual(
+      new Set(transportAlts.map((row) => row.originId)),
+      new Set(["180023:8", "180023:9"]),
+    );
+  });
+
+  it("does not treat an unknown recurrent maintenance as a zero-cost tiebreaker", () => {
+    const result = compareScenarios({
+      consumerId: "180023:1",
+      goodId: "schnapps",
+      islands: [
+        island({
+          id: "180023:1",
+          name: "Isla nueva",
+          demandTMin: 1,
+          capacityTMin: 0,
+          buildingCount: 0,
+          buildings: {},
+          fertility: { potato: true },
+          workforceAvailable: { farmer: 200 },
+        }),
+      ],
+    });
+    const chain = result.alternatives.find((row) => row.kind === "build-local-chain");
+    // Exactly the perfect chain (1 potato + 1 distillery): construction cost is known...
+    assert.notEqual(chain?.investment.coins, null);
+    // ...but per-building maintenance for potato/distillery is not in the catalog.
+    assert.equal(chain?.recurrentMaintenance, null);
+    assert.ok(chain?.missing.includes("investment"));
+    assert.notEqual(chain?.viability, "viable");
+    assert.equal(result.verdict.kind, "insufficient-data");
+    if (result.verdict.kind === "insufficient-data") {
+      assert.equal(result.verdict.nextDatum, "investment");
+    }
+  });
+});
+

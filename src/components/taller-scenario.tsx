@@ -3,8 +3,21 @@ import { HarborCard } from "@/components/harbor-card";
 import { fill, type UiDict } from "@/lib/i18n";
 import { playerIslandsFromSave } from "@/lib/live/evidence";
 import { islandKey } from "@/lib/live/island-key";
-import { compareScenarios, goodsOnSnapshot, observeScenario } from "@/lib/scenario";
-import type { AlternativeKind, MissingDatum, ScenarioAlternative, ScenarioVerdict } from "@/lib/scenario";
+import {
+  compareScenarios,
+  goodsOnSnapshot,
+  neededTMin,
+  observeScenario,
+  verifiedSurplusTMin,
+} from "@/lib/scenario";
+import type {
+  AlternativeKind,
+  MissingDatum,
+  ScenarioAlternative,
+  ScenarioIsland,
+  ScenarioVerdict,
+  VerdictReason,
+} from "@/lib/scenario";
 import { liveGoodToCatalog } from "@/lib/sim/catalog-figures";
 import { chainByGood, goodNameEs } from "@/lib/sim";
 import type { GoodId } from "@/lib/sim/types";
@@ -47,11 +60,60 @@ function money(value: number | null, t: UiDict) {
   return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(value)} ${t.scenario.coinsUnit}`;
 }
 
-function verdictLine(t: UiDict, verdict: ScenarioVerdict) {
-  if (verdict.kind === "pick") return fill(t.scenario.verdictPick, kindLabel(t, verdict.winner));
+function tmin(value: number | null, t: UiDict) {
+  if (value == null) return t.scenario.unknownAmount;
+  return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }).format(value)}`;
+}
+
+function verdictLine(t: UiDict, verdict: ScenarioVerdict, islands: ScenarioIsland[]) {
+  if (verdict.kind === "pick") {
+    const originName = verdict.originId
+      ? (islands.find((row) => row.id === verdict.originId)?.name ?? verdict.originId)
+      : null;
+    const label = originName ? `${kindLabel(t, verdict.winner)} (${originName})` : kindLabel(t, verdict.winner);
+    return fill(t.scenario.verdictPick, label);
+  }
   if (verdict.kind === "already-covered") return t.scenario.alreadyCovered;
   if (verdict.kind === "none-viable") return t.scenario.verdictNone;
   return t.scenario.verdictMissing;
+}
+
+function verdictReasonLabel(t: UiDict, reason: VerdictReason) {
+  if (reason === "only-viable") return t.scenario.verdictReasonOnly;
+  return t.scenario.verdictReasonCost;
+}
+
+function balanceLabel(t: UiDict, island: ScenarioIsland, isConsumer: boolean) {
+  if (isConsumer) {
+    const need = neededTMin(island);
+    if (need == null) return t.scenario.balanceUnknown;
+    if (need === 0) return t.scenario.balanceCovered;
+    return fill(t.scenario.balanceDeficit, tmin(need, t));
+  }
+  const surplus = verifiedSurplusTMin(island);
+  if (surplus == null) return t.scenario.balanceUnknown;
+  return fill(t.scenario.balanceSurplus, tmin(surplus, t));
+}
+
+function exportLabel(t: UiDict, island: ScenarioIsland) {
+  if (island.reservedExportTMin != null) return fill(t.scenario.exportKnown, tmin(island.reservedExportTMin, t));
+  if (island.hasOtherConsumers === true) return t.scenario.exportOtherUnknown;
+  if (island.hasOtherConsumers === false) return t.scenario.exportNone;
+  return t.scenario.exportUnknown;
+}
+
+function routeLabel(t: UiDict, island: ScenarioIsland) {
+  if (island.routeToConsumerOk === true) return t.scenario.routeReady;
+  if (island.routeToConsumerOk === false) return t.scenario.routeNotReady;
+  return t.scenario.routeUnknown;
+}
+
+function materialsLine(t: UiDict, materials: Partial<Record<GoodId, number>>) {
+  const entries = Object.entries(materials).filter(([, amount]) => (amount ?? 0) > 0) as Array<
+    [GoodId, number]
+  >;
+  if (!entries.length) return null;
+  return entries.map(([goodId, amount]) => `${goodNameEs(goodId)}: ${tmin(amount, t)} t/min`).join(" · ");
 }
 
 const PICKABLE: GoodId[] = [
@@ -70,6 +132,64 @@ const PICKABLE: GoodId[] = [
   "ponchos",
   "rum",
 ];
+
+function AlternativeCard({
+  t,
+  alt,
+  islands,
+}: {
+  t: UiDict;
+  alt: ScenarioAlternative;
+  islands: ScenarioIsland[];
+}) {
+  const materials = materialsLine(t, alt.materialsNeeded);
+  const origin = alt.originId ? islands.find((row) => row.id === alt.originId) : null;
+  return (
+    <li
+      data-taller-scenario-alt={alt.kind}
+      data-taller-scenario-origin={alt.originId ?? ""}
+      data-taller-scenario-viability={alt.viability}
+      className="rounded-lg border border-border p-4"
+    >
+      <p className="font-medium">
+        {kindLabel(t, alt.kind)}
+        <span className="ml-2 text-sm font-normal text-muted-foreground">{viabilityLabel(t, alt)}</span>
+      </p>
+      {origin ? (
+        <p className="mt-1 text-sm text-muted-foreground">{fill(t.scenario.origin, origin.name)}</p>
+      ) : null}
+      {origin ? (
+        <p className="text-xs text-muted-foreground">
+          {t.scenario.tableExport}: {exportLabel(t, origin)}
+        </p>
+      ) : null}
+      <p className="mt-2 text-sm">
+        {t.scenario.investment}: {money(alt.investment.coins, t)}
+      </p>
+      <p className="text-sm">
+        {t.scenario.recurrent}:{" "}
+        {alt.recurrentMaintenance == null
+          ? t.scenario.unknownAmount
+          : money(alt.recurrentMaintenance, t) + t.scenario.perMin}
+      </p>
+      {materials ? (
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t.scenario.materialsLabel}: {materials}
+        </p>
+      ) : null}
+      {alt.missing.length ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t.scenario.missing}: {alt.missing.map((key) => missingLabel(t, key)).join(" · ")}
+        </p>
+      ) : null}
+      {alt.assumptions.length ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t.scenario.assumptions}: {alt.assumptions.join(" · ")}
+        </p>
+      ) : null}
+    </li>
+  );
+}
 
 export function TallerScenarioCard() {
   const snapshot = useHarbor((state) => state.liveSnapshot);
@@ -116,16 +236,36 @@ export function TallerScenarioCard() {
     return best;
   }, [islands, resolvedIsland, resolvedGood, snapshot]);
 
-  const result = useMemo(() => {
+  const input = useMemo(() => {
     if (!resolvedIsland || !resolvedGood) return null;
-    const input = observeScenario({
+    return observeScenario({
       snapshot,
       consumerId: resolvedIsland,
       goodId: resolvedGood as GoodId,
       transportTMin,
     });
-    return compareScenarios(input);
   }, [snapshot, resolvedIsland, resolvedGood, transportTMin]);
+
+  const result = useMemo(() => (input ? compareScenarios(input) : null), [input]);
+
+  const localAlts = result?.alternatives.filter(
+    (alt) => alt.kind === "expand-local" || alt.kind === "build-local-chain",
+  );
+  const originIds = result
+    ? [
+        ...new Set(
+          result.alternatives
+            .filter((alt) => alt.kind === "transport-surplus" && alt.originId)
+            .map((alt) => alt.originId!),
+        ),
+      ]
+    : [];
+  const noOriginAlts = result
+    ? result.alternatives.filter(
+        (alt) =>
+          (alt.kind === "transport-surplus" || alt.kind === "expand-origin-and-transport") && !alt.originId,
+      )
+    : [];
 
   return (
     <div id="produce-or-import" data-taller-scenario="">
@@ -191,11 +331,16 @@ export function TallerScenarioCard() {
                 {fill(t.scenario.observedTransport, observedTransport)}
               </p>
             ) : null}
-            {result ? (
+            {result && input ? (
               <div className="flex flex-col gap-4">
                 <p data-taller-scenario-verdict={result.verdict.kind} className="text-lg leading-relaxed">
-                  {verdictLine(t, result.verdict)}
+                  {verdictLine(t, result.verdict, input.islands)}
                 </p>
+                {result.verdict.kind === "pick" ? (
+                  <p data-taller-scenario-verdict-reason={result.verdict.reason} className="text-xs text-muted-foreground">
+                    {verdictReasonLabel(t, result.verdict.reason)}
+                  </p>
+                ) : null}
                 {result.verdict.kind === "insufficient-data" ? (
                   <p data-taller-scenario-next="" className="text-sm leading-relaxed">
                     {fill(t.scenario.nextDatum, missingLabel(t, result.verdict.nextDatum))}
@@ -204,51 +349,87 @@ export function TallerScenarioCard() {
                 <p className="text-xs text-muted-foreground">{t.scenario.inferred}</p>
                 <p className="text-sm leading-relaxed text-muted-foreground">{t.scenario.stockNotSurplus}</p>
                 <p className="text-sm leading-relaxed text-muted-foreground">{t.scenario.noCut}</p>
-                <ul className="flex flex-col gap-3">
-                  {result.alternatives.map((alt) => (
-                    <li
-                      key={alt.kind}
-                      data-taller-scenario-alt={alt.kind}
-                      data-taller-scenario-viability={alt.viability}
-                      className="rounded-lg border border-border p-4"
-                    >
-                      <p className="font-medium">
-                        {kindLabel(t, alt.kind)}
-                        <span className="ml-2 text-sm font-normal text-muted-foreground">
-                          {viabilityLabel(t, alt)}
-                        </span>
+
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t.scenario.tableTitle}
+                  </p>
+                  <div className="mt-2 overflow-x-auto">
+                    <table data-taller-scenario-table="" className="w-full min-w-[760px] border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableIsland}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableStock}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableProduction}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableConsumption}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableBalance}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableExport}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableTransport}</th>
+                          <th className="py-2 pr-3 font-medium">{t.scenario.tableRoute}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {input.islands.map((row) => {
+                          const isConsumer = row.id === input.consumerId;
+                          return (
+                            <tr
+                              key={row.id}
+                              data-taller-scenario-table-row={row.id}
+                              className="border-b border-border/60"
+                            >
+                              <td className="py-2 pr-3 font-medium">{row.name}</td>
+                              <td className="py-2 pr-3">{row.stockAmount ?? t.scenario.unknownAmount}</td>
+                              <td className="py-2 pr-3">{tmin(row.capacityTMin, t)}</td>
+                              <td className="py-2 pr-3">{tmin(row.demandTMin, t)}</td>
+                              <td className="py-2 pr-3">{balanceLabel(t, row, isConsumer)}</td>
+                              <td className="py-2 pr-3">{exportLabel(t, row)}</td>
+                              <td className="py-2 pr-3">
+                                {isConsumer ? "—" : tmin(row.transportToConsumerTMin, t)}
+                              </td>
+                              <td className="py-2 pr-3">
+                                {isConsumer ? t.scenario.routeSelf : routeLabel(t, row)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t.scenario.groupLocal}
+                  </p>
+                  <ul className="flex flex-col gap-3">
+                    {localAlts?.map((alt) => <AlternativeCard key={alt.kind} t={t} alt={alt} islands={input.islands} />)}
+                  </ul>
+                </div>
+
+                {originIds.map((originId) => {
+                  const originAlts = result.alternatives.filter((alt) => alt.originId === originId);
+                  const originName = input.islands.find((row) => row.id === originId)?.name ?? originId;
+                  return (
+                    <div key={originId} className="flex flex-col gap-3">
+                      <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                        {t.scenario.groupOrigin}: {originName}
                       </p>
-                      {alt.originId ? (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {fill(
-                            t.scenario.origin,
-                            islands.find((row) => islandKey(row.regionId, row.areaId) === alt.originId)?.name ??
-                              alt.originId,
-                          )}
-                        </p>
-                      ) : null}
-                      <p className="mt-2 text-sm">
-                        {t.scenario.investment}: {money(alt.investment.coins, t)}
-                      </p>
-                      <p className="text-sm">
-                        {t.scenario.recurrent}:{" "}
-                        {alt.recurrentMaintenance == null
-                          ? t.scenario.unknownAmount
-                          : money(alt.recurrentMaintenance, t) + t.scenario.perMin}
-                      </p>
-                      {alt.missing.length ? (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {t.scenario.missing}: {alt.missing.map((key) => missingLabel(t, key)).join(" · ")}
-                        </p>
-                      ) : null}
-                      {alt.assumptions.length ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {t.scenario.assumptions}: {alt.assumptions.join(" · ")}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                      <ul className="flex flex-col gap-3">
+                        {originAlts.map((alt) => (
+                          <AlternativeCard key={`${alt.kind}-${originId}`} t={t} alt={alt} islands={input.islands} />
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+
+                {noOriginAlts.length ? (
+                  <ul className="flex flex-col gap-3">
+                    {noOriginAlts.map((alt) => (
+                      <AlternativeCard key={alt.kind} t={t} alt={alt} islands={input.islands} />
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">{t.scenario.emptyGood}</p>
