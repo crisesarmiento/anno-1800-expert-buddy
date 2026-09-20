@@ -5,7 +5,11 @@ export type SuggestedReserve = {
   goodId: string;
   goodName: string;
   amount: number;
+  /** Always "confirmed" — the required amount is read straight from the save's quest objective. */
+  amountHonesty: "confirmed";
   stockRead: number | null;
+  /** "confirmed" only when telemetry.goods carried this good; null when it did not. */
+  stockHonesty: "confirmed" | null;
   /** Always the read stock. Never stock minus the reserve. */
   stockUnchanged: number | null;
   missionTitle: string;
@@ -45,7 +49,9 @@ export function suggestedReserves(snapshot: LiveSnapshot | null | undefined): Su
         goodId,
         goodName: objective.goodName?.trim() || stock?.name || goodId,
         amount: remaining,
+        amountHonesty: "confirmed",
         stockRead: amountRead,
+        stockHonesty: amountRead != null ? "confirmed" : null,
         stockUnchanged: amountRead,
         missionTitle: quest.title,
       };

@@ -13,6 +13,8 @@ import {
   type FleetManualRole,
 } from "@/lib/fleet";
 import { fill } from "@/lib/i18n";
+import { playerIslandsFromSave } from "@/lib/live/evidence.ts";
+import { islandKey } from "@/lib/live/island-key.ts";
 import { useHarbor } from "@/lib/store";
 import { useT } from "@/lib/use-t";
 
@@ -46,7 +48,15 @@ export function FleetViewCard() {
   const [hullId, setHullId] = useState("frigate");
   const advice = useMemo(() => fleetAdvice(snapshot, roles), [snapshot, roles]);
   const coverage = coverageFromSnapshot(snapshot);
-  const compare = useMemo(() => compareNewBuild(hullId, snapshot), [hullId, snapshot]);
+  const islands = useMemo(() => playerIslandsFromSave(snapshot), [snapshot]);
+  const [islandId, setIslandId] = useState("");
+  const resolvedIslandId = islands.some((row) => islandKey(row.regionId, row.areaId) === islandId)
+    ? islandId
+    : (islands[0] ? islandKey(islands[0].regionId, islands[0].areaId) : "");
+  const compare = useMemo(
+    () => compareNewBuild(hullId, snapshot, resolvedIslandId || null),
+    [hullId, snapshot, resolvedIslandId],
+  );
 
   return (
     <div id="fleet" data-taller-fleet="">
@@ -59,6 +69,22 @@ export function FleetViewCard() {
         </p>
         <p className="text-sm text-muted-foreground">{t.fleet.riskHint}</p>
         <p className="text-xs text-muted-foreground">{t.fleet.noAuto}</p>
+
+        <div data-fleet-coverage-inventory="" className="mt-2">
+          <p className="text-sm font-medium">{t.fleet.coverageInventory}</p>
+          <p className="text-sm tabular-nums">
+            {fill(
+              t.fleet.coverageInventoryLine,
+              advice.roleInventory.escort,
+              advice.roleInventory.defense,
+              advice.roleInventory.trade,
+              advice.roleInventory.idle,
+              advice.roleInventory.unknown,
+              advice.roleInventory.total,
+            )}
+          </p>
+          <p className="text-xs text-muted-foreground">{t.fleet.coverageInventoryHint}</p>
+        </div>
 
         {advice.ships.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t.fleet.empty}</p>
@@ -143,11 +169,16 @@ export function FleetViewCard() {
             )}
           </p>
         ) : null}
+        {advice.upkeep.withoutUpkeep > 0 ? (
+          <p className="text-xs text-muted-foreground" data-fleet-upkeep-gap="">
+            {fill(t.fleet.upkeepGap, advice.upkeep.withoutUpkeep, advice.upkeep.uniqueShips)}
+          </p>
+        ) : null}
 
         <p className="text-sm">{t.fleet.noDismantle}</p>
         <p className="text-sm">{t.fleet.noCombat}</p>
 
-        <div data-fleet-new-build="" className="flex flex-col gap-2">
+        <div data-fleet-new-build="" className="flex flex-col gap-3">
           <p className="text-sm font-medium">{t.fleet.newBuild}</p>
           <label className="flex min-h-11 items-center gap-2 text-sm">
             <span>{t.fleet.pickHull}</span>
@@ -164,23 +195,76 @@ export function FleetViewCard() {
             </select>
           </label>
           <p className="text-xs text-muted-foreground">{t.fleet.catalog}</p>
-          {compare.purchaseFitsBudget === true ? (
-            <p className="text-sm">{t.fleet.purchaseFits}</p>
-          ) : null}
-          {compare.purchaseFitsBudget === false ? (
-            <p className="text-sm">{t.fleet.purchaseShort}</p>
-          ) : null}
-          {compare.purchaseFitsBudget == null ? (
-            <p className="text-sm text-muted-foreground">{t.fleet.purchaseUnknown}</p>
-          ) : null}
-          {compare.materialsCovered === true ? <p className="text-sm">{t.fleet.materialsOk}</p> : null}
-          {compare.materialsCovered === false ? (
-            <p className="text-sm">{t.fleet.materialsShort}</p>
-          ) : null}
-          {compare.materialsCovered == null ? (
-            <p className="text-sm text-muted-foreground">{t.fleet.materialsUnknown}</p>
-          ) : null}
-          <p className="text-xs text-muted-foreground">{t.fleet.reservesAside}</p>
+
+          <div data-fleet-buy="" className="rounded-md border border-border p-2">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t.fleet.buySection}
+            </p>
+            {compare.purchaseFitsBudget === true ? (
+              <p className="text-sm">{t.fleet.purchaseFits}</p>
+            ) : null}
+            {compare.purchaseFitsBudget === false ? (
+              <p className="text-sm">{t.fleet.purchaseShort}</p>
+            ) : null}
+            {compare.purchaseFitsBudget == null ? (
+              <p className="text-sm text-muted-foreground">{t.fleet.purchaseUnknown}</p>
+            ) : null}
+          </div>
+
+          <div data-fleet-build="" className="rounded-md border border-border p-2">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t.fleet.buildSection}
+            </p>
+            {islands.length > 0 ? (
+              <label className="mt-1 flex min-h-11 items-center gap-2 text-sm">
+                <span>{t.fleet.pickIsland}</span>
+                <select
+                  className="min-h-11 min-w-32 rounded-md border border-border bg-background px-2"
+                  value={resolvedIslandId}
+                  onChange={(event) => setIslandId(event.target.value)}
+                >
+                  {islands.map((island) => (
+                    <option
+                      key={islandKey(island.regionId, island.areaId)}
+                      value={islandKey(island.regionId, island.areaId)}
+                    >
+                      {island.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">{t.fleet.noIslandOption}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {compare.materialsScope === "island" && compare.materialsIslandName
+                ? fill(t.fleet.materialsIslandScope, compare.materialsIslandName)
+                : compare.materialsScope === "global"
+                  ? t.fleet.materialsGlobalScope
+                  : t.fleet.materialsNoIslandScope}
+            </p>
+            {compare.materialsCovered === true ? (
+              <p className="mt-1 text-sm">{t.fleet.materialsOk}</p>
+            ) : null}
+            {compare.materialsCovered === false ? (
+              <p className="mt-1 text-sm">{t.fleet.materialsShort}</p>
+            ) : null}
+            {compare.materialsCovered == null ? (
+              <p className="mt-1 text-sm text-muted-foreground">{t.fleet.materialsUnknown}</p>
+            ) : null}
+            <p className="mt-1 text-xs text-muted-foreground">{t.fleet.reservesAside}</p>
+          </div>
+
+          <div data-fleet-sustain="" className="rounded-md border border-border p-2">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t.fleet.sustainSection}
+            </p>
+            {compare.upkeep != null ? (
+              <p className="text-sm tabular-nums">{fill(t.fleet.sustainUpkeep, compare.upkeep)}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t.fleet.sustainUpkeepUnknown}</p>
+            )}
+          </div>
         </div>
         <Button asChild variant="outline" className="min-h-11">
           <Link to="/taller" hash="economy">

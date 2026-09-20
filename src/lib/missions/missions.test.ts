@@ -155,6 +155,25 @@ describe("suggested reserves do not deduct read stock", () => {
   });
 });
 
+describe("P2-C reserves carry explicit evidence", () => {
+  it("marks the required amount confirmed and the stock honesty by presence", () => {
+    const known = suggestedReserves({
+      ...questFixtures.deliverBefore,
+      telemetry: { goods: [{ id: "timber", name: "Tablones", amount: 48 }] },
+    });
+    assert.equal(known[0]?.amountHonesty, "confirmed");
+    assert.equal(known[0]?.stockHonesty, "confirmed");
+
+    const unknownStock = suggestedReserves({
+      ...questFixtures.deliverBefore,
+      telemetry: { goods: [] },
+    });
+    assert.equal(unknownStock[0]?.amountHonesty, "confirmed");
+    assert.equal(unknownStock[0]?.stockRead, null);
+    assert.equal(unknownStock[0]?.stockHonesty, null);
+  });
+});
+
 describe("ingest optional quest fields", () => {
   it("keeps instance, type, objectives, progress, state and timer", () => {
     const result = ingestLiveJsonText(

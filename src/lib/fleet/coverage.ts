@@ -4,6 +4,7 @@ import type {
   FleetCoverageView,
   FleetInventoryShip,
   FleetManualRole,
+  FleetRoleInventory,
   FleetRoleMap,
   SurplusLabel,
 } from "./types.ts";
@@ -63,4 +64,27 @@ export function surplusKeys(ships: readonly FleetInventoryShip[], roles?: FleetR
   void roles;
   const none: string[] = [];
   return none;
+}
+
+/**
+ * Explicit coverage inventory: which manual role covers each read ship.
+ * "unknown" ships are not idle — they are ships the player has not (yet)
+ * tagged and that have no confirmed trade-route assignment either.
+ */
+export function fleetRoleInventory(
+  ships: readonly FleetInventoryShip[],
+  roles?: FleetRoleMap,
+): FleetRoleInventory {
+  const counts: FleetRoleInventory = {
+    escort: 0,
+    defense: 0,
+    trade: 0,
+    idle: 0,
+    unknown: 0,
+    total: ships.length,
+  };
+  for (const ship of ships) {
+    counts[effectiveRole(ship, roles)] += 1;
+  }
+  return counts;
 }

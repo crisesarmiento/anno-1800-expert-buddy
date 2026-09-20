@@ -8,6 +8,7 @@ import {
   doubleCountRouteAndFleet,
   effectiveRole,
   fleetAdvice,
+  fleetRoleInventory,
   rolesForCampaign,
   setRoleOnCampaign,
   fleetFixtures,
@@ -165,5 +166,68 @@ describe("P1-A hull identity and campaign-scoped roles", () => {
     assert.equal(rolesForCampaign(stored, "camp-a")[escort.key], "escort");
     assert.equal(rolesForCampaign(stored, "camp-b")[escort.key], undefined);
     assert.deepEqual(rolesForCampaign(stored, "camp-b"), {});
+  });
+});
+
+describe("P2-C explicit coverage inventory", () => {
+  it("counts each ship under exactly one role, defaulting trade/unknown from assignment", () => {
+    const ships = inventoryFromSnapshot(fleetFixtures.escortAndTrade);
+    const inventory = fleetRoleInventory(ships);
+    assert.equal(inventory.total, 2);
+    assert.equal(inventory.trade, 1);
+    assert.equal(inventory.unknown, 1);
+    assert.equal(inventory.escort, 0);
+    assert.equal(inventory.defense, 0);
+    assert.equal(inventory.idle, 0);
+
+    const heraldo = ships.find((row) => row.ship.name === "Heraldo");
+    assert.ok(heraldo);
+    const withEscort = fleetRoleInventory(ships, { [heraldo.key]: "escort" });
+    assert.equal(withEscort.escort, 1);
+    assert.equal(withEscort.unknown, 0);
+    assert.equal(withEscort.total, 2);
+
+    const empty = fleetRoleInventory(inventoryFromSnapshot(fleetFixtures.noFleet));
+    assert.equal(empty.total, 0);
+    assert.equal(fleetAdvice(fleetFixtures.escortAndTrade).roleInventory.total, 2);
+  });
+});
+
+describe("P2-C materials scoped to the shipyard's island", () => {
+  it("uses per-island stock when an island id is given, and says so", () => {
+    const snapshot = {
+      ...fleetFixtures.escortAndTrade,
+      islandSnapshots: [
+        {
+          regionId: 1,
+          areaId: 8451,
+          ownerId: 0,
+          name: "La Inapetente",
+          nameSource: "city-name" as const,
+          stock: [
+            { id: "wood", name: "Timber", amount: 5 },
+            { id: "sails", name: "Sails", amount: 5 },
+            { id: "weapons", name: "Weapons", amount: 5 },
+          ],
+          coverage: { identity: { source: "save" as const, observedAt: "2026-09-20T12:00:00.000Z" } },
+        },
+      ],
+    };
+    const scoped = compareNewBuild("frigate", snapshot, "1:8451");
+    assert.equal(scoped.materialsScope, "island");
+    assert.equal(scoped.materialsIslandName, "La Inapetente");
+    // Frigate needs wood 40 / sails 20 / weapons 15; this island only has 5 of each.
+    assert.equal(scoped.materialsCovered, false);
+
+    const global = compareNewBuild("frigate", snapshot);
+    assert.equal(global.materialsScope, "global");
+    assert.equal(global.materialsIslandName, null);
+    // Save-wide telemetry.goods (wood 80 / sails 40 / weapons 20) does cover it.
+    assert.equal(global.materialsCovered, true);
+
+    const missingIsland = compareNewBuild("frigate", snapshot, "9:9999");
+    assert.equal(missingIsland.materialsScope, "unknown");
+    assert.equal(missingIsland.materialsKnown, false);
+    assert.ok(missingIsland.missing.includes("island"));
   });
 });
