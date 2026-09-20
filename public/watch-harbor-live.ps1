@@ -334,7 +334,7 @@ function Get-HarborReaderFromScan($scan) {
     "islandSnapshots", "islandNames", "islandStock", "islandBuildings", "fleet"
   )
   $id = "harbor-watcher"
-  $version = "0.6.0"
+  $version = "0.6.1"
   $engine = "a7s-scan"
   if ($scan -and ($scan.PSObject.Properties.Name -contains "reader") -and $scan.reader) {
     if ($scan.reader.id) { $id = [string]$scan.reader.id }

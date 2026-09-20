@@ -84,3 +84,7 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 ## Contraste pendiente (no bloquea etapa 0)
 
 Con copias locales gitignored en `tmp-saves/`: dos islas, el mismo bien, una ruta, guardar/cargar, un cambio de dinero conocido. Hasta entonces ningún campo de partida viva se marca **validado** más allá de la estructura de rutas ya cerrada en `docs/filedb-spike-routes.md`.
+
+## Contraste 2026-09-20 (P1-B follow-up)
+
+Save cloud `1359534061.save` + Autosave local: `AreaManager_*` sin `AreaStorageManager` → `islandSnapshots[].stock` / `.buildings` ausentes (gap de scanner; fixtures sí tienen el nodo). `telemetry.buildings` vía `CountsPerGUID` global sí. Goods/tesorería omitidos si no hay `StrgLrg` con `ParticipantID === 0`. Ver `docs/smoke-p1b-followup.md`.

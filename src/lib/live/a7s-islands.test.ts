@@ -211,7 +211,7 @@ describe("extractIslands nested FileDB", () => {
     assert.equal(costa?.nameSource, "city-name");
     assert.equal(costa?.stock?.find((g) => g.id === "wood")?.amount, 10);
     assert.equal(other?.name, "[999001]");
-    assert.equal(other?.nameSource, "neutral");
+    assert.equal(other?.nameSource, "city-name-guid");
     assert.equal(other?.stock?.find((g) => g.id === "wood")?.amount, 50);
     assert.notEqual(
       costa?.stock?.find((g) => g.id === "wood")?.amount,
@@ -276,7 +276,7 @@ describe("extractIslands nested FileDB", () => {
 });
 
 describe("resolveIslandName", () => {
-  it("prefers CityName, then translation, then a neutral label", () => {
+  it("prefers CityName, then translation, then bracketed GUID evidence", () => {
     assert.deepEqual(resolveIslandName({ cityName: "La Costa", cityNameGuid: 1, areaId: 3 }), {
       name: "La Costa",
       nameSource: "city-name",
@@ -292,7 +292,7 @@ describe("resolveIslandName", () => {
     );
     assert.deepEqual(resolveIslandName({ cityName: null, cityNameGuid: 77, areaId: 3 }), {
       name: "[77]",
-      nameSource: "neutral",
+      nameSource: "city-name-guid",
     });
     assert.deepEqual(resolveIslandName({ cityName: null, cityNameGuid: null, areaId: 8451 }), {
       name: "area-8451",

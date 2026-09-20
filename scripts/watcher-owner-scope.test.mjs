@@ -59,7 +59,8 @@ test("nested FileDB islands are extracted by id, not by display name", () => {
     assert.match(src, /AsInt64/);
     assert.match(src, /BuildingsFromManager/);
     assert.doesNotMatch(src, /stockCount >= 24\) break/);
-    assert.match(src, /blobs\.Count != 1/);
+    assert.match(src, /blobs\.Count == 0/);
+    assert.match(src, /city-name-guid/);
   }
   assert.match(ps1, /islandSnapshots/);
   assert.match(ps1, /\$notRollback/);

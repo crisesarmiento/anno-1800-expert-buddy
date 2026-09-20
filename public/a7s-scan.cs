@@ -7,7 +7,7 @@ using System.Text;
 namespace HarborBuddy {
   public static class A7sScan {
     public const string ReaderId = "harbor-watcher";
-    public const string ReaderVersion = "0.6.0";
+    public const string ReaderVersion = "0.6.1";
     public const string ReaderEngine = "a7s-scan";
     static readonly string[] ReaderCapabilities = {
       "buildings", "playerGoods", "playerTreasury", "routes", "routeStations",
@@ -856,20 +856,25 @@ namespace HarborBuddy {
     }
 
     static List<IslandStock> StockFromManager(DbNode manager, Dictionary<int, GuidRow> guids) {
+      // Real AreaManager_* nodes observed 2026-09-20 (cloud + local) do not contain
+      // AreaStorageManager — fixtures do. Keep the path; never invent stock as 0.
       var storage = FindDescendant(manager, "AreaStorageManager");
       if (storage == null) return new List<IslandStock>();
       var blobs = new List<byte[]>();
       CollectAttr(storage, "StrgLrg", blobs);
-      if (blobs.Count != 1 || blobs[0] == null || blobs[0].Length % 8 != 0) return new List<IslandStock>();
+      if (blobs.Count == 0) return new List<IslandStock>();
       var byId = new Dictionary<string, IslandStock>();
-      var bytes = blobs[0];
-      for (int i = 0; i + 8 <= bytes.Length; i += 8) {
-        int g = BitConverter.ToInt32(bytes, i);
-        int amt = BitConverter.ToInt32(bytes, i + 4);
-        GuidRow row;
-        if (!guids.TryGetValue(g, out row) || row.kind != "good") continue;
-        if (amt < 0 || byId.ContainsKey(row.id)) return new List<IslandStock>();
-        byId[row.id] = new IslandStock { Id = row.id, Name = row.name, Amount = amt };
+      foreach (var blob in blobs) {
+        if (blob == null || blob.Length % 8 != 0) continue;
+        for (int i = 0; i + 8 <= blob.Length; i += 8) {
+          int g = BitConverter.ToInt32(blob, i);
+          int amt = BitConverter.ToInt32(blob, i + 4);
+          GuidRow row;
+          if (!guids.TryGetValue(g, out row) || row.kind != "good") continue;
+          if (amt < 0) continue;
+          if (byId.ContainsKey(row.id)) continue;
+          byId[row.id] = new IslandStock { Id = row.id, Name = row.name, Amount = amt };
+        }
       }
       return new List<IslandStock>(byId.Values);
     }
@@ -968,6 +973,10 @@ namespace HarborBuddy {
           string name;
           string nameSource;
           if (!string.IsNullOrEmpty(cityName)) { name = cityName; nameSource = "city-name"; }
+          else if (cityNameGuid.HasValue && cityNameGuid.Value != 0) {
+            name = NeutralIslandName(cityNameGuid, areaId.Value);
+            nameSource = "city-name-guid";
+          }
           else { name = NeutralIslandName(cityNameGuid, areaId.Value); nameSource = "neutral"; }
           var row = new IslandRow {
             RegionId = regionId.Value,

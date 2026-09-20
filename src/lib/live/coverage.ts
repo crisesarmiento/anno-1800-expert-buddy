@@ -11,7 +11,7 @@ import type {
 } from "./types.ts";
 
 export const LIVE_READER_ID = "harbor-watcher" as const;
-export const LIVE_READER_VERSION = "0.6.0" as const;
+export const LIVE_READER_VERSION = "0.6.1" as const;
 export const LIVE_READER_ENGINE = "a7s-scan" as const;
 
 /** What this save reader knows how to extract. OCR is optional watcher enrichment, not a scanner capability. */

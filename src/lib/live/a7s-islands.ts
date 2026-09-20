@@ -102,7 +102,8 @@ export function resolveIslandName(input: {
   if (input.cityNameGuid != null && input.cityNameGuid !== 0) {
     const translated = input.translate?.(input.cityNameGuid)?.trim();
     if (translated) return { name: translated.slice(0, 200), nameSource: "city-name-guid" };
-    return { name: `[${input.cityNameGuid}]`, nameSource: "neutral" };
+    // Untranslated GUID stays bracketed; nameSource marks evidence for coverage.islandNames.
+    return { name: `[${input.cityNameGuid}]`, nameSource: "city-name-guid" };
   }
   return { name: `area-${input.areaId}`, nameSource: "neutral" };
 }

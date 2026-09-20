@@ -92,3 +92,9 @@ Limites / condicionado:
 - Cobertura describe lo que hay en el JSON de esta lectura; no prueba semántica de TaxBalance/Income.
 - Nombres de isla dependen de CityName/CityNameGuid en el save.
 - pack:mod debe regenerar bat/ps1 embebido tras tocar el watcher.
+
+## P1-B follow-up (2026-09-20)
+
+- Smoke + checklist reinicio vigilante: `docs/smoke-p1b-followup.md`.
+- `nameSource: city-name-guid` cuando solo hay `CityNameGuid` (sigue `[guid]`, sin inventar nombre).
+- Stock/edificios por isla: documentados como gap (AreaStorageManager no está bajo AreaManager en saves reales contrastados).
