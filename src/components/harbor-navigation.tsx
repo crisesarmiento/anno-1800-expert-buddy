@@ -3,16 +3,27 @@ import { Anchor, ChevronDown } from "lucide-react";
 import { LanguageSelect } from "@/components/language-select";
 import { useHarbor } from "@/lib/store";
 import { editorialCopy } from "@/lib/editorial-copy";
+import { fill } from "@/lib/i18n";
+import { focusOptionsForSnapshot, islandFocusName, resolveIslandFocusId } from "@/lib/island-focus";
 
 export function HarborNavigation() {
-  const t = editorialCopy[useHarbor((s) => s.locale)];
+  const locale = useHarbor((s) => s.locale);
+  const snapshot = useHarbor((s) => s.liveSnapshot);
+  const activeIslandId = useHarbor((s) => s.activeIslandId);
+  const t = editorialCopy[locale];
+  // Same island/campaign context on every main surface — only once there is a
+  // save to name it from; never invent a colony name without a reading.
+  const islandOptions = snapshot ? focusOptionsForSnapshot(snapshot) : [];
+  const islandName = snapshot
+    ? islandFocusName(resolveIslandFocusId(activeIslandId, islandOptions), islandOptions)
+    : null;
   return (
     <header className="editorial-nav">
       <Link to="/" className="editorial-brand">
         <Anchor aria-hidden="true" size={34} strokeWidth={1.3} />
         <span>
           <strong>Harbor Buddy</strong>
-          <small>{t.companion}</small>
+          <small>{islandName ? fill(t.focusIsland, islandName) : t.companion}</small>
         </span>
       </Link>
       <nav aria-label={t.nav} className="editorial-primary-nav">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  Anchor,
   Check,
   ChevronRight,
   Coins,
@@ -14,7 +13,7 @@ import {
 import { BuddyChat } from "@/components/buddy-chat";
 import { ChainBoard } from "@/components/chain-board";
 import { HarborCard, IconWell } from "@/components/harbor-card";
-import { LanguageSelect } from "@/components/language-select";
+import { HarborNavigation } from "@/components/harbor-navigation";
 import { DiaryTitleChips } from "@/components/diary-chips";
 import { useHomeSaturatedTip } from "@/components/home-saturated-tip";
 import { IslandFocusChips } from "@/components/island-focus";
@@ -57,9 +56,14 @@ export function HarborApp() {
   return (
     <div className="min-h-dvh bg-background" data-visual="diario">
       <OverbuildBrakeNotice />
+      <div className="border-b border-border bg-card px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <HarborNavigation />
+        </div>
+      </div>
       <div className="mx-auto flex min-h-dvh max-w-3xl flex-col">
         <div className="flex min-w-0 flex-1 flex-col">
-          <TopBar />
+          <DiaryToolbar />
           <main className="flex-1 px-4 py-5 sm:px-6 sm:py-7">
             {!missionId ? (
               <Welcome />
@@ -77,7 +81,10 @@ export function HarborApp() {
   );
 }
 
-function TopBar() {
+// The brand, primary nav and Más menu live in HarborNavigation, shared with
+// Inicio/Taller/Rutas. This strip keeps only what is specific to the Diario
+// session: spoilers, and the two calm-mode escapes.
+function DiaryToolbar() {
   const spoilers = useHarbor((s) => s.spoilers);
   const setSpoilers = useHarbor((s) => s.setSpoilers);
   const calm = useHarbor((s) => s.calm);
@@ -86,62 +93,14 @@ function TopBar() {
   const t = useT();
 
   return (
-    <header className="flex flex-col items-stretch gap-3 border-b border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
-        <IconWell>
-          <Anchor className="size-5" strokeWidth={1.75} />
-        </IconWell>
-        <div className="min-w-0">
-          <p className="font-display text-lg leading-none font-semibold tracking-tight">
-            Anno 1800 Buddy
-          </p>
-          <p className="mt-1 truncate text-xs text-mist">{t.tagline}</p>
-        </div>
-      </div>
-      <div className="-mx-1 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:shrink-0 sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
-        <LanguageSelect />
-        <Link
-          to="/"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          Inicio
-        </Link>
-        <Link
-          to="/tablero"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          {t.board}
-        </Link>
-        <Link
-          to="/rutas"
-          className="inline-flex h-11 shrink-0 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          Rutas
-        </Link>
-        <Link
-          to="/sandbox"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          Sandbox
-        </Link>
-        <Link
-          to="/mapa"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          {t.map}
-        </Link>
-        <Link
-          to="/taller"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          Taller
-        </Link>
-        <Link
-          to="/conectar"
-          className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          {t.installMod}
-        </Link>
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-card px-4 py-2 sm:px-6">
+      <Link
+        to="/taller"
+        className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        Taller
+      </Link>
+      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
         <button
           type="button"
           onClick={() => setSpoilers(!spoilers)}
@@ -180,7 +139,7 @@ function TopBar() {
           </>
         ) : null}
       </div>
-    </header>
+    </div>
   );
 }
 

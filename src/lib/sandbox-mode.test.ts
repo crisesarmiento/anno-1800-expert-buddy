@@ -69,13 +69,14 @@ describe("sandbox as a separate mode", () => {
 
   it("exposes a Sandbox chip on campaign Home without putting tips in the notebook", () => {
     const welcome = source("../components/harbor-app.tsx");
+    const nav = source("../components/harbor-navigation.tsx");
     const chips = source("../components/diary-chips.tsx");
     const diary = source("./diary-chips.ts");
     const campaign = source("./data/campaign.ts");
     const stamps = source("../components/desk-sheets/stamp-panel.tsx");
     const desk = source("../components/session-desk.tsx");
     assert.match(welcome, /SandboxModeChip/);
-    assert.match(welcome, /to="\/sandbox"/);
+    assert.match(welcome + nav, /to="\/sandbox"|\["\/sandbox",/);
     assert.doesNotMatch(chips, /sandbox/i);
     assert.doesNotMatch(diary, /sandbox/i);
     assert.doesNotMatch(stamps, /sandbox/i);

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { CampaignPicker, IslandHistoryCard } from "@/components/island-history";
 import { FleetViewCard } from "@/components/fleet-view";
+import { HarborNavigation } from "@/components/harbor-navigation";
 import { TallerEconomyCard } from "@/components/taller-economy";
 import { MissionReservesCard } from "@/components/mission-channels";
 import { TallerScenarioCard } from "@/components/taller-scenario";
@@ -19,6 +19,15 @@ import {
   tallerThreshold,
 } from "@/lib/taller-threshold";
 import { useHarbor } from "@/lib/store";
+import { cn } from "@/lib/utils";
+
+const TALLER_VIEWS = [
+  { id: "economia", label: "Economía" },
+  { id: "islas", label: "Islas" },
+  { id: "flota", label: "Flota" },
+  { id: "simulador", label: "Simulador" },
+] as const;
+type TallerView = (typeof TALLER_VIEWS)[number]["id"];
 
 export function TallerBench() {
   const pulse = useHarbor((s) => s.pulse);
@@ -39,6 +48,8 @@ export function TallerBench() {
     },
   });
 
+  const [view, setView] = useState<TallerView>("economia");
+
   // Shared city seed/sim between Ciudad and Bienes vistos — one source of
   // truth so Usar conteos (save-count chip) also feeds the comercio grid.
   const [mode, setMode] = useState<SimMode>("campaign");
@@ -58,43 +69,77 @@ export function TallerBench() {
 
   return (
     <div className="min-h-dvh bg-background" data-visual="taller">
-      <header className="border-b border-border bg-card px-4 py-3 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <p className="font-display text-lg leading-none font-semibold tracking-tight">
-            Anno 1800 Buddy
-          </p>
-          <Link to="/" className="ml-auto inline-flex h-11 items-center text-sm text-primary">
-            Inicio
-          </Link>
-          <Link to="/diario" className="inline-flex h-11 items-center text-sm text-primary">
-            Diario
-          </Link>
+      <div className="border-b border-border bg-card px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <HarborNavigation />
         </div>
-      </header>
-      <main className="mx-auto flex max-w-lg flex-col gap-8 px-4 py-8 sm:px-6">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Taller
-        </p>
+      </div>
+      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6">
         <article className="hero-orla rounded-xl p-5 sm:p-7">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Taller
+          </p>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Umbral</h1>
           <TallerStamp stamp={stamp} />
         </article>
-        <TallerGoodsBalance mode={mode} seed={seed} stats={stats} />
-        <TallerEconomyCard />
-        <FleetViewCard />
-        <MissionReservesCard />
-        <TallerScenarioCard />
-        <CampaignPicker />
-        <IslandHistoryCard />
-        <NativeProductionCard />
-        <TallerCity
-          mode={mode}
-          onModeChange={setMode}
-          stats={stats}
-          seedIslands={seed.islands}
-          notice={notice}
-          onUseSaveCounts={onUseSaveCounts}
-        />
+
+        <div
+          role="tablist"
+          aria-label="Vistas del taller"
+          className="flex flex-wrap gap-2 border-b border-border pb-3"
+        >
+          {TALLER_VIEWS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={view === item.id}
+              data-taller-view={item.id}
+              onClick={() => setView(item.id)}
+              className={cn(
+                "inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium",
+                view === item.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground hover:bg-secondary",
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {view === "economia" ? (
+          <div className="flex flex-col gap-6 xl:grid xl:grid-cols-2 xl:items-start xl:gap-6">
+            <TallerGoodsBalance mode={mode} seed={seed} stats={stats} />
+            <TallerEconomyCard />
+            <NativeProductionCard />
+          </div>
+        ) : null}
+
+        {view === "islas" ? (
+          <div className="flex flex-col gap-6">
+            <CampaignPicker />
+            <IslandHistoryCard />
+            <TallerCity
+              mode={mode}
+              onModeChange={setMode}
+              stats={stats}
+              seedIslands={seed.islands}
+              notice={notice}
+              onUseSaveCounts={onUseSaveCounts}
+            />
+          </div>
+        ) : null}
+
+        {view === "flota" ? (
+          <div className="flex flex-col gap-6 xl:grid xl:grid-cols-2 xl:items-start xl:gap-6">
+            <FleetViewCard />
+            <MissionReservesCard />
+          </div>
+        ) : null}
+
+        {view === "simulador" ? <TallerScenarioCard /> : null}
+
         <p className="text-xs leading-relaxed text-muted-foreground">
           Ratios estáticos {TALLER_RATIOS_VERSION} (wiki CC-BY-SA, no params.js de NiHoel).{" "}
           <a href={TALLER_WIKI} target="_blank" rel="noreferrer" className="underline">
