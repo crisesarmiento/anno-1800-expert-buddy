@@ -181,8 +181,48 @@
                           "guid": { "type": "integer" },
                           "id": { "type": "string", "minLength": 1, "maxLength": 48 },
                           "name": { "type": "string", "minLength": 1, "maxLength": 80 },
-                          "amount": { "type": "integer" }
+                          "amount": { "type": "integer" },
+                          "isLoading": { "type": "boolean" }
                         }
+                      }
+                    }
+                  }
+                }
+              },
+              "ships": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1, "maxLength": 80 }
+                  }
+                }
+              },
+              "delivery": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["visitCount", "lastExecutionTime", "goods"],
+                "properties": {
+                  "visitCount": { "type": "integer", "minimum": 1 },
+                  "lastExecutionTime": { "type": "integer" },
+                  "intervalMsMedian": { "type": "integer", "minimum": 1 },
+                  "goods": {
+                    "type": "array",
+                    "maxItems": 20,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["guid", "visitCount", "medianAbsAmount", "lastAmount"],
+                      "properties": {
+                        "guid": { "type": "integer" },
+                        "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+                        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+                        "visitCount": { "type": "integer", "minimum": 0 },
+                        "medianAbsAmount": { "type": "integer", "minimum": 0 },
+                        "lastAmount": { "type": "integer" }
                       }
                     }
                   }

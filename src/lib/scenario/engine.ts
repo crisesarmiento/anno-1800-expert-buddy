@@ -458,6 +458,7 @@ function transportSurplus(
     return alt;
   }
   if (picked.origin.transportToConsumerTMin == null) {
+    // Configured cargo, stock and observed visits are not throughput.
     alt.missing.push("transport-capacity");
     alt.logisticsViable = null;
     if (picked.origin.routeToConsumerOk === false) {

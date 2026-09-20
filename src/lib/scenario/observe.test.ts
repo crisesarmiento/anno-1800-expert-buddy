@@ -90,4 +90,57 @@ describe("observeScenario", () => {
     assert.equal(origin?.reservedExportTMin, null);
     assert.equal(origin?.transportToConsumerTMin, null);
   });
+
+  it("applies only an explicit manual transport rate, never configured cargo", () => {
+    const live = snap({
+      telemetry: {
+        routes: [
+          {
+            name: "Pescado",
+            ownerId: 0,
+            shipCount: 1,
+            stops: [
+              { areaId: 8451, goods: [{ guid: 1010200, id: "fish", name: "Fish", amount: 50 }] },
+              { areaId: 9219, goods: [{ guid: 1010200, id: "fish", name: "Fish", amount: 50 }] },
+            ],
+            delivery: {
+              visitCount: 4,
+              lastExecutionTime: 1000,
+              intervalMsMedian: 240000,
+              goods: [{ guid: 1010200, visitCount: 4, medianAbsAmount: 12, lastAmount: 12 }],
+            },
+          },
+        ],
+      },
+      islandSnapshots: [
+        {
+          regionId: 180023,
+          areaId: 8451,
+          ownerId: 0,
+          name: "Origen",
+          nameSource: "city-name",
+          coverage: { identity: { source: "save" } },
+        },
+        {
+          regionId: 180023,
+          areaId: 9219,
+          ownerId: 0,
+          name: "Destino",
+          nameSource: "city-name",
+          coverage: { identity: { source: "save" } },
+        },
+      ],
+    });
+    const auto = observeScenario({ snapshot: live, consumerId: "180023:9219", goodId: "fish" });
+    const origin = auto.islands.find((row) => row.id === "180023:8451");
+    assert.equal(origin?.transportToConsumerTMin, null);
+    const manual = observeScenario({
+      snapshot: live,
+      consumerId: "180023:9219",
+      goodId: "fish",
+      transportTMin: 2,
+    });
+    assert.equal(manual.islands.find((row) => row.id === "180023:8451")?.transportToConsumerTMin, 2);
+    assert.equal(manual.islands.find((row) => row.id === "180023:9219")?.transportToConsumerTMin, null);
+  });
 });

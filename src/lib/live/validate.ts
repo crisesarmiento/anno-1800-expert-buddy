@@ -36,6 +36,9 @@ import {
   type LiveSnapshot,
   type LiveSource,
   type LiveTelemetry,
+  type LiveRouteDelivery,
+  type LiveRouteDeliveryGood,
+  type LiveRouteShip,
   type LiveTradeRoute,
   type LiveWorkforce,
 } from "./types.ts";
@@ -262,10 +265,61 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
               const goodName = clipName(goodValue.name, 80);
               if (goodId) good.id = goodId;
               if (goodName) good.name = goodName;
+              if (typeof goodValue.isLoading === "boolean") good.isLoading = goodValue.isLoading;
               stop.goods.push(good);
             }
           }
           route.stops.push(stop);
+        }
+      }
+      if (Array.isArray(item.ships)) {
+        const ships: LiveRouteShip[] = [];
+        for (const shipValue of item.ships.slice(0, 8)) {
+          if (!asRecord(shipValue)) continue;
+          const shipName = clipName(shipValue.name, 80);
+          if (!shipName) continue;
+          ships.push({ name: shipName });
+        }
+        if (ships.length) route.ships = ships;
+      }
+      if (asRecord(item.delivery)) {
+        const visitCount = Number(item.delivery.visitCount);
+        const lastExecutionTime = Number(item.delivery.lastExecutionTime);
+        if (Number.isFinite(visitCount) && visitCount > 0 && Number.isFinite(lastExecutionTime)) {
+          const delivery: LiveRouteDelivery = {
+            visitCount: Math.trunc(visitCount),
+            lastExecutionTime: Math.trunc(lastExecutionTime),
+            goods: [],
+          };
+          const interval = Number(item.delivery.intervalMsMedian);
+          if (Number.isFinite(interval) && interval > 0) {
+            delivery.intervalMsMedian = Math.trunc(interval);
+          }
+          if (Array.isArray(item.delivery.goods)) {
+            for (const goodValue of item.delivery.goods.slice(0, 20)) {
+              if (!asRecord(goodValue)) continue;
+              const guid = Number(goodValue.guid);
+              const goodVisits = Number(goodValue.visitCount);
+              const medianAbsAmount = Number(goodValue.medianAbsAmount);
+              const lastAmount = Number(goodValue.lastAmount);
+              if (!Number.isFinite(guid) || !Number.isFinite(goodVisits) || !Number.isFinite(medianAbsAmount)) {
+                continue;
+              }
+              if (!Number.isFinite(lastAmount)) continue;
+              const row: LiveRouteDeliveryGood = {
+                guid: Math.trunc(guid),
+                visitCount: Math.max(0, Math.trunc(goodVisits)),
+                medianAbsAmount: Math.max(0, Math.trunc(medianAbsAmount)),
+                lastAmount: Math.trunc(lastAmount),
+              };
+              const rowId = clipName(goodValue.id, 48);
+              const rowName = clipName(goodValue.name, 80);
+              if (rowId) row.id = rowId;
+              if (rowName) row.name = rowName;
+              delivery.goods.push(row);
+            }
+          }
+          route.delivery = delivery;
         }
       }
       routes.push(route);

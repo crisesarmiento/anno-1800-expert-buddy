@@ -12,12 +12,35 @@ import { HarborCard, IconWell } from "@/components/harbor-card";
 import { LanguageSelect } from "@/components/language-select";
 import { LiveStatus } from "@/components/live-status";
 import { Badge } from "@/components/ui/badge";
+import { fill, type UiDict } from "@/lib/i18n";
 import { useHarbor } from "@/lib/store";
 import { routeAnchor } from "@/lib/home-priorities";
+import { inspectRouteLogistics, type LoadDirection, type RouteSupplyKind } from "@/lib/trade-route-logistics";
 import { tradeRouteHealth, uniqueTradeGoods } from "@/lib/trade-route-health";
+import { useT } from "@/lib/use-t";
+
+function honestyLabel(t: UiDict, level: "confirmed" | "observed" | "inferred") {
+  if (level === "confirmed") return t.routes.confirmed;
+  if (level === "observed") return t.routes.observed;
+  return t.routes.inferred;
+}
+
+function directionLabel(t: UiDict, direction: LoadDirection) {
+  if (direction === "load") return t.routes.load;
+  if (direction === "unload") return t.routes.unload;
+  return t.routes.directionUnknown;
+}
+
+function supplyCopy(t: UiDict, kind: RouteSupplyKind) {
+  if (kind === "configured-only") return t.routes.configuredOnly;
+  if (kind === "observed-partial") return t.routes.observedPartial;
+  if (kind === "observed") return t.routes.observedOk;
+  return null;
+}
 
 export function TradeRoutes() {
   const snapshot = useHarbor((state) => state.liveSnapshot);
+  const t = useT();
   const routes = (snapshot?.telemetry?.routes ?? []).filter(
     (route) => route.ownerId == null || route.ownerId === 0,
   );
@@ -26,6 +49,7 @@ export function TradeRoutes() {
     route,
     health: tradeRouteHealth(route, goodsChanges),
     goods: uniqueTradeGoods(route),
+    logistics: inspectRouteLogistics(route, snapshot),
   }));
   const confirmedIssues = routeRows.filter((row) => row.health.level === "confirmed").length;
   const stockSignals = routeRows.filter((row) => row.health.level === "watch").length;
@@ -41,15 +65,13 @@ export function TradeRoutes() {
           </IconWell>
           <div className="min-w-0">
             <p className="font-display text-lg leading-none font-semibold tracking-tight">
-              Rutas comerciales
+              {t.routes.title}
             </p>
-            <p className="mt-1 truncate text-xs text-mist">
-              Configuración leída del último guardado
-            </p>
+            <p className="mt-1 truncate text-xs text-mist">{t.routes.subtitle}</p>
           </div>
           <LanguageSelect className="ml-auto" />
           <Link to="/" className="inline-flex min-h-11 items-center text-sm text-primary">
-            Volver
+            {t.backDesk}
           </Link>
         </div>
       </header>
@@ -59,34 +81,35 @@ export function TradeRoutes() {
 
         {routes.length === 0 ? (
           <HarborCard
-            kicker="Rutas"
-            title="Todavía no hay rutas leídas"
-            hint="Conectá harbor-live.json después de que el vigilante lea un guardado. Esta pantalla no inventa rutas manuales."
+            kicker={t.routes.title}
+            title={t.routes.emptyTitle}
+            hint={t.routes.emptyHint}
             icon={<Route className="size-5" />}
           />
         ) : (
           <>
             <div className="grid gap-3 sm:grid-cols-3">
               <HarborCard
-                kicker="Tus rutas"
+                kicker={t.routes.yourRoutes}
                 title={String(routes.length)}
                 icon={<Route className="size-5" />}
               />
               <HarborCard
-                kicker="Barcos asignados"
+                kicker={t.routes.assignedShips}
                 title={String(ships)}
                 icon={<Ship className="size-5" />}
               />
               <HarborCard
-                kicker="Revisar"
+                kicker={t.routes.review}
                 title={String(issues)}
-                hint={`${confirmedIssues} de configuración · ${stockSignals} por stock global`}
+                hint={fill(t.routes.reviewHint, confirmedIssues, stockSignals)}
                 icon={<AlertTriangle className="size-5" />}
               />
             </div>
 
-            <section className="flex flex-col gap-3" aria-label="Rutas del jugador">
-              {routeRows.map(({ route, health, goods }, index) => {
+            <section className="flex flex-col gap-3" aria-label={t.routes.yourRoutes}>
+              {routeRows.map(({ route, health, goods, logistics }, index) => {
+                const supply = supplyCopy(t, logistics.supplyKind);
                 return (
                   <article
                     id={routeAnchor(route, index)}
@@ -109,13 +132,19 @@ export function TradeRoutes() {
                           ) : (
                             <Badge variant="ok">
                               <CheckCircle2 className="size-3.5" aria-hidden="true" />
-                              Configurada
+                              {t.routes.configured}
                             </Badge>
                           )}
                         </div>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {route.shipCount} {route.shipCount === 1 ? "barco" : "barcos"} ·{" "}
-                          {route.stops.length} {route.stops.length === 1 ? "parada" : "paradas"}
+                          {route.shipCount} {route.shipCount === 1 ? t.routes.oneShip : t.routes.manyShips}{" "}
+                          · {route.stops.length}{" "}
+                          {route.stops.length === 1 ? t.routes.oneStop : t.routes.manyStops}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {logistics.ships.length
+                            ? logistics.ships.join(" · ")
+                            : t.routes.noShipNames}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -126,49 +155,104 @@ export function TradeRoutes() {
                             </Badge>
                           ))
                         ) : (
-                          <Badge variant="muted">Sin bienes</Badge>
+                          <Badge variant="muted">{t.routes.noGoods}</Badge>
                         )}
                       </div>
                     </div>
                     {health.level === "watch" ? (
                       <div className="mt-4 rounded-lg border border-ochre/30 bg-ochre/10 p-3">
                         <p className="text-sm font-medium">
-                          Entre guardados: {health.change.previousAmount} → {health.change.amount} (
-                          {health.change.delta})
+                          {fill(
+                            t.routes.stockBetween,
+                            health.change.previousAmount,
+                            health.change.amount,
+                            health.change.delta,
+                          )}
                         </p>
                         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                          Es stock global del save. Revisá carga y descarga, pero también producción
-                          y consumo: esta señal no prueba que la ruta sea la causa.
+                          {t.routes.stockWatch}
                         </p>
                       </div>
                     ) : null}
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {route.stops.map((stop, stopIndex) => (
-                        <div
-                          key={`${stop.areaId ?? "stop"}-${stopIndex}`}
-                          className="rounded-lg bg-muted/60 p-3"
-                        >
-                          <p className="flex items-center gap-2 text-sm font-medium">
-                            <Warehouse className="size-4 text-mist" aria-hidden="true" />
-                            Parada {stopIndex + 1}
-                            {stop.areaId != null ? (
-                              <span className="text-xs text-muted-foreground">
-                                Área {stop.areaId}
-                              </span>
-                            ) : null}
+                    {supply && health.level !== "confirmed" ? (
+                      <p className="mt-4 text-sm leading-relaxed" data-route-supply={logistics.supplyKind}>
+                        <span className="text-xs tracking-wide text-muted-foreground uppercase">
+                          {logistics.supplyKind === "configured-only"
+                            ? honestyLabel(t, "confirmed")
+                            : honestyLabel(t, "observed")}
+                        </span>
+                        <span className="mt-1 block">{supply}</span>
+                      </p>
+                    ) : null}
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      {logistics.quantities.map((row) => (
+                        <div key={row.guid} className="rounded-lg bg-muted/60 p-3">
+                          <p className="text-sm font-medium">{row.name}</p>
+                          <p className="mt-2 text-xs text-muted-foreground">{t.routes.nominal}</p>
+                          <p className="text-sm">{t.scenario.unknownAmount}</p>
+                          <p className="mt-2 text-xs text-muted-foreground">{t.routes.configuredQty}</p>
+                          <p className="text-sm">
+                            {row.configured} · {honestyLabel(t, "confirmed")}
                           </p>
-                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                            {stop.goods.length
-                              ? stop.goods
-                                  .map(
-                                    (good) => `${good.name ?? `GUID ${good.guid}`} ${good.amount}`,
-                                  )
-                                  .join(" · ")
-                              : "Sin bienes configurados en el save"}
+                          <p className="mt-2 text-xs text-muted-foreground">{t.routes.realized}</p>
+                          <p className="text-sm">
+                            {row.realizedMedian == null
+                              ? t.scenario.unknownAmount
+                              : `${row.realizedMedian} · ${honestyLabel(t, "observed")}`}
                           </p>
                         </div>
                       ))}
                     </div>
+                    {logistics.delivery ? (
+                      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                        {fill(t.routes.visits, logistics.delivery.visitCount)}
+                        {logistics.delivery.intervalMsMedian
+                          ? ` · ${fill(
+                              t.routes.interval,
+                              Math.round((logistics.delivery.intervalMsMedian / 60_000) * 10) / 10,
+                            )}`
+                          : ""}
+                        {logistics.observedTMin != null
+                          ? ` · ${honestyLabel(t, "inferred")} ${logistics.observedTMin} t/min`
+                          : ""}
+                      </p>
+                    ) : null}
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {route.stops.map((stop, stopIndex) => {
+                        const island = stop.areaId != null ? logistics.islandByAreaId.get(stop.areaId) : null;
+                        return (
+                          <div
+                            key={`${stop.areaId ?? "stop"}-${stopIndex}`}
+                            className="rounded-lg bg-muted/60 p-3"
+                          >
+                            <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                              <Warehouse className="size-4 text-mist" aria-hidden="true" />
+                              {fill(t.routes.stopLabel, stopIndex + 1)}
+                              {island ? (
+                                <span className="text-xs text-muted-foreground">{island.name}</span>
+                              ) : stop.areaId != null ? (
+                                <span className="text-xs text-muted-foreground">
+                                  {fill(t.routes.area, stop.areaId)}
+                                </span>
+                              ) : null}
+                            </p>
+                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                              {stop.goods.length
+                                ? stop.goods
+                                    .map((good) => {
+                                      const dir = loadDirectionLine(t, good.isLoading);
+                                      return `${good.name ?? `GUID ${good.guid}`} ${good.amount} · ${dir}`;
+                                    })
+                                    .join(" · ")
+                                : t.routes.noStopGoods}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                      {t.routes.guaranteedNever} {t.routes.unknownNominal}
+                    </p>
                   </article>
                 );
               })}
@@ -176,12 +260,14 @@ export function TradeRoutes() {
           </>
         )}
 
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          “Sin barco”, “una parada” y “sin bienes” son fallos confirmados por el save. Una caída de
-          stock sólo es una señal global entre guardados: no mide viajes ni prueba que esa ruta sea
-          la causa.
-        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{t.routes.footer}</p>
       </main>
     </div>
   );
+}
+
+function loadDirectionLine(t: UiDict, isLoading: boolean | undefined) {
+  if (isLoading === true) return `${directionLabel(t, "load")} · ${honestyLabel(t, "confirmed")}`;
+  if (isLoading === false) return `${directionLabel(t, "unload")} · ${honestyLabel(t, "confirmed")}`;
+  return directionLabel(t, "unknown");
 }

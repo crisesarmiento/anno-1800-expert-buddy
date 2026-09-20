@@ -44,6 +44,36 @@ export type LiveTradeRouteGood = {
   id?: string;
   name?: string;
   amount: number;
+  /**
+   * Raw `IsLoading` byte when the save wrote it.
+   * Absent stays omitted — never defaulted to load or unload.
+   */
+  isLoading?: boolean;
+};
+
+/** Player-facing ship name, only when VehicleName joins a route id. */
+export type LiveRouteShip = {
+  name: string;
+};
+
+export type LiveRouteDeliveryGood = {
+  guid: number;
+  id?: string;
+  name?: string;
+  visitCount: number;
+  medianAbsAmount: number;
+  lastAmount: number;
+};
+
+/**
+ * Compact history from PassiveTrade/History/TradeRouteEntries.
+ * Signed lastAmount is the last finalized visit; it is not load/unload.
+ */
+export type LiveRouteDelivery = {
+  visitCount: number;
+  lastExecutionTime: number;
+  intervalMsMedian?: number;
+  goods: LiveRouteDeliveryGood[];
 };
 
 /** Change in save-wide stock between two distinct saves from the same session. */
@@ -67,6 +97,8 @@ export type LiveTradeRoute = {
   ownerId?: number;
   shipCount: number;
   stops: LiveTradeRouteStop[];
+  ships?: LiveRouteShip[];
+  delivery?: LiveRouteDelivery;
 };
 
 export type LiveConnection = {

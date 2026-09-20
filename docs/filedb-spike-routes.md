@@ -80,6 +80,7 @@ data.a7s
 - 57 rutas leídas. Nombres reales encontrados (no inventados): *"Noz - Hot"*, *"Pra - Str"*, *"Ron Tri - Por"*, *"Caña de azúcar Tri - Por"*, *"Lúpulo Les - La"*, *"Pescado Pra - Wan"*, etc. Son nombres **automáticos** del juego (abreviatura de isla origen/destino, a veces con el bien principal) — `IsDefaultName` es `true` en las 57, es decir, **el jugador tampoco renombró manualmente ninguna ruta** en este save. Son reales y útiles para mostrar, pero no son "nombres puestos por el jugador"; no confundir con lo que pediría la pregunta 1 para islas.
 - 25/57 rutas tienen `GoodInfos` poblado con guid/amount reales; el resto son rutas nuevas/incompletas (plantilla, sin bienes asignados todavía).
 - `Ships` decodificado y verificado con hex dump manual contra el buffer crudo (no solo con el parser) antes de confiar en el reader.
+- Etapa 4: `GoodInfos/IsLoading` (1 byte) contrastado — `0` = descarga; el campo falta en la otra parada y **nunca** se vio `IsLoading=1` en ese save, así que la carga no se infiere. Nombres de barco: `VehicleName` + `PropertyTradeRouteVehicle/TradeRouteID` (los ids de `Ships` no matchean el `ID` int64 del GameObject).
 
 Barcos (para atar buque ↔ ruta), también anidados — **CONFIRMADO**, path exacto:
 
@@ -88,7 +89,7 @@ GameSessionManager / AreaManagers/AreaManager_3/AreaObjectManager/GameObject/obj
   Nameable / VehicleName        → utf16, CONFIRMADO. 72 hits reales: "Empresa", "Gorgona", "Campeón", "Ventolera", "Salvaje", "Olimpia", "Heraldo", "Cangrejo Sucio", "Conflicto", "Tiburón Tosco", …
 ```
 
-Historia pasiva (no es la ruta activa): `PassiveTrade/History/TradeRouteEntries` — no se re-probó, sigue fuera de scope (no es el menú de rutas).
+Historia pasiva (no es la ruta activa): `PassiveTrade/History/TradeRouteEntries` — **re-probado en etapa 4** contra `tmp-saves/stage1-real.a7s`: 724 visitas con `RouteID`, `ExecutionTime`, `Finalized`, `TraderShip` (GUID de tipo, no instancia) y `TradedGoods` con `GoodAmount` con signo. El JSON publica un resumen por ruta, no las 724 filas.
 
 Lua in-game (`ts.TradeRoute.GetRoute`) **queda fuera de techo**. No es path FileDB.
 
