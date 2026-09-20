@@ -7,6 +7,8 @@ import {
   LIVE_MAX_ISLAND_BUILDINGS,
   LIVE_MAX_ISLAND_SNAPSHOTS,
   LIVE_MAX_ISLAND_STOCK,
+  LIVE_MAX_INSTANCE_ID,
+  LIVE_MAX_QUEST_OBJECTIVES,
   LIVE_MAX_QUESTS,
   LIVE_MAX_TITLE,
   LIVE_SCHEMA,
@@ -32,7 +34,11 @@ import {
   type LiveProductionMetric,
   type LivePulseHint,
   type LiveQuest,
+  type LiveQuestObjective,
+  type LiveQuestProgress,
   type LiveQuestState,
+  type LiveQuestTimer,
+  type LiveQuestType,
   type LiveSnapshot,
   type LiveSource,
   type LiveTelemetry,
@@ -44,7 +50,8 @@ import {
 } from "./types.ts";
 
 const JSON_MIME = new Set(["application/json", "text/plain"]);
-const QUEST_STATES = new Set<LiveQuestState>(["active", "ready", "done"]);
+const QUEST_STATES = new Set<LiveQuestState>(["active", "ready", "done", "failed", "expired"]);
+const QUEST_TYPES = new Set<LiveQuestType>(["story", "delivery", "errand", "timer", "unknown"]);
 const SOURCES = new Set<LiveSource>(["telemetry", "save", "file"]);
 const COINS = new Set(["unknown", "up", "down"]);
 const HOUSES = new Set(["unknown", "ok", "yellow", "empty"]);
@@ -120,7 +127,66 @@ function normalizeQuest(value: unknown, locale?: string | null): LiveQuest | { e
   if (typeof value.objective === "string" && value.objective.trim()) {
     quest.objective = value.objective.trim().slice(0, 400);
   }
+  const instanceId = clipName(value.instanceId, LIVE_MAX_INSTANCE_ID);
+  if (instanceId) quest.instanceId = instanceId;
+  if (typeof value.guid === "number" && Number.isSafeInteger(value.guid) && value.guid > 0) {
+    quest.guid = Math.trunc(value.guid);
+  }
+  if (QUEST_TYPES.has(value.type as LiveQuestType)) {
+    quest.type = value.type as LiveQuestType;
+  }
+  const progress = normalizeQuestProgress(value.progress);
+  if (progress) quest.progress = progress;
+  const timer = normalizeQuestTimer(value.timer);
+  if (timer) quest.timer = timer;
+  const objectives = normalizeQuestObjectives(value.objectives);
+  if (objectives) quest.objectives = objectives;
   return quest;
+}
+
+function normalizeQuestProgress(value: unknown): LiveQuestProgress | undefined {
+  if (!asRecord(value)) return undefined;
+  const current = Number(value.current);
+  const required = Number(value.required);
+  if (!Number.isFinite(current) || !Number.isFinite(required) || required < 0 || current < 0) {
+    return undefined;
+  }
+  return { current: Math.trunc(current), required: Math.trunc(required) };
+}
+
+function normalizeQuestTimer(value: unknown): LiveQuestTimer | undefined {
+  if (!asRecord(value)) return undefined;
+  const remainingMs = Number(value.remainingMs);
+  if (!Number.isFinite(remainingMs) || remainingMs < 0) return undefined;
+  const timer: LiveQuestTimer = { remainingMs: Math.trunc(remainingMs) };
+  const observedAt = parseOptionalIso(value.observedAt);
+  if (observedAt) timer.observedAt = observedAt;
+  return timer;
+}
+
+function normalizeQuestObjectives(value: unknown): LiveQuestObjective[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const objectives: LiveQuestObjective[] = [];
+  for (const item of value.slice(0, LIVE_MAX_QUEST_OBJECTIVES)) {
+    if (!asRecord(item)) continue;
+    const objective: LiveQuestObjective = {};
+    const id = clipName(item.id, 48);
+    const text = typeof item.text === "string" ? item.text.trim().slice(0, 200) : "";
+    const goodId = clipName(item.goodId, 48);
+    const goodName = clipName(item.goodName, 80);
+    if (id) objective.id = id;
+    if (text) objective.text = text;
+    if (goodId) objective.goodId = goodId;
+    if (goodName) objective.goodName = goodName;
+    if (typeof item.current === "number" && Number.isFinite(item.current) && item.current >= 0) {
+      objective.current = Math.trunc(item.current);
+    }
+    if (typeof item.required === "number" && Number.isFinite(item.required) && item.required >= 0) {
+      objective.required = Math.trunc(item.required);
+    }
+    if (Object.keys(objective).length) objectives.push(objective);
+  }
+  return objectives.length ? objectives : undefined;
 }
 
 function clipName(value: unknown, max: number) {

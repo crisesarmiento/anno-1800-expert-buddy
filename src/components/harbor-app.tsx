@@ -21,6 +21,7 @@ import { IslandFocusChips } from "@/components/island-focus";
 import { SandboxModeChip } from "@/components/sandbox-mode";
 import { PowerUpSection } from "@/components/live-panel";
 import { MissionFinder } from "@/components/mission-finder";
+import { MissionChannels } from "@/components/mission-channels";
 import { OverbuildBrakeNotice } from "@/components/overbuild-brake-notice";
 import { SessionDeskSurface } from "@/components/session-desk-surface";
 import { Stamp } from "@/components/stamps";
@@ -368,6 +369,7 @@ function Welcome() {
 
       <MissionFinder />
       <PowerUpSection />
+      <MissionChannels />
       <HarborFooter />
     </div>
   );
@@ -549,7 +551,10 @@ function SessionDesk() {
         <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:gap-8">
           <div>
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {t.session.thisSession}
+              {t.missions.manual}
+            </p>
+            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+              {t.missions.manualHint}
             </p>
             <ol className="mt-2 flex flex-col gap-2">
               {mission.do.map((item, index) => {

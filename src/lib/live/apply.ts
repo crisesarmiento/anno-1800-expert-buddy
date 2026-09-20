@@ -1,6 +1,6 @@
-import { missions } from "../data/campaign.ts";
 import type { Pulse } from "../play.ts";
-import type { LiveMatch, LiveSnapshot } from "./types.ts";
+import { completedFromSnapshot, readMissionProgress } from "../missions/progress.ts";
+import type { LiveMatch, LiveSnapshot, MissionChannel } from "./types.ts";
 
 export function applyLiveToProgress(
   snapshot: LiveSnapshot,
@@ -11,7 +11,20 @@ export function applyLiveToProgress(
   completed: string[];
   checks: Record<string, number[]>;
   pulse: Partial<Pulse>;
+  channel: MissionChannel;
 } {
+  const view = readMissionProgress(snapshot, match);
+  if (match.kind === "suggested") {
+    return {
+      matched: false,
+      missionId: null,
+      completed: [],
+      checks: {},
+      pulse: {},
+      channel: "suggestion",
+    };
+  }
+
   if (match.kind !== "confirmed" || !match.missionId || match.confidence < 3) {
     return {
       matched: false,
@@ -19,14 +32,8 @@ export function applyLiveToProgress(
       completed: [],
       checks: {},
       pulse: {},
+      channel: view.manualFallback ? "manual" : "save-read",
     };
-  }
-
-  const index = missions.findIndex((mission) => mission.id === match.missionId);
-  const earlier = index > 0 ? missions.slice(0, index) : [];
-  const checks: Record<string, number[]> = {};
-  for (const mission of earlier) {
-    checks[mission.id] = mission.do.map((_, i) => i);
   }
 
   const pulse: Partial<Pulse> = { looking: "quest" };
@@ -35,11 +42,16 @@ export function applyLiveToProgress(
     pulse.houses = snapshot.pulseHint.houses;
   }
 
+  const saveCompleted = completedFromSnapshot(snapshot);
+  const channel: MissionChannel = view.saveRead.length > 0 ? "save-read" : "manual";
+
   return {
     matched: true,
     missionId: match.missionId,
-    completed: earlier.map((mission) => mission.id),
-    checks,
+    // Only explicit state:"done" rows. Earlier campaign missions are not inferred.
+    completed: saveCompleted,
+    checks: {},
     pulse,
+    channel,
   };
 }

@@ -3,19 +3,51 @@ export const LIVE_GAME = "anno-1800" as const;
 export const LIVE_MAX_BYTES = 400 * 1024;
 export const LIVE_MAX_QUESTS = 40;
 export const LIVE_MAX_TITLE = 200;
+export const LIVE_MAX_QUEST_OBJECTIVES = 8;
+export const LIVE_MAX_INSTANCE_ID = 80;
 export const LIVE_MAX_ISLAND_SNAPSHOTS = 40;
 export const LIVE_MAX_ISLAND_STOCK = 24;
 export const LIVE_MAX_ISLAND_BUILDINGS = 40;
 
 export type LiveSource = "telemetry" | "save" | "file";
-export type LiveQuestState = "active" | "ready" | "done";
+export type LiveQuestState = "active" | "ready" | "done" | "failed" | "expired";
+export type LiveQuestType = "story" | "delivery" | "errand" | "timer" | "unknown";
 export type LiveCoins = "unknown" | "up" | "down";
 export type LiveHouses = "unknown" | "ok" | "yellow" | "empty";
+
+export type LiveQuestObjective = {
+  id?: string;
+  text?: string;
+  current?: number;
+  required?: number;
+  goodId?: string;
+  goodName?: string;
+};
+
+/**
+ * Remaining time frozen at the save. The app must not tick this with wall-clock.
+ */
+export type LiveQuestTimer = {
+  remainingMs: number;
+  observedAt?: string;
+};
+
+export type LiveQuestProgress = {
+  current: number;
+  required: number;
+};
 
 export type LiveQuest = {
   title: string;
   state: LiveQuestState;
   objective?: string;
+  /** Distinguishes repeated instances that share the same GUID. */
+  instanceId?: string;
+  guid?: number;
+  type?: LiveQuestType;
+  objectives?: LiveQuestObjective[];
+  progress?: LiveQuestProgress;
+  timer?: LiveQuestTimer;
 };
 
 export type LivePulseHint = {
@@ -279,6 +311,14 @@ export type LiveEconomy = {
 
 export type LiveMatchKind = "none" | "confirmed" | "suggested";
 export type LiveMatchSource = "none" | "quests" | "buildings";
+
+/**
+ * Three honest channels. Never mix them in copy or completion:
+ * - suggestion: campaign matcher / buildings. Never "misión completada".
+ * - manual: player checklist. Clearly labeled.
+ * - save-read: decoded instance/state from the JSON. Only when those fields exist.
+ */
+export type MissionChannel = "suggestion" | "manual" | "save-read";
 
 export type LiveMatch = {
   missionId: string | null;

@@ -74,8 +74,24 @@
         "required": ["title", "state"],
         "properties": {
           "title": { "type": "string", "minLength": 1, "maxLength": 200 },
-          "state": { "type": "string", "enum": ["active", "ready", "done"] },
-          "objective": { "type": "string", "minLength": 1, "maxLength": 400 }
+          "state": {
+            "type": "string",
+            "enum": ["active", "ready", "done", "failed", "expired"]
+          },
+          "objective": { "type": "string", "minLength": 1, "maxLength": 400 },
+          "instanceId": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "guid": { "type": "integer", "exclusiveMinimum": 0 },
+          "type": {
+            "type": "string",
+            "enum": ["story", "delivery", "errand", "timer", "unknown"]
+          },
+          "progress": { "$ref": "#/$defs/questProgress" },
+          "timer": { "$ref": "#/$defs/questTimer" },
+          "objectives": {
+            "type": "array",
+            "maxItems": 8,
+            "items": { "$ref": "#/$defs/questObjective" }
+          }
         }
       }
     },
@@ -257,6 +273,36 @@
     }
   },
   "$defs": {
+    "questProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "required"],
+      "properties": {
+        "current": { "type": "integer", "minimum": 0 },
+        "required": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "questTimer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remainingMs"],
+      "properties": {
+        "remainingMs": { "type": "integer", "minimum": 0 },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "questObjective": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "current": { "type": "integer", "minimum": 0 },
+        "required": { "type": "integer", "minimum": 0 },
+        "goodId": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "goodName": { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
     "namedHits": {
       "type": "array",
       "items": {
