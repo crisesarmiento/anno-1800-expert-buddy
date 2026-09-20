@@ -250,8 +250,8 @@ function packWatcherBundle() {
   let ps = readFileSync(join(outDir, "watch-harbor-live.ps1"), "utf8");
   if (ps.charCodeAt(0) === 0xfeff) ps = ps.slice(1);
   ps = ps.replace(/\r\n/g, "\n");
-  const catalog = readFileSync(join(outDir, "harbor-catalog.json"), "utf8").trim();
-  const guids = readFileSync(join(outDir, "harbor-guids.json"), "utf8").trim();
+  const catalog = readFileSync(join(outDir, "harbor-catalog.json"), "utf8").replace(/\r\n/g, "\n").trim();
+  const guids = readFileSync(join(outDir, "harbor-guids.json"), "utf8").replace(/\r\n/g, "\n").trim();
   const scanCs = readFileSync(join(root, "src/lib/live/a7s-scan.cs"), "utf8").replace(/\r\n/g, "\n").trim();
   writeFileSync(join(outDir, "a7s-scan.cs"), `${scanCs}\n`);
   const needle = "$titlesPath = Find-Catalog\n$catalog = Get-Content -LiteralPath $titlesPath -Raw -Encoding UTF8 | ConvertFrom-Json";
@@ -283,7 +283,7 @@ function packWatcherBundle() {
     "::HARBOR_WATCHER_SCRIPT_V1",
     "",
   ].join("\r\n");
-  writeFileSync(join(outDir, "watch-harbor-live.bat"), header + injected.replace(/\n/g, "\r\n"));
+  writeFileSync(join(outDir, "watch-harbor-live.bat"), header + injected.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n"));
   console.log("[pack-mod] bundled watcher bat");
 }
 
