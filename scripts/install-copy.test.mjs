@@ -24,6 +24,17 @@ test("install-harbor-buddy never suggests a blind path open — every candidate 
   }
 });
 
+test("watch-harbor-live.bat does not rename the source .ps1 when run from the repo checkout", () => {
+  const packMod = readFileSync(join(root, "scripts/pack-mod.mjs"), "utf8");
+  assert.match(watchBat, /if exist "%~dp0\.\.\\scripts\\pack-mod\.mjs"/);
+  assert.match(watchBat, /Dejo el \.ps1 donde esta/);
+  assert.match(watchBat, /else if exist "watch-harbor-live\.ps1"/);
+  assert.match(watchBat, /move \/Y "watch-harbor-live\.ps1" "watch-harbor-live\.ps1\.old"/);
+  assert.match(packMod, /dp0\.\.\\\\scripts\\\\pack-mod\.mjs/);
+  assert.match(packMod, /Dejo el \.ps1 donde esta/);
+  assert.match(packMod, /git restore public\/watch-harbor-live\.ps1/);
+});
+
 test("watch-harbor-live copy stays calm and specific about what it reads/writes, .bat mirrors the .ps1", () => {
   assert.match(watchPs1, /la leo, nunca la toco/);
   assert.match(watchPs1, /Dejá esta ventana abierta y jugá tranquilo/);

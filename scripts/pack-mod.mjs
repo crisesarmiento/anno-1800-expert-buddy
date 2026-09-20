@@ -237,6 +237,15 @@ packCatalog(packedMissions);
 
 function stampBom(name) {
   const dest = join(outDir, name);
+  if (!existsSync(dest)) {
+    console.error(`[pack-mod] missing ${dest}`);
+    if (name === "watch-harbor-live.ps1") {
+      console.error(
+        "[pack-mod] if you ran watch-harbor-live.bat from public/, restore: git restore public/watch-harbor-live.ps1",
+      );
+    }
+    process.exit(1);
+  }
   let text = readFileSync(dest, "utf8");
   if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
   writeFileSync(dest, `\uFEFF${text.replace(/\r?\n/g, "\r\n")}`);
@@ -273,7 +282,10 @@ function packWatcherBundle() {
     "setlocal EnableExtensions",
     "cd /d \"%~dp0\"",
     "echo Harbor Buddy vigilante 0.5.0 - un solo archivo",
-    "if exist \"watch-harbor-live.ps1\" (",
+    // public/ is both source and generated output; never move the canonical .ps1 there.
+    "if exist \"%~dp0..\\scripts\\pack-mod.mjs\" (",
+    "  echo Esta carpeta es el codigo del buddy. Dejo el .ps1 donde esta.",
+    ") else if exist \"watch-harbor-live.ps1\" (",
     "  echo Encontre un .ps1 viejo en esta carpeta. Lo renombro a .old para no usarlo.",
     "  move /Y \"watch-harbor-live.ps1\" \"watch-harbor-live.ps1.old\" >nul",
     ")",
