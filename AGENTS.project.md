@@ -84,6 +84,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Untrusted-input normalization: `src/lib/live/validate.ts`
 - Save/OCR writer: `public/watch-harbor-live.ps1` (Windows). `src/lib/live/a7s-snapshot.ts` is a research util, not the Windows writer.
 - Honesty helpers: `src/lib/live/evidence.ts`
+- Verified missions (three channels, frozen timer, suggested reserves): `src/lib/missions`
 - Local campaign history (IndexedDB, not the shared JSON): `src/lib/history`
 - Production analysis: `src/lib/native-production.ts`
 - Produce-or-import scenarios (pure, inferred): `src/lib/scenario/`
@@ -144,8 +145,8 @@ Prefer improvements that strengthen evidence without increasing setup:
 
 1. Installation/health diagnostics for the optional OCR server.
 2. Evidence freshness and per-island capture guidance.
-3. Etapa 5: misiones verificadas (instancia, progreso, temporizador) o fallback manual rotulado.
-4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links. Nominal ship cargo capacity is still unread.
+3. Etapa 6: inventario de flota y gasto militar, sin desarmar defensas por costo ni acciones automáticas.
+4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links. Nominal ship cargo capacity is still unread. Save-read quest instance/state from the watcher is still unread (`quests: []`).
 
 Do not pursue automatic route clicking, memory hooks, save mutation, or claims of real route
 throughput unless a new trustworthy data source is first demonstrated and documented.

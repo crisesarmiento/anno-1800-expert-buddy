@@ -60,6 +60,7 @@ describe("live mission match", () => {
     assert.equal(progress.matched, false);
     assert.equal(progress.missionId, null);
     assert.deepEqual(progress.completed, []);
+    assert.equal(progress.channel, "suggestion");
   });
 
   it("prefers the diary title over building inference", () => {

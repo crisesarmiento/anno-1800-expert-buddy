@@ -60,8 +60,8 @@ describe("harbor-live ingest", () => {
     const progress = applyLiveToProgress(result.snapshot, match);
     assert.equal(progress.matched, true);
     assert.equal(progress.missionId, "ch1-spark");
-    assert.ok(progress.completed.includes("pro-blast"));
-    assert.deepEqual(progress.checks["pro-blast"], [0, 1, 2]);
+    assert.deepEqual(progress.completed, []);
+    assert.deepEqual(progress.checks, {});
     assert.equal(progress.pulse.looking, "quest");
     assert.equal(progress.pulse.coins, "down");
     assert.equal(result.snapshot.telemetry?.buildings?.[0]?.id, "lumberjack");
@@ -136,6 +136,20 @@ describe("harbor-live ingest", () => {
     assert.ok(schema.properties.campaignId);
     assert.ok(schema.properties.simTime);
     assert.ok(schema.properties.economy);
+    assert.ok(
+      (
+        schema.properties.quests as {
+          items?: { properties?: { instanceId?: unknown; timer?: unknown } };
+        }
+      ).items?.properties?.instanceId,
+    );
+    assert.ok(
+      (
+        schema.properties.quests as {
+          items?: { properties?: { instanceId?: unknown; timer?: unknown } };
+        }
+      ).items?.properties?.timer,
+    );
     assert.equal(schema.properties.money, undefined);
     assert.equal(schema.$defs.economy.properties.income, undefined);
     assert.equal(schema.$defs.economy.properties.maintenance, undefined);

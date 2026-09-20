@@ -3,6 +3,7 @@ import { DiaryTitleChips } from "@/components/diary-chips";
 import { useHomeSaturatedTip } from "@/components/home-saturated-tip";
 import { IslandFocusChips } from "@/components/island-focus";
 import { PowerUpSection } from "@/components/live-panel";
+import { MissionChannels } from "@/components/mission-channels";
 import { InkSeal } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { constructionTipLine } from "@/lib/construction-tip";
@@ -151,6 +152,7 @@ export function SessionDesk() {
         <DiaryTitleChips activeId={missionId} onPick={setMissionId} />
       </div>
       <PowerUpSection />
+      <MissionChannels />
     </div>
   );
 }

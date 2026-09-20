@@ -1,6 +1,6 @@
 # Plan de implementación: asesor económico, logístico y militar
 
-Fecha: 2026-09-20. Estado: Etapa 0–2 en main. Etapa 3 (esta rama): catálogo incremental + motor de escenarios producir/importar en Taller. Etapas 4–6 no implementadas.
+Fecha: 2026-09-20. Estado: Etapa 0–4 en main. Etapa 5 (esta rama): misiones verificadas — tres canales, contrato opcional, fixtures de transición, fallback manual. Etapa 6 no implementada.
 Base revisada: main local `106afe1`. No se confirmó la punta remota por restricciones de conexión.
 
 ## Objetivo y decisiones

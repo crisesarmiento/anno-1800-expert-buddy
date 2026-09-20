@@ -158,7 +158,6 @@ export const useHarbor = create<HarborState>()(
           }),
         }),
       toggleCheck: (missionId, index) => {
-        if (isLiveLocked(get())) return;
         const current = get().checks[missionId] ?? [];
         const next = current.includes(index)
           ? current.filter((item) => item !== index)
@@ -267,8 +266,8 @@ export const useHarbor = create<HarborState>()(
           liveFileName: fileName ?? get().liveFileName,
           lastImportedAt: importedAt,
           missionId: progress.missionId,
-          completed: progress.completed,
-          checks: { ...get().checks, ...progress.checks },
+          // Save-read completions stay on the snapshot. Manual `completed` is not replaced,
+          // so an older save cannot inherit later ticks.
           pulse,
           samples: pushSample(get().samples, pulse),
           calm: "session",
