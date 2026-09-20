@@ -21,7 +21,9 @@ describe("Taller produce-or-import", () => {
     assert.match(card, /data-taller-scenario-good/);
     assert.match(card, /data-taller-scenario-verdict/);
     assert.match(card, /data-taller-scenario-next/);
+    assert.match(card, /data-taller-scenario-transport/);
     assert.match(card, /t\.scenario\.verdictMissing/);
+    assert.match(card, /t\.scenario\.transportManualHint/);
     assert.match(card, /t\.scenario\.stockNotSurplus/);
     assert.match(card, /t\.scenario\.noCut/);
   });
@@ -32,6 +34,9 @@ describe("Taller produce-or-import", () => {
       assert.equal(typeof dict.scenario.nextDatum, "string");
       assert.equal(typeof dict.scenario.expandLocal, "string");
       assert.equal(typeof dict.scenario.transport, "string");
+      assert.equal(typeof dict.scenario.transportManual, "string");
+      assert.equal(typeof dict.routes.guaranteedNever, "string");
+      assert.equal(typeof dict.routes.configuredOnly, "string");
     }
   });
 });

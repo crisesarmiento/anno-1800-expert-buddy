@@ -594,3 +594,96 @@ describe("trade route structural health", () => {
     assert.deepEqual(health, { level: "confirmed", message: "Sin barco asignado" });
   });
 });
+
+describe("stage 4 optional route logistics fields", () => {
+  it("keeps isLoading, ship names and delivery summaries when well-formed", () => {
+    const result = ingestLiveJsonText(
+      JSON.stringify({
+        schema: "harbor-live-v1",
+        source: "save",
+        updatedAt: "2026-09-20T12:00:00.000Z",
+        savedAt: "2026-09-20T11:50:00.000Z",
+        game: "anno-1800",
+        quests: [],
+        telemetry: {
+          routes: [
+            {
+              id: 26,
+              name: "Tablones La - Les",
+              ownerId: 0,
+              shipCount: 1,
+              ships: [{ name: "Conflicto" }, { name: "" }],
+              stops: [
+                { areaId: 8451, goods: [{ guid: 1010196, id: "timber", name: "Tablones", amount: 20 }] },
+                {
+                  areaId: 9219,
+                  goods: [
+                    {
+                      guid: 1010196,
+                      id: "timber",
+                      name: "Tablones",
+                      amount: 20,
+                      isLoading: false,
+                    },
+                  ],
+                },
+              ],
+              delivery: {
+                visitCount: 4,
+                lastExecutionTime: 31558000,
+                intervalMsMedian: 240000,
+                goods: [
+                  {
+                    guid: 1010196,
+                    id: "timber",
+                    name: "Tablones",
+                    visitCount: 4,
+                    medianAbsAmount: 12,
+                    lastAmount: -11,
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    const route = result.snapshot.telemetry?.routes?.[0];
+    assert.equal(route?.stops[0]?.goods[0]?.isLoading, undefined);
+    assert.equal(route?.stops[1]?.goods[0]?.isLoading, false);
+    assert.deepEqual(route?.ships, [{ name: "Conflicto" }]);
+    assert.equal(route?.delivery?.visitCount, 4);
+    assert.equal(route?.delivery?.goods[0]?.medianAbsAmount, 12);
+  });
+
+  it("drops invented delivery fields and does not default missing IsLoading", () => {
+    const result = ingestLiveJsonText(
+      JSON.stringify({
+        schema: "harbor-live-v1",
+        source: "save",
+        updatedAt: "2026-09-20T12:00:00.000Z",
+        game: "anno-1800",
+        quests: [],
+        telemetry: {
+          routes: [
+            {
+              name: "Ruta",
+              shipCount: 1,
+              ships: [{ name: "Inventado", cause: "stock" }],
+              stops: [{ goods: [{ guid: 1, amount: 5, isLoading: "maybe" }] }],
+              delivery: { visitCount: 0, lastExecutionTime: 1, goods: [] },
+            },
+          ],
+        },
+      }),
+    );
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    const route = result.snapshot.telemetry?.routes?.[0];
+    assert.equal(route?.stops[0]?.goods[0]?.isLoading, undefined);
+    assert.deepEqual(route?.ships, [{ name: "Inventado" }]);
+    assert.equal(route?.delivery, undefined);
+  });
+});

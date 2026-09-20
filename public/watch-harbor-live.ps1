@@ -649,6 +649,9 @@ while ($true) {
             $knownGood = $guidByNumber[[string]$good.guid]
             if ($knownGood -and $knownGood.id) { $routeGood.id = [string]$knownGood.id }
             if ($good.name) { $routeGood.name = [string]$good.name }
+            if ($good.PSObject.Properties.Name -contains "isLoading") {
+              $routeGood.isLoading = [bool]$good.isLoading
+            }
             $routeGoods += $routeGood
           }
         }
@@ -663,6 +666,37 @@ while ($true) {
       }
       if ($route.id -ne $null) { $routeOut.id = [int]$route.id }
       if ($route.ownerId -ne $null) { $routeOut.ownerId = [int]$route.ownerId }
+      $ships = @()
+      foreach ($ship in @($route.ships)) {
+        if ($ship.name) { $ships += [ordered]@{ name = [string]$ship.name } }
+      }
+      if ($ships.Count -gt 0) { $routeOut.ships = @($ships) }
+      if ($route.delivery -and $route.delivery.visitCount) {
+        $deliveryGoods = @()
+        foreach ($good in @($route.delivery.goods)) {
+          if ($good.guid -eq $null) { continue }
+          $row = [ordered]@{
+            guid            = [int]$good.guid
+            visitCount      = [int]$good.visitCount
+            medianAbsAmount = [int]$good.medianAbsAmount
+            lastAmount      = [int]$good.lastAmount
+          }
+          $knownGood = $guidByNumber[[string]$good.guid]
+          if ($knownGood -and $knownGood.id) { $row.id = [string]$knownGood.id }
+          if ($good.name) { $row.name = [string]$good.name }
+          elseif ($knownGood -and $knownGood.name) { $row.name = [string]$knownGood.name }
+          $deliveryGoods += $row
+        }
+        $delivery = [ordered]@{
+          visitCount         = [int]$route.delivery.visitCount
+          lastExecutionTime  = [int64]$route.delivery.lastExecutionTime
+          goods              = @($deliveryGoods)
+        }
+        if ($route.delivery.intervalMsMedian -ne $null) {
+          $delivery.intervalMsMedian = [int64]$route.delivery.intervalMsMedian
+        }
+        $routeOut.delivery = $delivery
+      }
       $routes += $routeOut
     }
     $currentSavedAt = $save.LastWriteTimeUtc.ToString("o")

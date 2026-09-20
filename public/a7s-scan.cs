@@ -140,11 +140,44 @@ namespace HarborBuddy {
             sb.Append("{\"guid\":").Append(good.Guid)
               .Append(",\"amount\":").Append(good.Amount);
             if (!string.IsNullOrEmpty(good.Name)) sb.Append(",\"name\":\"").Append(Esc(good.Name)).Append("\"");
+            if (good.IsLoading.HasValue) sb.Append(",\"isLoading\":").Append(good.IsLoading.Value ? "true" : "false");
             sb.Append("}");
           }
           sb.Append("]}");
         }
-        sb.Append("]}");
+        sb.Append("]");
+        if (route.ShipNames.Count > 0) {
+          sb.Append(",\"ships\":[");
+          bool firstShip = true;
+          foreach (var shipName in route.ShipNames) {
+            if (!firstShip) sb.Append(",");
+            firstShip = false;
+            sb.Append("{\"name\":\"").Append(Esc(shipName)).Append("\"}");
+          }
+          sb.Append("]");
+        }
+        if (route.Delivery != null) {
+          var delivery = route.Delivery;
+          sb.Append(",\"delivery\":{\"visitCount\":").Append(delivery.VisitCount)
+            .Append(",\"lastExecutionTime\":").Append(delivery.LastExecutionTime);
+          if (delivery.IntervalMsMedian.HasValue) {
+            sb.Append(",\"intervalMsMedian\":").Append(delivery.IntervalMsMedian.Value);
+          }
+          sb.Append(",\"goods\":[");
+          bool firstDel = true;
+          foreach (var good in delivery.Goods) {
+            if (!firstDel) sb.Append(",");
+            firstDel = false;
+            sb.Append("{\"guid\":").Append(good.Guid)
+              .Append(",\"visitCount\":").Append(good.VisitCount)
+              .Append(",\"medianAbsAmount\":").Append(good.MedianAbsAmount)
+              .Append(",\"lastAmount\":").Append(good.LastAmount);
+            if (!string.IsNullOrEmpty(good.Name)) sb.Append(",\"name\":\"").Append(Esc(good.Name)).Append("\"");
+            sb.Append("}");
+          }
+          sb.Append("]}");
+        }
+        sb.Append("}");
       }
       sb.Append("]");
       if (islandsExtract.SimTime.HasValue) sb.Append(",\"simTime\":").Append(islandsExtract.SimTime.Value);
@@ -206,10 +239,29 @@ namespace HarborBuddy {
       public readonly List<DbLeaf> Leaves = new List<DbLeaf>();
       public readonly List<DbNode> Children = new List<DbNode>();
     }
-    sealed class RouteGood { public int Guid; public int Amount; public string Name; }
+    sealed class RouteGood { public int Guid; public int Amount; public string Name; public bool? IsLoading; }
     sealed class RouteStop {
       public int? AreaId;
       public readonly List<RouteGood> Goods = new List<RouteGood>();
+    }
+    sealed class RouteDeliveryGood {
+      public int Guid;
+      public string Name;
+      public int VisitCount;
+      public int MedianAbsAmount;
+      public int LastAmount;
+    }
+    sealed class RouteDelivery {
+      public int VisitCount;
+      public long LastExecutionTime;
+      public long? IntervalMsMedian;
+      public readonly List<RouteDeliveryGood> Goods = new List<RouteDeliveryGood>();
+    }
+    sealed class RouteVisit {
+      public long Time;
+      public bool Finalized;
+      public readonly List<int> Guids = new List<int>();
+      public readonly List<int> Amounts = new List<int>();
     }
     sealed class RouteRow {
       public int? Id;
@@ -217,6 +269,8 @@ namespace HarborBuddy {
       public int? OwnerId;
       public int ShipCount;
       public readonly List<RouteStop> Stops = new List<RouteStop>();
+      public readonly List<string> ShipNames = new List<string>();
+      public RouteDelivery Delivery;
     }
     sealed class IslandStock { public string Id; public string Name; public int Amount; }
     sealed class IslandBuilding { public string Id; public string Name; public int Count; }
@@ -345,10 +399,14 @@ namespace HarborBuddy {
                 var amount = LeafInt(goodNode, "Amount");
                 if (!guid.HasValue || !amount.HasValue || guid.Value == 0) continue;
                 GuidRow guidRow;
+                var loading = Leaf(goodNode, "IsLoading");
+                bool? isLoading = null;
+                if (loading != null && loading.Length > 0) isLoading = loading[0] != 0;
                 stop.Goods.Add(new RouteGood {
                   Guid = guid.Value,
                   Amount = amount.Value,
-                  Name = guids.TryGetValue(guid.Value, out guidRow) ? guidRow.name : ""
+                  Name = guids.TryGetValue(guid.Value, out guidRow) ? guidRow.name : "",
+                  IsLoading = isLoading
                 });
               }
             }
@@ -357,7 +415,130 @@ namespace HarborBuddy {
         }
         output.Add(row);
       }
+      var shipsByRoute = new Dictionary<int, List<string>>();
+      CollectRouteShips(root, shipsByRoute);
+      var visitsByRoute = new Dictionary<int, List<RouteVisit>>();
+      CollectRouteVisits(root, visitsByRoute, 4000);
+      foreach (var route in output) {
+        if (!route.Id.HasValue) continue;
+        List<string> names;
+        if (shipsByRoute.TryGetValue(route.Id.Value, out names)) {
+          foreach (var name in names) if (route.ShipNames.Count < 8) route.ShipNames.Add(name);
+        }
+        List<RouteVisit> visits;
+        if (visitsByRoute.TryGetValue(route.Id.Value, out visits)) {
+          route.Delivery = SummarizeDelivery(visits, guids);
+        }
+      }
       return output;
+    }
+
+    static void CollectRouteShips(DbNode node, Dictionary<int, List<string>> byRoute) {
+      if (node == null) return;
+      var nameable = Child(node, "Nameable");
+      var trade = Child(node, "PropertyTradeRouteVehicle");
+      if (nameable != null && trade != null) {
+        var name = Utf16(Leaf(nameable, "VehicleName"));
+        var routeId = LeafInt(trade, "TradeRouteID");
+        if (!string.IsNullOrEmpty(name) && routeId.HasValue) {
+          List<string> list;
+          if (!byRoute.TryGetValue(routeId.Value, out list)) {
+            list = new List<string>();
+            byRoute[routeId.Value] = list;
+          }
+          if (!list.Contains(name) && list.Count < 8) list.Add(name.Length > 80 ? name.Substring(0, 80) : name);
+        }
+      }
+      foreach (var child in node.Children) CollectRouteShips(child, byRoute);
+    }
+
+    static void CollectRouteVisits(DbNode node, Dictionary<int, List<RouteVisit>> byRoute, int remaining) {
+      if (node == null || remaining <= 0) return;
+      var routeId = LeafInt(node, "RouteID");
+      var time = LeafInt64(node, "ExecutionTime");
+      var goods = Child(node, "TradedGoods");
+      if (routeId.HasValue && time.HasValue && goods != null) {
+        var finalized = Leaf(node, "Finalized");
+        var visit = new RouteVisit {
+          Time = time.Value,
+          Finalized = finalized != null && finalized.Length > 0 && finalized[0] != 0
+        };
+        foreach (var goodNode in goods.Children) {
+          var guid = LeafInt(goodNode, "GoodGuid");
+          var amount = LeafInt(goodNode, "GoodAmount");
+          if (!guid.HasValue || !amount.HasValue || guid.Value == 0) continue;
+          visit.Guids.Add(guid.Value);
+          visit.Amounts.Add(amount.Value);
+        }
+        List<RouteVisit> list;
+        if (!byRoute.TryGetValue(routeId.Value, out list)) {
+          list = new List<RouteVisit>();
+          byRoute[routeId.Value] = list;
+        }
+        if (list.Count < 400) list.Add(visit);
+        remaining--;
+      }
+      foreach (var child in node.Children) CollectRouteVisits(child, byRoute, remaining);
+    }
+
+    static int MedianInt(List<int> values) {
+      values.Sort();
+      int n = values.Count;
+      if (n % 2 == 1) return values[n / 2];
+      return (int)Math.Round((values[n / 2 - 1] + values[n / 2]) / 2.0);
+    }
+
+    static long MedianLong(List<long> values) {
+      values.Sort();
+      int n = values.Count;
+      if (n % 2 == 1) return values[n / 2];
+      return (long)Math.Round((values[n / 2 - 1] + values[n / 2]) / 2.0);
+    }
+
+    static RouteDelivery SummarizeDelivery(List<RouteVisit> visits, Dictionary<int, GuidRow> guids) {
+      var finalized = new List<RouteVisit>();
+      foreach (var visit in visits) if (visit.Finalized) finalized.Add(visit);
+      if (finalized.Count == 0) return null;
+      finalized.Sort((a, b) => a.Time.CompareTo(b.Time));
+      var intervals = new List<long>();
+      for (int i = 1; i < finalized.Count; i++) {
+        long delta = finalized[i].Time - finalized[i - 1].Time;
+        if (delta > 0) intervals.Add(delta);
+      }
+      var last = finalized[finalized.Count - 1];
+      var amounts = new Dictionary<int, List<int>>();
+      var lastAmount = new Dictionary<int, int>();
+      foreach (var visit in finalized) {
+        for (int i = 0; i < visit.Guids.Count; i++) {
+          int guid = visit.Guids[i];
+          int amt = visit.Amounts[i];
+          List<int> list;
+          if (!amounts.TryGetValue(guid, out list)) {
+            list = new List<int>();
+            amounts[guid] = list;
+          }
+          list.Add(amt);
+          lastAmount[guid] = amt;
+        }
+      }
+      var delivery = new RouteDelivery {
+        VisitCount = finalized.Count,
+        LastExecutionTime = last.Time,
+        IntervalMsMedian = intervals.Count > 0 ? MedianLong(intervals) : (long?)null
+      };
+      foreach (var kv in amounts) {
+        var abs = new List<int>();
+        foreach (var amt in kv.Value) abs.Add(Math.Abs(amt));
+        GuidRow guidRow;
+        delivery.Goods.Add(new RouteDeliveryGood {
+          Guid = kv.Key,
+          Name = guids.TryGetValue(kv.Key, out guidRow) && guidRow.kind == "good" ? guidRow.name : "",
+          VisitCount = kv.Value.Count,
+          MedianAbsAmount = MedianInt(abs),
+          LastAmount = lastAmount[kv.Key]
+        });
+      }
+      return delivery;
     }
 
     static bool IsNestedFileDb(byte[] bytes) {

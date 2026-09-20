@@ -29,7 +29,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `telemetry.hints`     | residencias farmer/worker/…                                                                                                               |                                                                                                                                                                                                                                                                                                     |
 | `telemetry.goods`     | `StrgLrg` del ParticipantID 0                                                                                                             | Stock **global del jugador**. Si el dueño no se demuestra, se omite (no es 0). No es inventario por isla ni tesorería. Sandbox lo muestra; la campaña no hereda tips de producción.                                                                                                                |
 | `telemetry.goodsChanges` | Diferencia de `telemetry.goods` contra el guardado anterior de la misma sesión                                                          | Evidencia global: monto anterior, actual, delta y `previousSavedAt`. Sirve para señalar bienes que caen en una ruta, pero no demuestra causalidad ni throughput.                                                                                                                                     |
-| `telemetry.routes`    | `SessionTradeRouteManager/RouteMap`                                                                                                       | Sólo rutas del jugador (`ownerId = 0`): nombre, número de barcos, paradas y bienes configurados. Todavía no afirma dirección ni rendimiento.                                                                                                                                                        |
+| `telemetry.routes`    | `SessionTradeRouteManager/RouteMap`                                                                                                       | Sólo rutas del jugador (`ownerId = 0`): nombre, barcos, paradas y bienes configurados. `isLoading` opcional si el save lo escribió. `ships[].name` sólo si `VehicleName` junta `TradeRouteID`. `delivery` resume visitas finalizadas (`ExecutionTime` del reloj de simulación). No afirma capacidad nominal ni abastecimiento garantizado. |
 | `connection.native`   | UXEnhancer `Server.exe` por loopback                                                                                                      | Evidencia OCR: proveedor, pestaña visible, isla y hora. No implica lectura de memoria. Rol sin cambios: última observación **válida**, nunca se limpia al desconectar. Ver `docs/native-telemetry.md`.                                                                                              |
 | `connection.nativeProbe` (nuevo, opcional) | Resultado técnico del último sondeo HTTP al mismo `Server.exe` | `state` (`reachable`, `unreachable`, `invalid_response`), `lastProbeAt`, `lastSuccessAt` opcional, `reason` opcional (`timeout`, `connection_refused`, `bad_payload`). Sólo hechos técnicos del sondeo — nunca `missing`/`starting`/`connected`/`stale`/`wrong_view`, `hintEs`, rutas locales, stacktraces ni mensajes crudos de Windows. Un JSON viejo sin este campo sigue siendo válido. Ver `docs/native-telemetry.md`. |
 | `telemetry.production` | Pantallas Producción + Finanzas por OCR                                                                                                  | Demanda/productividad y conteo por isla. `buildingCountObservedAt` (opcional) marca cuándo Finanzas dio ese conteo, independiente de `observedAt` (la muestra de Producción). Taller sólo aconseja si ambas muestras existen y conoce el ritmo del GUID. `islandRef` sólo si el nombre OCR mapea a **una** isla del save.                                                                                                                                                                                 |
@@ -44,7 +44,7 @@ El dump Lua (`tools/harbor-buddy-telemetry/dump_live.lua`) **no va en el zip**. 
 No se agregan aunque el `.a7s` “los tenga” por dentro:
 
 - Conteos de población por casa (sí hay residencias y `goods`; no hay barra amarilla de necesidad todavía).
-- Rutas NPC, dirección carga/descarga y rendimiento real. El walker confirma la configuración de las rutas del jugador; el proveedor OCR no expone throughput (`docs/native-telemetry.md`).
+- Rutas NPC y capacidad nominal del barco. La dirección se publica sólo si `IsLoading` está en el save (`true` carga, `false` descarga). Un campo ausente queda desconocido: en el save contrastado nunca apareció `IsLoading=1`, así que no se infiere carga por omisión. El rendimiento t/min no se escribe en el JSON; Rutas puede mostrarlo como inferido a partir de visitas. El OCR no prueba una ruta (`docs/native-telemetry.md`).
 - Spoilers de diario más allá de GUIDs de quest mapeados.
 - Inject: Lua en el pack, parche de GUID, `ModOps` sobre assets vanilla.
 - Write al `.a7s`.
@@ -57,8 +57,9 @@ Si un JSON trae `population`, `goods`, `warehouse`, `tradeRoutes` (en raíz) u o
   `telemetry.routes`.
 - **Observar:** un bien configurado en la ruta cayó al menos 5 unidades y 10% entre dos guardados
   consecutivos de la misma sesión. Sale de `telemetry.goodsChanges`.
-- **No se afirma:** qué parada carga/descarga, tiempos de viaje, capacidad usada ni que la ruta haya
-  causado la caída. Producción, consumo y otras rutas también mueven el stock global.
+- **No se afirma:** capacidad nominal del barco, abastecimiento garantizado, ni que la ruta haya
+  causado una caída de stock. Producción, consumo y otras rutas también mueven el stock global.
+  Cantidad configurada, entrega realizada y t/min inferido se muestran por separado.
 
 ## Escritura crash-safe
 

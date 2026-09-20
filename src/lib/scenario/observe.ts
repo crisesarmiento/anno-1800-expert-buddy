@@ -168,6 +168,8 @@ export function observeScenario(input: {
   snapshot: LiveSnapshot | null;
   consumerId: string;
   goodId: GoodId;
+  /** Explicit manual t/min. Never inferred from configured cargo or stock. */
+  transportTMin?: number | null;
 }): ScenarioInput {
   const islands = playerIslandsFromSave(input.snapshot);
   const consumerSnap = islands.find(
@@ -196,7 +198,14 @@ export function observeScenario(input: {
       buildings,
       reservedExportTMin: null,
       hasOtherConsumers: routes.hasOtherConsumers,
-      transportToConsumerTMin: null,
+      transportToConsumerTMin:
+        island === consumerSnap
+          ? null
+          : typeof input.transportTMin === "number" &&
+              Number.isFinite(input.transportTMin) &&
+              input.transportTMin >= 0
+            ? input.transportTMin
+            : null,
       routeToConsumerOk: island === consumerSnap ? true : routes.routeToConsumerOk,
     };
     return row;

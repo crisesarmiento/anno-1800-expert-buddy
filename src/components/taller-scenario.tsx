@@ -5,9 +5,11 @@ import { playerIslandsFromSave } from "@/lib/live/evidence";
 import { islandKey } from "@/lib/live/island-key";
 import { compareScenarios, goodsOnSnapshot, observeScenario } from "@/lib/scenario";
 import type { AlternativeKind, MissingDatum, ScenarioAlternative, ScenarioVerdict } from "@/lib/scenario";
+import { liveGoodToCatalog } from "@/lib/sim/catalog-figures";
 import { chainByGood, goodNameEs } from "@/lib/sim";
 import type { GoodId } from "@/lib/sim/types";
 import { useHarbor } from "@/lib/store";
+import { inferredDeliveryTMin } from "@/lib/trade-route-logistics";
 import { useT } from "@/lib/use-t";
 
 function kindLabel(t: UiDict, kind: AlternativeKind) {
@@ -76,6 +78,7 @@ export function TallerScenarioCard() {
   const goods = (seenGoods.length ? seenGoods : PICKABLE).filter((id) => chainByGood(id));
   const [islandId, setIslandId] = useState("");
   const [goodId, setGoodId] = useState<GoodId | "">("");
+  const [transportText, setTransportText] = useState("");
   const resolvedIsland = islands.some((row) => islandKey(row.regionId, row.areaId) === islandId)
     ? islandId
     : islands[0]
@@ -83,15 +86,42 @@ export function TallerScenarioCard() {
       : "";
   const resolvedGood = (goods as string[]).includes(goodId) ? goodId : (goods[0] ?? "");
 
+  const transportTMin = useMemo(() => {
+    const raw = transportText.trim().replace(",", ".");
+    if (!raw) return null;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) return null;
+    return value;
+  }, [transportText]);
+
+  const observedTransport = useMemo(() => {
+    const island = islands.find((row) => islandKey(row.regionId, row.areaId) === resolvedIsland);
+    if (!island || !resolvedGood) return null;
+    let best: number | null = null;
+    for (const route of snapshot?.telemetry?.routes ?? []) {
+      if ((route.ownerId ?? 0) !== 0) continue;
+      const hasIsland = route.stops.some((stop) => stop.areaId === island.areaId);
+      const hasGood = route.stops.some((stop) =>
+        stop.goods.some((good) => liveGoodToCatalog(good.id) === resolvedGood),
+      );
+      if (!hasIsland || !hasGood) continue;
+      const tmin = inferredDeliveryTMin(route.delivery);
+      if (tmin == null) continue;
+      best = best == null ? tmin : Math.max(best, tmin);
+    }
+    return best;
+  }, [islands, resolvedIsland, resolvedGood, snapshot]);
+
   const result = useMemo(() => {
     if (!resolvedIsland || !resolvedGood) return null;
     const input = observeScenario({
       snapshot,
       consumerId: resolvedIsland,
       goodId: resolvedGood as GoodId,
+      transportTMin,
     });
     return compareScenarios(input);
-  }, [snapshot, resolvedIsland, resolvedGood]);
+  }, [snapshot, resolvedIsland, resolvedGood, transportTMin]);
 
   return (
     <div id="produce-or-import" data-taller-scenario="">
@@ -100,7 +130,7 @@ export function TallerScenarioCard() {
           <p className="text-sm leading-relaxed text-muted-foreground">{t.scenario.emptyIslands}</p>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <label className="flex min-h-11 flex-col gap-1 text-sm">
                 <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   {t.scenario.pickIsland}
@@ -135,7 +165,28 @@ export function TallerScenarioCard() {
                   ))}
                 </select>
               </label>
+              <label className="flex min-h-11 flex-col gap-1 text-sm">
+                <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  {t.scenario.transportManual}
+                </span>
+                <input
+                  data-taller-scenario-transport=""
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  inputMode="decimal"
+                  className="min-h-11 rounded-md border border-border bg-card px-3 text-foreground"
+                  value={transportText}
+                  onChange={(event) => setTransportText(event.target.value)}
+                />
+              </label>
             </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">{t.scenario.transportManualHint}</p>
+            {observedTransport != null ? (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {fill(t.scenario.observedTransport, observedTransport)}
+              </p>
+            ) : null}
             {result ? (
               <div className="flex flex-col gap-4">
                 <p data-taller-scenario-verdict={result.verdict.kind} className="text-lg leading-relaxed">

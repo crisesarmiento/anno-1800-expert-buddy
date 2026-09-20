@@ -57,11 +57,22 @@ See `docs/native-telemetry.md`.
 - Routes come from `SessionTradeRouteManager/RouteMap` in the save.
 - Only player routes (`ownerId = 0`) reach the UI.
 - Confirmed structural failures are: no assigned ship, fewer than two stops, or no configured goods.
+- Island names on stops come from `islandSnapshots` via `areaId`. Ship names come from
+  `VehicleName` joined by `TradeRouteID`. Missing names stay unnamed.
+- `IsLoading` is published only when present (`true` load, `false` unload). An omitted field is
+  unknown — do not default it to load.
+- `delivery` is a compact summary of finalized `TradeRouteEntries` (visit count, median |amount|,
+  last signed amount, median `ExecutionTime` interval). Configured quantity, realized delivery and
+  inferred t/min stay separate. Nominal ship capacity is unknown.
+- A configured route without observed deliveries is not guaranteed supply. Partial loads do not
+  become full-warehouse claims.
 - `telemetry.goodsChanges` compares global stock across two distinct saves from the same session.
 - A route gets an observational stock warning only when a carried good drops by at least 5 units
   and 10 percent. Structural failures always take priority.
 - Global stock correlation does **not** establish direction, throughput, travel time, loading,
   unloading, or causality. Production, consumption, and other routes can cause the same change.
+- Stage 3 transport scenarios take an explicit manual t/min. Observed deliveries may be shown as a
+  hint; they are never auto-filled as real throughput.
 
 See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 
@@ -77,7 +88,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Production analysis: `src/lib/native-production.ts`
 - Produce-or-import scenarios (pure, inferred): `src/lib/scenario/`
 - Catalog figures (source/unit/DLC): `src/lib/sim/catalog-figures.ts`
-- Route analysis: `src/lib/trade-route-health.ts`
+- Route analysis: `src/lib/trade-route-health.ts`, `src/lib/trade-route-logistics.ts`
 - Production UI: `src/components/native-production-card.tsx`
 - Scenario UI: `src/components/taller-scenario.tsx`
 - Route UI: `src/components/trade-routes.tsx`
@@ -133,8 +144,8 @@ Prefer improvements that strengthen evidence without increasing setup:
 
 1. Installation/health diagnostics for the optional OCR server.
 2. Evidence freshness and per-island capture guidance.
-3. Etapa 4: dirección de carga/descarga, historial de entregas y tiempos de viaje verificados.
-4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links.
+3. Etapa 5: misiones verificadas (instancia, progreso, temporizador) o fallback manual rotulado.
+4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links. Nominal ship cargo capacity is still unread.
 
 Do not pursue automatic route clicking, memory hooks, save mutation, or claims of real route
 throughput unless a new trustworthy data source is first demonstrated and documented.

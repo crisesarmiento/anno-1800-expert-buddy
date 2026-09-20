@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { extractTradeRoutes } from "./a7s-trade-routes.ts";
+import {
+  extractRouteShips,
+  extractRouteVisits,
+  extractTradeRoutes,
+  summarizeRouteDeliveries,
+} from "./a7s-trade-routes.ts";
 
 const FILEDB_MAGIC = 0xfffffffd;
 
@@ -68,8 +73,35 @@ function int64Array(ids: number[]): Buffer {
   return b;
 }
 
-const TAGS = { MetaGameManager: 1, SessionTradeRouteManager: 2, RouteMap: 3, Owner: 11, Stations: 12, GoodInfos: 13 };
-const ATTRS = { ID: 1, Name: 2, IsDefaultName: 3, id: 4, Ships: 5, AreaID: 6, ProductGUID: 7, Amount: 8 };
+const TAGS = {
+  MetaGameManager: 1,
+  SessionTradeRouteManager: 2,
+  RouteMap: 3,
+  Owner: 11,
+  Stations: 12,
+  GoodInfos: 13,
+  Nameable: 14,
+  PropertyTradeRouteVehicle: 15,
+  TradedGoods: 16,
+};
+const ATTRS = {
+  ID: 1,
+  Name: 2,
+  IsDefaultName: 3,
+  id: 4,
+  Ships: 5,
+  AreaID: 6,
+  ProductGUID: 7,
+  Amount: 8,
+  IsLoading: 9,
+  VehicleName: 10,
+  TradeRouteID: 11,
+  RouteID: 12,
+  ExecutionTime: 13,
+  Finalized: 14,
+  GoodGuid: 15,
+  GoodAmount: 16,
+};
 const UNNAMED_TAG = 90; // route/station/good instances -- real saves also fall back to "tag_N"
 
 function buildDataA7s(): Buffer {
@@ -129,7 +161,7 @@ describe("extractTradeRoutes", () => {
     assert.deepEqual(r1.shipIds, [500, 501]);
     assert.equal(r1.stations.length, 1);
     assert.equal(r1.stations[0].areaId, 42);
-    assert.deepEqual(r1.stations[0].goods, [{ guid: 1010266, amount: 12 }]);
+    assert.deepEqual(r1.stations[0].goods, [{ guid: 1010266, amount: 12, isLoading: null }]);
 
     assert.equal(r2.id, 102);
     assert.equal(r2.name, "Nueva ruta de comercio");
@@ -148,5 +180,108 @@ describe("extractTradeRoutes", () => {
 
   it("returns an empty list for a non-FileDB buffer", () => {
     assert.deepEqual(extractTradeRoutes(Buffer.from("not a filedb")), []);
+  });
+});
+
+function i64(n: number): Buffer {
+  const b = Buffer.alloc(8);
+  b.writeBigInt64LE(BigInt(n), 0);
+  return b;
+}
+
+function buildLogisticsA7s(): Buffer {
+  const recs: Rec[] = [
+    { open: TAGS.MetaGameManager },
+    { open: TAGS.SessionTradeRouteManager },
+    { open: TAGS.RouteMap },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.ID, payload: i32(26) },
+    { leaf: ATTRS.Name, payload: wide("Tablones La - Les") },
+    { open: TAGS.Owner },
+    { leaf: ATTRS.id, payload: i32(0) },
+    { close: true },
+    { leaf: ATTRS.Ships, payload: int64Array([177]) },
+    { open: TAGS.Stations },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.AreaID, payload: i32(8451) },
+    { open: TAGS.GoodInfos },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.ProductGUID, payload: i32(1010196) },
+    { leaf: ATTRS.Amount, payload: i32(20) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.AreaID, payload: i32(9219) },
+    { open: TAGS.GoodInfos },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.ProductGUID, payload: i32(1010196) },
+    { leaf: ATTRS.Amount, payload: i32(20) },
+    { leaf: ATTRS.IsLoading, payload: Buffer.from([0]) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { open: TAGS.Nameable },
+    { leaf: ATTRS.VehicleName, payload: wide("Conflicto") },
+    { close: true },
+    { open: TAGS.PropertyTradeRouteVehicle },
+    { leaf: ATTRS.TradeRouteID, payload: i32(26) },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(10_000) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(-12) },
+    { close: true },
+    { close: true },
+    { close: true },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.RouteID, payload: i32(26) },
+    { leaf: ATTRS.ExecutionTime, payload: i64(22_000) },
+    { leaf: ATTRS.Finalized, payload: Buffer.from([1]) },
+    { open: TAGS.TradedGoods },
+    { open: UNNAMED_TAG },
+    { leaf: ATTRS.GoodGuid, payload: i32(1010196) },
+    { leaf: ATTRS.GoodAmount, payload: i32(11) },
+    { close: true },
+    { close: true },
+    { close: true },
+  ];
+  const tagNames = Object.fromEntries(Object.entries(TAGS).map(([name, id]) => [id, name]));
+  const attrNames = Object.fromEntries(Object.entries(ATTRS).map(([name, id]) => [id, name]));
+  return encodeFileDb(recs, tagNames, attrNames);
+}
+
+describe("stage 4 route fields from FileDB", () => {
+  it("keeps missing IsLoading as null and false as unload, never inventing load", () => {
+    const route = extractTradeRoutes(buildLogisticsA7s())[0];
+    assert.equal(route.stations[0]?.goods[0]?.isLoading, null);
+    assert.equal(route.stations[1]?.goods[0]?.isLoading, false);
+  });
+
+  it("names a ship only when VehicleName joins TradeRouteID", () => {
+    const ships = extractRouteShips(buildLogisticsA7s());
+    assert.deepEqual(ships, [{ routeId: 26, name: "Conflicto" }]);
+  });
+
+  it("summarizes finalized visits without treating signed amounts as direction", () => {
+    const visits = extractRouteVisits(buildLogisticsA7s());
+    assert.equal(visits.length, 2);
+    assert.equal(visits[0]?.goods[0]?.amount, -12);
+    const summary = summarizeRouteDeliveries(visits);
+    assert.equal(summary[0]?.visitCount, 2);
+    assert.equal(summary[0]?.intervalMsMedian, 12_000);
+    assert.equal(summary[0]?.goods[0]?.medianAbsAmount, 12);
+    assert.equal(summary[0]?.goods[0]?.lastAmount, 11);
   });
 });
