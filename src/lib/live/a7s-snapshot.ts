@@ -1,8 +1,15 @@
 import { lookupGuid } from "../data/guids.ts";
 import { unpackA7s, visitFileDb, leafI32, leafText } from "./a7s-read.ts";
+import {
+  capIslandSnapshots,
+  extractIslands,
+  islandSnapshotFromExtracted,
+  playerIslands,
+} from "./a7s-islands.ts";
 import { isPlayerParticipant, type StorageOwner } from "./evidence.ts";
 import type {
   LiveBuildingHit,
+  LiveIslandSnapshot,
   LiveNamedHit,
   LivePulseHint,
   LiveQuest,
@@ -27,6 +34,9 @@ export type SaveScan = {
   workers: boolean;
   artisans: boolean;
   engineers: boolean;
+  islandSnapshots: LiveIslandSnapshot[];
+  snapshotId: string | null;
+  simTime: number | null;
 };
 
 function addCount(map: Map<string, { name: string; count: number }>, id: string, name: string, n: number) {
@@ -57,6 +67,9 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     workers: false,
     artisans: false,
     engineers: false,
+    islandSnapshots: [],
+    snapshotId: null,
+    simTime: null,
   };
 
   for (const file of files) {
@@ -133,6 +146,15 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     scan.goods = new Map();
     scan.money = null;
   }
+
+  const extracted = extractIslands(data.bytes);
+  scan.snapshotId = extracted.meta.snapshotId;
+  scan.simTime = extracted.meta.simTime;
+  const observedAt = undefined;
+  const liveIslands = playerIslands(extracted.islands).map((island) =>
+    islandSnapshotFromExtracted(island, observedAt),
+  );
+  scan.islandSnapshots = capIslandSnapshots(liveIslands).kept;
 
   return scan;
 }
@@ -272,6 +294,12 @@ export function snapshotFromScan(
   snapshot.pulseHint = pulseHint;
   if (Object.keys(workforce).length) snapshot.workforce = workforce;
   if (Object.keys(telemetry).length) snapshot.telemetry = telemetry;
+  if (scan.snapshotId) snapshot.snapshotId = scan.snapshotId;
+  if (scan.simTime != null) snapshot.simTime = scan.simTime;
+  if (scan.islandSnapshots.length) {
+    snapshot.islandSnapshots = scan.islandSnapshots;
+    snapshot.playerId = 0;
+  }
   return snapshot;
 }
 

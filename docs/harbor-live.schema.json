@@ -14,6 +14,15 @@
     "game": { "const": "anno-1800" },
     "sessionName": { "type": "string", "minLength": 1, "maxLength": 200 },
     "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "campaignId": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "playerId": { "type": "integer" },
+    "snapshotId": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "simTime": { "type": "integer" },
+    "islandSnapshots": {
+      "type": "array",
+      "maxItems": 40,
+      "items": { "$ref": "#/$defs/islandSnapshot" }
+    },
     "connection": {
       "type": "object",
       "additionalProperties": false,
@@ -36,7 +45,8 @@
             "view": { "type": "string", "enum": ["production", "finance", "population", "unknown"] },
             "observedAt": { "type": "string", "format": "date-time" },
             "islandName": { "type": "string", "minLength": 1, "maxLength": 200 },
-            "serverVersion": { "type": "string", "minLength": 1, "maxLength": 40 }
+            "serverVersion": { "type": "string", "minLength": 1, "maxLength": 40 },
+            "islandRef": { "$ref": "#/$defs/islandRef" }
           }
         },
         "nativeProbe": {
@@ -197,7 +207,8 @@
               "requiredTMin": { "type": "number", "minimum": 0 },
               "productivity": { "type": "number", "minimum": 0 },
               "buildingCount": { "type": "number", "minimum": 0 },
-              "buildingCountObservedAt": { "type": "string", "format": "date-time" }
+              "buildingCountObservedAt": { "type": "string", "format": "date-time" },
+              "islandRef": { "$ref": "#/$defs/islandRef" }
             }
           }
         }
@@ -227,6 +238,81 @@
           "id": { "type": "string", "minLength": 1, "maxLength": 48 },
           "name": { "type": "string", "minLength": 1, "maxLength": 80 },
           "count": { "type": "integer", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "islandRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regionId", "areaId"],
+      "properties": {
+        "regionId": { "type": "integer" },
+        "areaId": { "type": "integer" }
+      }
+    },
+    "fieldCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": { "type": "string", "enum": ["save", "ocr", "manual"] },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "scope": { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
+    "islandSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regionId", "areaId", "ownerId", "name", "nameSource", "coverage"],
+      "properties": {
+        "regionId": { "type": "integer" },
+        "areaId": { "type": "integer" },
+        "ownerId": { "type": "integer" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "nameSource": { "type": "string", "enum": ["city-name", "city-name-guid", "neutral"] },
+        "stock": {
+          "type": "array",
+          "maxItems": 24,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "amount"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+              "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "amount": { "type": "integer" }
+            }
+          }
+        },
+        "buildings": { "$ref": "#/$defs/buildingHits" },
+        "population": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "farmers": { "type": "integer", "minimum": 0 },
+            "workers": { "type": "integer", "minimum": 0 },
+            "artisans": { "type": "integer", "minimum": 0 },
+            "engineers": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "capacities": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "warehouse": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["identity"],
+          "properties": {
+            "identity": { "$ref": "#/$defs/fieldCoverage" },
+            "stock": { "$ref": "#/$defs/fieldCoverage" },
+            "buildings": { "$ref": "#/$defs/fieldCoverage" },
+            "population": { "$ref": "#/$defs/fieldCoverage" },
+            "capacities": { "$ref": "#/$defs/fieldCoverage" }
+          }
         }
       }
     }

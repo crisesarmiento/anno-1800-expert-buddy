@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
+  ingestSnapshotHistory,
+  type CampaignCandidate,
+  type HistoryRecordResult,
+} from "@/lib/history";
+import {
   applyLiveToProgress,
   liveMissLine,
   liveOkLine,
@@ -50,6 +55,8 @@ type HarborState = {
   locale: Locale;
   samples: PulseSample[];
   activeIslandId: string | null;
+  historyCampaignId: string | null;
+  pendingCampaign: { candidates: CampaignCandidate[]; snapshot: LiveSnapshot } | null;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -67,6 +74,9 @@ type HarborState = {
   setLiveBanner: (text: string | null, failed?: boolean) => void;
   setLocale: (value: Locale) => void;
   setActiveIslandId: (id: string | null) => void;
+  applyHistoryResult: (result: HistoryRecordResult) => void;
+  chooseCampaign: (id: string) => void;
+  clearPendingCampaign: () => void;
 };
 
 export function isLiveLocked(state: {
@@ -101,6 +111,8 @@ export const useHarbor = create<HarborState>()(
       locale: DEFAULT_LOCALE,
       samples: [],
       activeIslandId: null,
+      historyCampaignId: null,
+      pendingCampaign: null,
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         const prev = get().missionId;
@@ -270,6 +282,7 @@ export const useHarbor = create<HarborState>()(
           lastImportedAt: null,
           liveBanner: null,
           liveBannerFailed: false,
+          pendingCampaign: null,
         }),
       setLiveEnabled: (value) => {
         const snapshot = get().liveSnapshot;
@@ -293,6 +306,21 @@ export const useHarbor = create<HarborState>()(
         }
       },
       setActiveIslandId: (id) => set({ activeIslandId: id }),
+      applyHistoryResult: (result) => {
+        if (result.ok) {
+          set({ historyCampaignId: result.campaignId, pendingCampaign: null });
+          return;
+        }
+        set({ pendingCampaign: { candidates: result.candidates, snapshot: result.snapshot } });
+      },
+      chooseCampaign: (id) => {
+        const pending = get().pendingCampaign;
+        if (!pending) return;
+        void ingestSnapshotHistory(pending.snapshot, { explicitCampaignId: id }).then((history) => {
+          get().applyHistoryResult(history);
+        });
+      },
+      clearPendingCampaign: () => set({ pendingCampaign: null }),
     }),
     {
       name: "harbor-buddy-es",
@@ -319,6 +347,7 @@ export const useHarbor = create<HarborState>()(
         locale: state.locale,
         samples: state.samples,
         activeIslandId: state.activeIslandId,
+        historyCampaignId: state.historyCampaignId,
       }),
     },
   ),

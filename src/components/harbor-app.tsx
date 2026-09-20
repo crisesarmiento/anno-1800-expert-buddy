@@ -27,7 +27,7 @@ import { Stamp } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { HOME_SATURATED_TIP_MS } from "@/lib/home-saturated-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
-import { resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
+import { focusOptionsForSnapshot, resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -315,7 +315,8 @@ function Welcome() {
   const completed = useHarbor((s) => s.completed);
   const activeIslandId = useHarbor((s) => s.activeIslandId);
   const setActiveIslandId = useHarbor((s) => s.setActiveIslandId);
-  const islandId = resolveIslandFocusId(activeIslandId);
+  const islandOptions = focusOptionsForSnapshot(snapshot);
+  const islandId = resolveIslandFocusId(activeIslandId, islandOptions);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
   const saturatedTip = useHomeSaturatedTip(snapshot);
   const t = useT();
@@ -325,7 +326,7 @@ function Welcome() {
     : campaignTip?.kind === "chip"
       ? campaignTip.line
       : (campaignTip?.line ?? ESTO_AHORA_IDLE);
-  const scopedLine = scopeEstoAhoraLine(islandId, rawLine);
+  const scopedLine = scopeEstoAhoraLine(islandId, rawLine, islandOptions);
 
   return (
     <div data-welcome="" className="stagger-in mx-auto flex max-w-2xl flex-col gap-8">

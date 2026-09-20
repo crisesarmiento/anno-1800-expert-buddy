@@ -1,5 +1,6 @@
 import { InkSeal } from "@/components/stamps";
-import { islandFocusOptions } from "@/lib/island-focus";
+import { focusOptionsForSnapshot } from "@/lib/island-focus";
+import { useHarbor } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 /** Notebook chip/selector texture — never the brass CTA expedition wreath. */
@@ -10,7 +11,8 @@ export function IslandFocusChips({
   activeId: string;
   onPick: (id: string) => void;
 }) {
-  const islands = islandFocusOptions();
+  const live = useHarbor((state) => state.liveSnapshot);
+  const islands = focusOptionsForSnapshot(live);
 
   return (
     <div data-island-focus-chips="" className="flex flex-wrap gap-2">

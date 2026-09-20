@@ -1,6 +1,14 @@
 import { create } from "zustand";
+import { ingestSnapshotHistory } from "@/lib/history";
 import { useHarbor } from "@/lib/store";
-import { ingestLiveFile } from "@/lib/live";
+import { ingestLiveFile, type LiveSnapshot } from "@/lib/live";
+
+export function commitLiveSnapshot(snapshot: LiveSnapshot, fileName?: string | null) {
+  useHarbor.getState().applyLiveSnapshot(snapshot, fileName);
+  void ingestSnapshotHistory(snapshot).then((history) => {
+    useHarbor.getState().applyHistoryResult(history);
+  });
+}
 import { createLiveReader, type ReaderStatus } from "@/lib/live/reader";
 import {
   ensureReadPermission,
@@ -15,7 +23,7 @@ const reader = createLiveReader({
   accept: async (file) => {
     const result = await ingestLiveFile(file, useHarbor.getState().locale);
     if (!result.ok) return null;
-    return () => useHarbor.getState().applyLiveSnapshot(result.snapshot, file.name);
+    return () => commitLiveSnapshot(result.snapshot, file.name);
   },
 });
 export const liveReader = {

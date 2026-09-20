@@ -21,7 +21,13 @@ import {
   snapshotFromSession,
   type LiveSnapshot,
 } from "@/lib/live";
-import { liveReader, startLiveReader, resumeLiveReader, useLiveReader } from "@/lib/live-reader";
+import {
+  commitLiveSnapshot,
+  liveReader,
+  startLiveReader,
+  resumeLiveReader,
+  useLiveReader,
+} from "@/lib/live-reader";
 import { isLiveLocked, useHarbor } from "@/lib/store";
 import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
@@ -224,7 +230,7 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
-    applyLiveSnapshot(result.snapshot, file.name);
+    commitLiveSnapshot(result.snapshot, file.name);
   }
 
   function onPaste() {
@@ -235,7 +241,7 @@ export function LivePanel({
       return;
     }
     liveReader.stop();
-    applyLiveSnapshot(result.snapshot, "pegado.json");
+    commitLiveSnapshot(result.snapshot, "pegado.json");
   }
 
   function onExample() {

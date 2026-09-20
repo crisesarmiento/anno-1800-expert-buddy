@@ -1,4 +1,4 @@
-import type { LiveNamedHit, LiveSnapshot } from "./types.ts";
+import type { LiveIslandSnapshot, LiveNamedHit, LiveSnapshot } from "./types.ts";
 
 /** Catalog session/region ids. Never a player-renamed colony. */
 export const SESSION_REGION_IDS = new Set(["old-world", "new-world", "bright-sands"]);
@@ -22,6 +22,7 @@ export const RESEARCH_READER_PATHS = [
   "src/lib/live/a7s-snapshot.ts",
   "src/lib/live/a7s-read.ts",
   "src/lib/live/a7s-trade-routes.ts",
+  "src/lib/live/a7s-islands.ts",
   "scripts/filedb-probe.ts",
 ] as const;
 
@@ -46,11 +47,17 @@ export function isSessionRegionHit(
 }
 
 /**
- * Etapa 0 cannot resolve CityName. Save `islandName` / `telemetry.islands`
- * are session/region hits — never a player island identity.
+ * Inherited `islandName` / `telemetry.islands` are session/region hits —
+ * never a player island identity. Colonies live in `islandSnapshots`.
  */
 export function playerIslandFromSave(_snapshot: LiveSnapshot | null | undefined): null {
   return null;
+}
+
+export function playerIslandsFromSave(
+  snapshot: LiveSnapshot | null | undefined,
+): LiveIslandSnapshot[] {
+  return (snapshot?.islandSnapshots ?? []).filter((island) => isPlayerParticipant(island.ownerId));
 }
 
 /** OCR Statistics island — observed selected island, not a save CityName. */

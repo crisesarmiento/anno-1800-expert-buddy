@@ -3,6 +3,9 @@ export const LIVE_GAME = "anno-1800" as const;
 export const LIVE_MAX_BYTES = 400 * 1024;
 export const LIVE_MAX_QUESTS = 40;
 export const LIVE_MAX_TITLE = 200;
+export const LIVE_MAX_ISLAND_SNAPSHOTS = 40;
+export const LIVE_MAX_ISLAND_STOCK = 24;
+export const LIVE_MAX_ISLAND_BUILDINGS = 40;
 
 export type LiveSource = "telemetry" | "save" | "file";
 export type LiveQuestState = "active" | "ready" | "done";
@@ -81,12 +84,20 @@ export type LiveConnection = {
 
 export type LiveNativeView = "production" | "finance" | "population" | "unknown";
 
+/** Composite island identity: session/region GUID + AreaInfo area id. */
+export type LiveIslandRef = {
+  regionId: number;
+  areaId: number;
+};
+
 export type LiveNativeConnection = {
   provider: "ux-enhancer-ocr";
   view: LiveNativeView;
   observedAt: string;
   islandName?: string;
   serverVersion?: string;
+  /** Set only when OCR display name maps to exactly one save island. */
+  islandRef?: LiveIslandRef;
 };
 
 export type LiveNativeProbeState = "reachable" | "unreachable" | "invalid_response";
@@ -120,6 +131,8 @@ export type LiveProductionMetric = {
   buildingCount?: number;
   /** When Finance last supplied buildingCount, independent of `observedAt` (Production's sample time). */
   buildingCountObservedAt?: string;
+  /** Set only when this OCR row maps to exactly one save island. */
+  islandRef?: LiveIslandRef;
 };
 
 export type LiveTelemetry = {
@@ -138,6 +151,56 @@ export type LiveTelemetry = {
 export const LIVE_WORKFORCE_TIERS = ["farmers", "workers", "artisans", "engineers"] as const;
 export type LiveWorkforceTier = (typeof LIVE_WORKFORCE_TIERS)[number];
 export type LiveWorkforce = Partial<Record<LiveWorkforceTier, true>>;
+
+export type LiveEvidenceSource = "save" | "ocr" | "manual";
+
+export type LiveFieldCoverage = {
+  source: LiveEvidenceSource;
+  observedAt?: string;
+  scope?: string;
+};
+
+export type LiveIslandNameSource = "city-name" | "city-name-guid" | "neutral";
+
+export type LiveIslandStock = {
+  id: string;
+  name: string;
+  amount: number;
+};
+
+export type LiveIslandPopulation = {
+  farmers?: number;
+  workers?: number;
+  artisans?: number;
+  engineers?: number;
+};
+
+export type LiveIslandCapacities = {
+  warehouse?: number;
+};
+
+/**
+ * One colony in one session. Identity is regionId+areaId, never the display name.
+ * Optional blocks are omitted when unknown — never filled with 0.
+ */
+export type LiveIslandSnapshot = {
+  regionId: number;
+  areaId: number;
+  ownerId: number;
+  name: string;
+  nameSource: LiveIslandNameSource;
+  stock?: LiveIslandStock[];
+  buildings?: LiveBuildingHit[];
+  population?: LiveIslandPopulation;
+  capacities?: LiveIslandCapacities;
+  coverage: {
+    identity: LiveFieldCoverage;
+    stock?: LiveFieldCoverage;
+    buildings?: LiveFieldCoverage;
+    population?: LiveFieldCoverage;
+    capacities?: LiveFieldCoverage;
+  };
+};
 
 export type LiveSnapshot = {
   schema: typeof LIVE_SCHEMA;
@@ -158,6 +221,15 @@ export type LiveSnapshot = {
   savedAt?: string;
   workforce?: LiveWorkforce;
   connection?: LiveConnection;
+  /** Verifiable campaign id from the save. Never inferred from filename/mtime. */
+  campaignId?: string;
+  /** Participant id when it is the human player (0). */
+  playerId?: number;
+  /** Save-internal snapshot id when present. */
+  snapshotId?: string;
+  /** Simulation clock from the save when present. Not filesystem mtime. */
+  simTime?: number;
+  islandSnapshots?: LiveIslandSnapshot[];
 };
 
 export type LiveMatchKind = "none" | "confirmed" | "suggested";

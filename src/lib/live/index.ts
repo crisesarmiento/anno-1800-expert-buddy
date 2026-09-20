@@ -7,3 +7,5 @@ export * from "./apply.ts";
 export * from "./export.ts";
 export * from "./handle-store.ts";
 export * from "./evidence.ts";
+export * from "./ocr-island.ts";
+export * from "./island-key.ts";

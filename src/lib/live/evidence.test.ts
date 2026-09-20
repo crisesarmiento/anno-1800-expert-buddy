@@ -15,6 +15,7 @@ import {
   liveJsonWriterPath,
   ocrSelectedIsland,
   playerIslandFromSave,
+  playerIslandsFromSave,
   regionHitsFromSnapshot,
   unknownAmountIsZero,
 } from "./evidence.ts";
@@ -50,6 +51,9 @@ function scanOf(over: Partial<SaveScan> = {}): SaveScan {
     workers: false,
     artisans: false,
     engineers: false,
+    islandSnapshots: [],
+    snapshotId: null,
+    simTime: null,
     ...over,
   };
 }
@@ -155,6 +159,33 @@ describe("islands: session/region is not a player colony", () => {
     assert.equal(playerIslandFromSave(snapshot), null);
     assert.deepEqual(regionHitsFromSnapshot(snapshot), [{ id: "old-world", name: "Old World" }]);
     assert.equal(ocrSelectedIsland(snapshot), "La Inapetente");
+  });
+
+  it("reads player colonies from islandSnapshots, never from islandName", () => {
+    const snapshot = snap({
+      islandName: "Old World",
+      islandSnapshots: [
+        {
+          regionId: 180023,
+          areaId: 8451,
+          ownerId: 0,
+          name: "La Costa",
+          nameSource: "city-name",
+          coverage: { identity: { source: "save" } },
+        },
+        {
+          regionId: 180023,
+          areaId: 1,
+          ownerId: 13,
+          name: "[1]",
+          nameSource: "neutral",
+          coverage: { identity: { source: "save" } },
+        },
+      ],
+    });
+    assert.equal(playerIslandFromSave(snapshot), null);
+    assert.equal(playerIslandsFromSave(snapshot).length, 1);
+    assert.equal(playerIslandsFromSave(snapshot)[0]?.areaId, 8451);
   });
 });
 

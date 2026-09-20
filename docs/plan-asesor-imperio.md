@@ -1,6 +1,6 @@
 # Plan de implementación: asesor económico, logístico y militar
 
-Fecha: 2026-09-19. Estado: propuesta de implementación. Etapa 0 entregada en este PR (matriz de evidencia + honestidad del lector). Etapas 1–6 no implementadas.
+Fecha: 2026-09-19. Estado: propuesta de implementación. Etapa 0 en main. Etapa 1 (islas + historial IndexedDB) en este PR. Etapas 2–6 no implementadas.
 Base revisada: main local `106afe1`. No se confirmó la punta remota por restricciones de conexión.
 
 ## Objetivo y decisiones

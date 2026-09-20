@@ -7,7 +7,7 @@ import { InkSeal } from "@/components/stamps";
 import { pickCampaignTip } from "@/lib/campaign-tips";
 import { constructionTipLine } from "@/lib/construction-tip";
 import { ESTO_AHORA_IDLE } from "@/lib/diary-chips";
-import { resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
+import { focusOptionsForSnapshot, resolveIslandFocusId, scopeEstoAhoraLine } from "@/lib/island-focus";
 import { deskCalmUmbral, sessionEstoAhora } from "@/lib/session-desk";
 import { resolveMission } from "@/lib/data";
 import { commitDeskMutation } from "@/lib/desk-offline";
@@ -28,7 +28,8 @@ export function SessionDesk() {
   const completed = useHarbor((s) => s.completed);
   const activeIslandId = useHarbor((s) => s.activeIslandId);
   const setActiveIslandId = useHarbor((s) => s.setActiveIslandId);
-  const islandId = resolveIslandFocusId(activeIslandId);
+  const islandOptions = focusOptionsForSnapshot(snapshot);
+  const islandId = resolveIslandFocusId(activeIslandId, islandOptions);
   const resolved = resolveMission(missionId);
   const campaignTip = pickCampaignTip({ snapshot, stamps, missionId, completed });
   const urgentCampaignTip =
@@ -58,7 +59,7 @@ export function SessionDesk() {
     campaignTip?.line ??
     now?.text ??
     ESTO_AHORA_IDLE;
-  const scopedLine = scopeEstoAhoraLine(islandId, activeLine);
+  const scopedLine = scopeEstoAhoraLine(islandId, activeLine, islandOptions);
 
   function commit(kind: Parameters<typeof commitDeskMutation>[1]) {
     commitDeskMutation(getDeskHost(), kind);

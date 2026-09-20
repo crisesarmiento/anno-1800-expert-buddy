@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import {
   defaultIslandFocusId,
+  focusOptionsForSnapshot,
   islandFocusName,
   islandFocusOptions,
+  liveIslandFocusOptions,
   resolveIslandFocusId,
   scopeEstoAhoraLine,
 } from "./island-focus.ts";
@@ -40,6 +42,32 @@ describe("island focus options", () => {
     assert.equal(resolveIslandFocusId(undefined), "la-inapetente");
     assert.equal(resolveIslandFocusId("not-a-real-island"), "la-inapetente");
     assert.equal(resolveIslandFocusId("la-inapetente"), "la-inapetente");
+  });
+
+  it("uses save islandSnapshots for live focus, never islandName as a colony", () => {
+    const snapshot: LiveSnapshot = {
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T12:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      islandName: "Old World",
+      islandSnapshots: [
+        {
+          regionId: 180023,
+          areaId: 8451,
+          ownerId: 0,
+          name: "La Costa",
+          nameSource: "city-name",
+          coverage: { identity: { source: "save" } },
+        },
+      ],
+    };
+    const live = liveIslandFocusOptions(snapshot);
+    assert.equal(live[0]?.id, "180023:8451");
+    assert.equal(live[0]?.name, "La Costa");
+    assert.equal(focusOptionsForSnapshot(snapshot)[0]?.id, "180023:8451");
+    assert.equal(focusOptionsForSnapshot(null)[0]?.id, "la-inapetente");
   });
 });
 

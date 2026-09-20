@@ -35,6 +35,7 @@ must open or save next instead of guessing.
 - It writes `harbor-live.json` crash-safely and never writes to the save.
 - The browser reads the JSON through the explicitly selected file handle.
 - The contract remains `harbor-live-v1`; new fields should stay optional and backward compatible.
+- `islandName` / `telemetry.islands` are session/region. Player colonies live in optional `islandSnapshots[]` (region + area). OCR auto-associates only when that identity is unique.
 
 ### Optional production OCR
 
@@ -71,6 +72,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Untrusted-input normalization: `src/lib/live/validate.ts`
 - Save/OCR writer: `public/watch-harbor-live.ps1` (Windows). `src/lib/live/a7s-snapshot.ts` is a research util, not the Windows writer.
 - Honesty helpers: `src/lib/live/evidence.ts`
+- Local campaign history (IndexedDB, not the shared JSON): `src/lib/history`
 - Production analysis: `src/lib/native-production.ts`
 - Route analysis: `src/lib/trade-route-health.ts`
 - Production UI: `src/components/native-production-card.tsx`
@@ -127,7 +129,7 @@ Prefer improvements that strengthen evidence without increasing setup:
 
 1. Installation/health diagnostics for the optional OCR server.
 2. Evidence freshness and per-island capture guidance.
-3. Longer save-to-save history with explicit global-stock scope.
+3. Etapa 2: tesorería, mantenimiento y pérdidas recurrentes sin confundir compra con déficit.
 4. More catalog mappings, each backed by a known GUID and production rate.
 
 Do not pursue automatic route clicking, memory hooks, save mutation, or claims of real route
