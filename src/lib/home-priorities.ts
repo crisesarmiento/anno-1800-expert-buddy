@@ -1,7 +1,13 @@
+import type { HistorySample } from "./history/types.ts";
 import type { LiveSnapshot, LiveTradeRoute } from "./live/types.ts";
 import { analyzeNativeProduction, type NativeProductionAdvice } from "./native-production.ts";
 import { isOcrSampleStale } from "./native-freshness.ts";
 import { tradeRouteHealth } from "./trade-route-health.ts";
+import {
+  essentialStockDrops,
+  samplesOnBranch,
+  treasuryHealth,
+} from "./treasury-health.ts";
 
 export type HomePriority =
   | {
@@ -22,6 +28,25 @@ export type HomePriority =
       observedAt?: string;
       previousSavedAt: string;
       anchor: string;
+    }
+  | {
+      kind: "treasury";
+      key: string;
+      from: number;
+      to: number;
+      observedAt?: string;
+      previousSavedAt: string;
+      anchor: string;
+    }
+  | {
+      kind: "essential";
+      key: string;
+      name: string;
+      before: number;
+      after: number;
+      observedAt?: string;
+      previousSavedAt: string;
+      anchor: string;
     };
 
 export type ProductionReadiness =
@@ -32,7 +57,12 @@ export function routeAnchor(route: LiveTradeRoute, index: number) {
 }
 
 /** The timestamp of an observation is not the JSON writer/probe timestamp. */
-export function homePriorities(snapshot: LiveSnapshot | null, now: number, enabled = true) {
+export function homePriorities(
+  snapshot: LiveSnapshot | null,
+  now: number,
+  enabled = true,
+  samples: HistorySample[] = [],
+) {
   const native = snapshot?.connection?.native;
   const probe = snapshot?.connection?.nativeProbe;
   const production = snapshot?.telemetry?.production ?? [];
@@ -108,8 +138,41 @@ export function homePriorities(snapshot: LiveSnapshot | null, now: number, enabl
   });
   const shortfall = advice.filter((row) => row.status === "falta").map(toPriority);
   const excess = advice.filter((row) => row.status === "sobra").map(toPriority);
+  const branch = samplesOnBranch(samples);
+  const cash = treasuryHealth(branch);
+  const treasury: HomePriority[] =
+    cash.kind === "recurrent"
+      ? [
+          {
+            kind: "treasury",
+            key: "treasury-recurrent",
+            from: cash.from,
+            to: cash.to,
+            observedAt: cash.savedAt,
+            previousSavedAt: cash.previousSavedAt,
+            anchor: "economy",
+          },
+        ]
+      : [];
+  const essential: HomePriority[] = essentialStockDrops(branch).map((row) => ({
+    kind: "essential",
+    key: `essential-${row.id}`,
+    name: row.name,
+    before: row.from,
+    after: row.to,
+    observedAt: row.savedAt,
+    previousSavedAt: row.previousSavedAt,
+    anchor: "economy",
+  }));
   return {
-    priorities: [...structural, ...shortfall, ...excess, ...stock.values()].slice(0, 3),
+    priorities: [
+      ...treasury,
+      ...structural,
+      ...essential,
+      ...shortfall,
+      ...excess,
+      ...stock.values(),
+    ].slice(0, 3),
     readiness,
     island: currentIsland,
     hasRoutes: snapshot?.telemetry?.routes != null,

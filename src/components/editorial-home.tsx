@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Database, Factory, ScanLine, Ship, Wheat } from "lucide-react";
+import { ArrowRight, BookOpen, Coins, Database, Factory, ScanLine, Ship, Wheat } from "lucide-react";
 import { HarborNavigation } from "@/components/harbor-navigation";
 import { Button } from "@/components/ui/button";
 import { homePriorities, type HomePriority } from "@/lib/home-priorities";
 import { editorialCopy } from "@/lib/editorial-copy";
+import { campaignHistoryStore, type HistorySample } from "@/lib/history";
 import { fill, LOCALE_META, type Locale } from "@/lib/i18n";
 import { useHarbor } from "@/lib/store";
 import { resumeLiveReader, useLiveReader } from "@/lib/live-reader";
+import { samplesOnBranch } from "@/lib/treasury-health";
 
 function age(iso: string | undefined, locale: Locale, now: number) {
   if (!iso || !Number.isFinite(Date.parse(iso))) return editorialCopy[locale].unknownTime;
@@ -25,10 +27,12 @@ export function EditorialHome() {
   const enabled = useHarbor((s) => s.liveEnabled);
   const locale = useHarbor((s) => s.locale);
   const fileName = useHarbor((s) => s.liveFileName);
+  const campaignId = useHarbor((s) => s.historyCampaignId);
   const t = editorialCopy[locale];
   const [now, setNow] = useState(() => Date.now());
   const reading = useLiveReader((s) => s.status);
   const [busy, setBusy] = useState(false);
+  const [samples, setSamples] = useState<HistorySample[]>([]);
   useEffect(() => {
     const clock = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(clock);
@@ -36,6 +40,24 @@ export function EditorialHome() {
   useEffect(() => {
     document.documentElement.lang = LOCALE_META[locale].html;
   }, [locale]);
+  useEffect(() => {
+    if (!campaignId) {
+      setSamples([]);
+      return;
+    }
+    let cancelled = false;
+    void campaignHistoryStore()
+      .list(campaignId)
+      .then((rows) => {
+        if (!cancelled) setSamples(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setSamples([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [campaignId, snapshot]);
   async function refresh() {
     if (busy) return;
     setBusy(true);
@@ -46,7 +68,12 @@ export function EditorialHome() {
     }
   }
 
-  const model = homePriorities(snapshot, now, enabled && reading !== "stopped");
+  const model = homePriorities(
+    snapshot,
+    now,
+    enabled && reading !== "stopped",
+    samplesOnBranch(samples),
+  );
   const [lead, ...rest] = model.priorities;
   const readiness = model.readiness;
   const guidance = {
@@ -214,31 +241,39 @@ function Priority({
 }) {
   const t = editorialCopy[locale];
   const production = item.kind === "production";
+  const cash = item.kind === "treasury";
+  const essential = item.kind === "essential";
   const title =
     item.kind === "route"
       ? fill(t.routeTitle, item.route.name)
       : item.kind === "stock"
         ? fill(t.stockTitle, item.name)
-        : fill(item.advice.status === "falta" ? t.missing : t.surplus, item.advice.name);
+        : cash
+          ? t.treasuryTitle
+          : essential
+            ? fill(t.essentialTitle, item.name)
+            : fill(item.advice.status === "falta" ? t.missing : t.surplus, item.advice.name);
   const format = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   const body =
     item.kind === "route"
       ? t[item.issue]
-      : item.kind === "stock"
-        ? `${format.format(item.before)} → ${format.format(item.after)} · ${t.stockLimit}`
-        : fill(
-            t.productionNumbers,
-            format.format(item.advice.capacityTMin),
-            format.format(item.advice.requiredTMin),
-          );
+      : item.kind === "stock" || essential
+        ? `${format.format(item.before)} → ${format.format(item.after)} · ${essential ? t.essentialLimit : t.stockLimit}`
+        : cash
+          ? t.treasuryBody
+          : fill(
+              t.productionNumbers,
+              format.format(item.advice.capacityTMin),
+              format.format(item.advice.requiredTMin),
+            );
   const scope =
     item.kind === "route"
       ? item.route.name
-      : item.kind === "stock"
+      : item.kind === "stock" || cash || essential
         ? t.global
         : item.advice.islandName;
   const observed = production ? item.advice.observedAt : item.observedAt;
-  const Icon = item.kind === "route" ? Ship : production ? Factory : Wheat;
+  const Icon = item.kind === "route" ? Ship : production ? Factory : cash ? Coins : Wheat;
   return (
     <article className="editorial-priority" data-priority={item.kind}>
       <Icon className="editorial-object-icon" strokeWidth={1.1} aria-hidden="true" />
@@ -257,17 +292,23 @@ function Priority({
             <p className="editorial-muted">{t.productionLimit}</p>
           </>
         )}
-        {item.kind === "stock" && (
+        {(item.kind === "stock" || cash || essential) && (
           <p className="editorial-evidence">
             {age(item.previousSavedAt, locale, now)} → {age(item.observedAt, locale, now)}
           </p>
         )}
         <Link
-          to={production ? "/taller" : "/rutas"}
+          to={production || cash || essential ? "/taller" : "/rutas"}
           hash={item.anchor}
           className={primary ? "editorial-cta" : "editorial-text-link"}
         >
-          {production ? t.viewProduction : item.kind === "route" ? t.viewRoute : t.evidence}
+          {cash || essential
+            ? t.viewTreasury
+            : production
+              ? t.viewProduction
+              : item.kind === "route"
+                ? t.viewRoute
+                : t.evidence}
           <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </div>
