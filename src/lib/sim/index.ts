@@ -25,6 +25,12 @@ export {
   parseCitySeed,
   seenChapterId,
 } from "./compute.ts";
+export {
+  BUILDING_SITE,
+  CHAIN_CONSTRUCTION,
+  liveBuildingToCatalog,
+  liveGoodToCatalog,
+} from "./catalog-figures.ts";
 export { GOOD_NAME_ES, goodNameEs } from "./goods.ts";
 export {
   SAVE_COUNT_CHIP_LABEL,
