@@ -61,6 +61,7 @@ El diario vive si el vigilante corre. El mod vacío no es fuente de datos. No co
 | Ingresos / mantenimiento / gasto militar | `TaxBalance` / `Income` / `Expenses` / `ShipMaintenance` en FileDB | Sin dueño jugador demostrable (ConstructionAI / AreaManager_3, no colonias `ownerId=0`) | float32 o entero | — | Etapa 2 no los publica. Flota = etapa 6 | no disponible |
 | Estado real de misión (activa/hecha) | GUID en el save no prueba estado | Instancia | — | — | Watcher emite `quests: []` | no disponible |
 | Throughput de ruta | — | — | t/min reales | — | Ni save ni OCR | no disponible |
+| Escenario producir/importar | Catálogo wiki + observaciones (demanda/capacidad/rutas). Motor puro en `src/lib/scenario/` | Isla elegida + bien | créditos, t/min, mano de obra | `savedAt` / OCR `observedAt` si hay | Taller. Inferido. Stock ≠ excedente. Sin entrega real (etapa 4) | parcial (catálogo); no disponible (fertilidad, pausas, throughput) |
 
 ## Reglas de honestidad (código)
 

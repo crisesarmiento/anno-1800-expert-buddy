@@ -9,6 +9,8 @@ Proyecto fan no oficial; no afiliado a Ubisoft. Los números se citan de la wiki
 
 El motor vive en Taller (`src/lib/sim/`). No es el diario ni “Esto, ahora”. `mode: "campaign"` es el default. El ratio wiki `perfect` solo se usa en Taller.
 
+Etapa 3 compara escenarios puros (capacidad local, cadena faltante, excedente verificado, ampliar origen) en `src/lib/scenario/`. El stock alto no es excedente. Más suministro no se cuenta como ingreso fiscal. Cifras: `src/lib/sim/catalog-figures.ts` (fuente, unidad, cobertura DLC/modificadores).
+
 ## Qué anotar (casas, no habitantes)
 
 En Anno: **Estadísticas → Economía / Población**.

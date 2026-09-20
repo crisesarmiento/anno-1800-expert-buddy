@@ -75,8 +75,11 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Honesty helpers: `src/lib/live/evidence.ts`
 - Local campaign history (IndexedDB, not the shared JSON): `src/lib/history`
 - Production analysis: `src/lib/native-production.ts`
+- Produce-or-import scenarios (pure, inferred): `src/lib/scenario/`
+- Catalog figures (source/unit/DLC): `src/lib/sim/catalog-figures.ts`
 - Route analysis: `src/lib/trade-route-health.ts`
 - Production UI: `src/components/native-production-card.tsx`
+- Scenario UI: `src/components/taller-scenario.tsx`
 - Route UI: `src/components/trade-routes.tsx`
 
 Update schema, types, validation, fixtures, documentation, and tests together when the contract
@@ -130,8 +133,8 @@ Prefer improvements that strengthen evidence without increasing setup:
 
 1. Installation/health diagnostics for the optional OCR server.
 2. Evidence freshness and per-island capture guidance.
-3. Etapa 2: tesorería, mantenimiento y pérdidas recurrentes sin confundir compra con déficit.
-4. More catalog mappings, each backed by a known GUID and production rate.
+3. Etapa 4: dirección de carga/descarga, historial de entregas y tiempos de viaje verificados.
+4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links.
 
 Do not pursue automatic route clicking, memory hooks, save mutation, or claims of real route
 throughput unless a new trustworthy data source is first demonstrated and documented.

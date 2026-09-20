@@ -75,6 +75,7 @@ describe("Taller opt-in workbench", () => {
   });
 
   it("lista falta/alcanza/saturado solo para bienes vistos, en /taller", () => {
+    assert.match(bench, /TallerScenarioCard/);
     assert.match(bench, /TallerGoodsBalance/);
     assert.match(seen, /classifyWorkshopGoods/);
     assert.match(seen, /data-taller-seen-goods/);

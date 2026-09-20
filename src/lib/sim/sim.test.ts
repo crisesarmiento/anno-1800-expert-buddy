@@ -170,10 +170,10 @@ describe("campaign-ch1 fixture", () => {
     close(island.housesSupported.fish?.farmer ?? -1, 0, 1e-9);
   });
 
-  it("does not invent workforce when lumberjack/sawmill rows are null", () => {
+  it("uses wiki lumberjack/sawmill workforce and maintenance, not invented zeros", () => {
     const stats = compute(parseCitySeed(fixture));
-    assert.equal(stats.islands[0]?.workforce, null);
-    assert.equal(stats.islands[0]?.maintenance, null);
+    assert.equal(stats.islands[0]?.workforce?.farmer, 15);
+    assert.equal(stats.islands[0]?.maintenance, -20);
   });
 });
 
@@ -276,7 +276,8 @@ describe("sim gate: chapter already seen + perfect copy", () => {
 describe("missing wiki stays null", () => {
   it("lists fields that were not copied from a building infobox", () => {
     assert.ok(MISSING_WIKI.length >= 5);
-    assert.equal(BUILDINGS.lumberjack.maintenance, null);
+    assert.equal(BUILDINGS.lumberjack.maintenance, -10);
+    assert.equal(BUILDINGS.lumberjack.workforce?.farmer, 5);
     assert.equal(BUILDINGS.knitters.maintenance, null);
     assert.equal(BUILDINGS.slaughterhouse.maintenance, null);
   });

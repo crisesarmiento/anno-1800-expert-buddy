@@ -67,8 +67,8 @@ export const BUILDINGS: Record<string, ProductionBuilding> = {
     inputs: [],
     cycleMin: 0.25,
     wikiUrl: "https://anno1800.fandom.com/wiki/Lumberjack%27s_Hut",
-    maintenance: null,
-    workforce: null,
+    maintenance: -10,
+    workforce: { farmer: 5 },
   },
   sawmill: {
     id: "sawmill",
@@ -78,8 +78,8 @@ export const BUILDINGS: Record<string, ProductionBuilding> = {
     inputs: ["wood"],
     cycleMin: 0.25,
     wikiUrl: "https://anno1800.fandom.com/wiki/Sawmill",
-    maintenance: null,
-    workforce: null,
+    maintenance: -10,
+    workforce: { farmer: 10 },
   },
   fishery: {
     id: "fishery",
@@ -664,10 +664,6 @@ export function chainOutputTMin(chain: ProductionChain, mode: SimMode): number {
  * Do not invent these numbers.
  */
 export const MISSING_WIKI: readonly { field: string; source: string }[] = [
-  { field: "BUILDINGS.lumberjack.maintenance", source: "https://anno1800.fandom.com/wiki/Lumberjack%27s_Hut" },
-  { field: "BUILDINGS.lumberjack.workforce", source: "https://anno1800.fandom.com/wiki/Lumberjack%27s_Hut" },
-  { field: "BUILDINGS.sawmill.maintenance", source: "https://anno1800.fandom.com/wiki/Sawmill" },
-  { field: "BUILDINGS.sawmill.workforce", source: "https://anno1800.fandom.com/wiki/Sawmill" },
   { field: "BUILDINGS.sheep.maintenance", source: "https://anno1800.fandom.com/wiki/Sheep_Farm" },
   { field: "BUILDINGS.sheep.workforce", source: "https://anno1800.fandom.com/wiki/Sheep_Farm" },
   { field: "BUILDINGS.knitters.maintenance", source: "https://anno1800.fandom.com/wiki/Framework_Knitters" },
