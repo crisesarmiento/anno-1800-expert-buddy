@@ -57,12 +57,33 @@ export type FleetCoverageView = {
   enemiesAbsentIsNotSafety: true;
 };
 
+/**
+ * Explicit inventory of what manual roles cover the read fleet.
+ * "unknown" is ships with no manual role and no trade-route assignment —
+ * a count of what advice cannot yet speak to, not an accusation of idleness.
+ */
+export type FleetRoleInventory = {
+  escort: number;
+  defense: number;
+  trade: number;
+  idle: number;
+  unknown: number;
+  total: number;
+};
+
+/** Where the material stock used for a build check was read from. */
+export type MaterialsStockScope = "island" | "global" | "unknown";
+
 export type NewBuildCompare = {
   shipId: string;
   honesty: HonestyLabel;
   purchase?: number;
   upkeep?: number;
   materials: { goodId: string; required: number; stockRead: number | null }[];
+  /** "island" only when stock came from the selected shipyard's islandSnapshot. */
+  materialsScope: MaterialsStockScope;
+  materialsIslandId: string | null;
+  materialsIslandName: string | null;
   treasury: number | null;
   purchaseFitsBudget: boolean | null;
   materialsKnown: boolean;
@@ -78,6 +99,7 @@ export type FleetAdvice = {
   ships: FleetInventoryShip[];
   upkeep: FleetUpkeepSplit;
   coverage: FleetCoverageView;
+  roleInventory: FleetRoleInventory;
   /** Escort / defense never appear here. */
   surplusKeys: string[];
   automaticGameActions: readonly [];

@@ -1,5 +1,5 @@
 import type { LiveSnapshot } from "../live/types.ts";
-import { coverageFromSnapshot, surplusKeys } from "./coverage.ts";
+import { coverageFromSnapshot, fleetRoleInventory, surplusKeys } from "./coverage.ts";
 import { fleetUpkeepSplit, inventoryFromSnapshot } from "./inventory.ts";
 import {
   AUTOMATIC_GAME_ACTIONS,
@@ -22,6 +22,7 @@ export function fleetAdvice(
     ships,
     upkeep,
     coverage,
+    roleInventory: fleetRoleInventory(ships, roles),
     surplusKeys: surplusKeys(ships, roles),
     automaticGameActions: automaticGameActions(),
     incompleteLimitsAdvice: coverage.adviceLimited || ships.length === 0 || upkeep.withoutUpkeep > 0,

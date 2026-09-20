@@ -5,6 +5,7 @@ import {
   readMissionProgress,
   suggestedReserves,
   type SaveReadQuestView,
+  type SuggestedReserve,
 } from "@/lib/missions";
 import { missionsById } from "@/lib/data";
 import { useHarbor } from "@/lib/store";
@@ -20,6 +21,12 @@ function stateLabel(
   if (state === "expired") return t.expired;
   if (state === "ready") return t.ready;
   return t.active;
+}
+
+function reserveEvidenceLine(t: ReturnType<typeof useT>["missions"], row: SuggestedReserve) {
+  const stockPart =
+    row.stockRead == null ? t.stockUnknown : fill(t.stockRead, row.stockRead);
+  return `${t.confirmed} · ${stockPart}`;
 }
 
 export function MissionChannels() {
@@ -91,6 +98,22 @@ export function MissionChannels() {
                     {fill(t.missions.timerFrozen, formatFrozenTimer(row.timerRemainingMs))}
                   </span>
                 ) : null}
+                {row.quest.objectives?.length ? (
+                  <ul className="mt-1 flex flex-col gap-0.5" data-quest-objectives="">
+                    {row.quest.objectives.map((objective, index) => (
+                      <li key={objective.id ?? index} className="text-xs text-muted-foreground">
+                        {fill(
+                          t.missions.objectiveProgress,
+                          objective.current ?? 0,
+                          objective.required ?? "?",
+                          objective.goodName ?? objective.text ?? objective.goodId ?? "",
+                        )}
+                        {" · "}
+                        {t.missions.confirmed}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -118,13 +141,7 @@ export function MissionChannels() {
             {reserves.map((row) => (
               <li key={`${row.instanceId ?? row.missionTitle}:${row.goodId}`}>
                 {row.goodName} · {row.amount}
-                <span className="text-muted-foreground">
-                  {" "}
-                  ·{" "}
-                  {row.stockRead == null
-                    ? t.missions.stockUnknown
-                    : fill(t.missions.stockRead, row.stockRead)}
-                </span>
+                <span className="text-muted-foreground"> · {reserveEvidenceLine(t.missions, row)}</span>
               </li>
             ))}
           </ul>
@@ -152,13 +169,7 @@ export function MissionReservesCard({ className }: { className?: string }) {
         {reserves.map((row) => (
           <li key={`${row.instanceId ?? row.missionTitle}:${row.goodId}`} className="tabular-nums">
             {row.goodName} · {row.amount}
-            <span className="text-muted-foreground">
-              {" "}
-              ·{" "}
-              {row.stockRead == null
-                ? t.missions.stockUnknown
-                : fill(t.missions.stockRead, row.stockRead)}
-            </span>
+            <span className="text-muted-foreground"> · {reserveEvidenceLine(t.missions, row)}</span>
           </li>
         ))}
       </ul>
