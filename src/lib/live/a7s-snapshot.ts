@@ -300,6 +300,18 @@ export function snapshotFromScan(
     snapshot.islandSnapshots = scan.islandSnapshots;
     snapshot.playerId = 0;
   }
+  if (scan.storageOwner === "player" && scan.money != null) {
+    snapshot.economy = {
+      treasury: scan.money,
+      coverage: {
+        treasury: {
+          source: "save",
+          scope: "player",
+          ...(opts.savedAt ? { observedAt: opts.savedAt } : {}),
+        },
+      },
+    };
+  }
   return snapshot;
 }
 

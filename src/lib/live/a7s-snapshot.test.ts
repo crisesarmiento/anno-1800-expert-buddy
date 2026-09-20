@@ -45,6 +45,7 @@ describe("GUID table and FileDB snapshot", () => {
     assert.equal(snap.telemetry?.buildings?.find((row) => row.id === "lumberjack")?.count, 3);
     assert.equal(snap.telemetry?.buildings?.find((row) => row.id === "marketplace")?.count, 1);
     assert.equal(snap.telemetry?.goods?.[0]?.amount, 42);
+    assert.equal(snap.economy?.treasury, 8840);
     const ingested = ingestLiveJsonText(JSON.stringify(snap));
     assert.equal(ingested.ok, true);
     if (!ingested.ok) return;
@@ -209,6 +210,18 @@ describe("evidence honesty from a save scan", () => {
     assert.equal(snap.playerId, 0);
     assert.equal(snap.islandSnapshots?.[0]?.stock?.[0]?.amount, 10);
     assert.equal(snap.islandSnapshots?.[1]?.stock?.[0]?.amount, 50);
+  });
+
+  it("publishes player treasury and omits it when the owner is unknown", () => {
+    const player = snapshotFromScan(
+      scanOf({ storageOwner: "player", money: 18420 }),
+      { savedAt: "2026-09-20T12:00:00.000Z" },
+    );
+    assert.equal(player.economy?.treasury, 18420);
+    assert.equal(player.economy?.coverage.treasury.source, "save");
+    assert.equal(player.economy?.coverage.treasury.scope, "player");
+    const unknown = snapshotFromScan(scanOf({ storageOwner: "unknown", money: 18420 }), {});
+    assert.equal(unknown.economy, undefined);
   });
 
   it("keeps islandName as the catalog session/region, not a player colony", () => {

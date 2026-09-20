@@ -13,6 +13,7 @@ import {
   LIVE_WORKFORCE_TIERS,
   type LiveBuildingHit,
   type LiveConnection,
+  type LiveEconomy,
   type LiveEvidenceSource,
   type LiveFieldCoverage,
   type LiveGoodChange,
@@ -329,6 +330,19 @@ function normalizeIslandRef(value: unknown): LiveIslandRef | undefined {
   return { regionId: Math.trunc(regionId), areaId: Math.trunc(areaId) };
 }
 
+function normalizeEconomy(value: unknown): LiveEconomy | undefined {
+  if (!asRecord(value)) return undefined;
+  const treasury = value.treasury;
+  if (typeof treasury !== "number" || !Number.isSafeInteger(treasury)) return undefined;
+  const coverage = asRecord(value.coverage)
+    ? normalizeCoverage(value.coverage.treasury)
+    : undefined;
+  return {
+    treasury,
+    coverage: { treasury: coverage ?? { source: "save", scope: "player" } },
+  };
+}
+
 function normalizeCoverage(value: unknown): LiveFieldCoverage | undefined {
   if (!asRecord(value) || !EVIDENCE_SOURCES.has(value.source as LiveEvidenceSource)) {
     return undefined;
@@ -573,6 +587,8 @@ export function normalizeSnapshot(raw: unknown, locale?: string | null): LiveIng
   }
   const islandSnapshots = normalizeIslandSnapshots(raw.islandSnapshots);
   if (islandSnapshots) snapshot.islandSnapshots = islandSnapshots;
+  const economy = normalizeEconomy(raw.economy);
+  if (economy) snapshot.economy = economy;
   return { ok: true, snapshot: attachOcrIslandIdentity(snapshot) };
 }
 

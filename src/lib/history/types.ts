@@ -26,6 +26,7 @@ export type HistorySummary = {
   islands: HistoryIsland[];
   globalGoods?: LiveIslandStock[];
   islandsOmitted?: number;
+  treasury?: number;
 };
 
 export type HistorySample = {

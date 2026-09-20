@@ -26,6 +26,16 @@ test("money is persisted for the next tick only after a real player money readin
 test("the money sidecar never becomes part of the harbor-live-v1 schema", () => {
   assert.equal(schema.properties.money, undefined);
   assert.equal(schema.properties.pulseHint.properties.money, undefined);
+  assert.ok(schema.properties.economy);
+  assert.equal(schema.$defs.economy.required.includes("treasury"), true);
+});
+
+test("watcher publishes player treasury on economy, not a root money field", () => {
+  assert.match(ps1, /\$payload\.economy = \[ordered\]@\{/);
+  assert.match(ps1, /treasury = \[int\]\$scan\.money/);
+  assert.match(ps1, /scope = "player"/);
+  assert.doesNotMatch(ps1, /\$payload\.money\s*=/);
+  assert.match(bat, /\$payload\.economy = \[ordered\]@\{/);
 });
 
 test("bundled .bat ships the same sidecar-based delta as the .ps1 source", () => {

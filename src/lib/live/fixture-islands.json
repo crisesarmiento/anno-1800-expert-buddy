@@ -8,6 +8,10 @@
   "islandName": "Old World",
   "playerId": 0,
   "simTime": 12000,
+  "economy": {
+    "treasury": 18420,
+    "coverage": { "treasury": { "source": "save", "observedAt": "2026-09-19T11:50:00.000Z", "scope": "player" } }
+  },
   "connection": {
     "mode": "documents-save",
     "fileName": "Autosave.a7s",

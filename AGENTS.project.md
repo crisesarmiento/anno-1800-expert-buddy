@@ -35,6 +35,7 @@ must open or save next instead of guessing.
 - It writes `harbor-live.json` crash-safely and never writes to the save.
 - The browser reads the JSON through the explicitly selected file handle.
 - The contract remains `harbor-live-v1`; new fields should stay optional and backward compatible.
+- Player cash is optional `economy.treasury` (GUID 1010017, participant 0). Recurrent income/maintenance are not published until owner-scoped. The money sidecar only feeds `pulseHint.coins`.
 - `islandName` / `telemetry.islands` are session/region. Player colonies live in optional `islandSnapshots[]` (region + area). OCR auto-associates only when that identity is unique.
 
 ### Optional production OCR

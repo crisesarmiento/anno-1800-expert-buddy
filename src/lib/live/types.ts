@@ -230,6 +230,19 @@ export type LiveSnapshot = {
   /** Simulation clock from the save when present. Not filesystem mtime. */
   simTime?: number;
   islandSnapshots?: LiveIslandSnapshot[];
+  /**
+   * Player-owned cash only (GUID 1010017, ParticipantID 0).
+   * Omitted when the owner is unknown — never filled with 0.
+   * Recurrent income/maintenance stay off the contract until owner-scoped.
+   */
+  economy?: LiveEconomy;
+};
+
+export type LiveEconomy = {
+  treasury: number;
+  coverage: {
+    treasury: LiveFieldCoverage;
+  };
 };
 
 export type LiveMatchKind = "none" | "confirmed" | "suggested";

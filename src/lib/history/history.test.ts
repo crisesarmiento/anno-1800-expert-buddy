@@ -215,6 +215,21 @@ describe("IndexedDB-equivalent history", () => {
     assert.equal(refused.reason === "cross-branch" || refused.reason === "against-future", true);
   });
 
+  it("keeps treasury in the summary and does not dedupe a cash-only change", async () => {
+    const store = createMemoryHistoryStore();
+    const first = await store.record(
+      snap({ simTime: 100, economy: { treasury: 2000, coverage: { treasury: { source: "save" } } } }),
+    );
+    const spent = await store.record(
+      snap({ simTime: 200, economy: { treasury: 800, coverage: { treasury: { source: "save" } } } }),
+    );
+    assert.equal(first.ok && spent.ok, true);
+    if (!first.ok || !spent.ok) return;
+    assert.equal(spent.deduped, false);
+    assert.equal(first.sample.summary.treasury, 2000);
+    assert.equal(spent.sample.summary.treasury, 800);
+  });
+
   it("dedupes identical snapshots and caps at 200 distinct samples", async () => {
     const store = createMemoryHistoryStore();
     const first = await store.record(snap({ simTime: 1, snapshotId: "s1" }));
