@@ -16,6 +16,7 @@ import {
 } from "../sim/catalog-figures.ts";
 import { BUILDINGS, chainByGood, chainLinks, outputTMinAt100 } from "../sim/chains.ts";
 import type { BuildingId, PopulationTier } from "../sim/types.ts";
+import type { GoodId } from "../sim/types.ts";
 import type {
   AlternativeKind,
   ConstructionTotals,
@@ -154,6 +155,39 @@ function inputBlockers(
     }
   }
   return { impossible, missing: [...new Set(missing)] };
+}
+
+/**
+ * Direct input goods for every building in buildingsToAdd, t/min at the added
+ * rate. Lists every input — not only the final good — even when another
+ * added building already covers it, so the comparator shows the full bill.
+ */
+function materialsFor(
+  buildingsToAdd: Partial<Record<BuildingId, number>>,
+): Partial<Record<GoodId, number>> {
+  const out: Partial<Record<GoodId, number>> = {};
+  const entries = Object.entries(buildingsToAdd).filter(([, n]) => (n ?? 0) > 0) as Array<
+    [BuildingId, number]
+  >;
+  for (const [id, count] of entries) {
+    const building = BUILDINGS[id];
+    if (!building?.inputs?.length) continue;
+    const rate = perBuildingTMin(id) * count;
+    for (const inputGood of building.inputs) {
+      out[inputGood] = (out[inputGood] ?? 0) + rate;
+    }
+  }
+  return out;
+}
+
+/**
+ * A component missing from investment or recurrent maintenance is not a
+ * zero cost. Flag "investment" so the verdict cannot rank on a partial bill.
+ */
+function flagCostGaps(alt: ScenarioAlternative): void {
+  if (alt.investment.coins == null || alt.recurrentMaintenance == null) {
+    if (!alt.missing.includes("investment")) alt.missing.push("investment");
+  }
 }
 
 function siteBlockers(
@@ -313,6 +347,7 @@ function blankAlt(kind: AlternativeKind): ScenarioAlternative {
     missing: [],
     assumptions: [],
     buildingsToAdd: {},
+    materialsNeeded: {},
     investment: { ...EMPTY_COST },
     recurrentMaintenance: null,
     workforce: null,
@@ -388,9 +423,10 @@ function expandLocal(input: ScenarioInput, consumer: ScenarioIsland, need: numbe
   alt.blockers.push(...site.impossible);
   alt.missing.push(...site.missing);
   alt.investment = costForBuildings(alt.buildingsToAdd, input.goodId, consumer.world);
-  if (alt.investment.coins == null) alt.missing.push("investment");
   alt.workforce = workforceForBuildings(alt.buildingsToAdd);
   alt.recurrentMaintenance = maintenanceForBuildings(alt.buildingsToAdd);
+  alt.materialsNeeded = materialsFor(alt.buildingsToAdd);
+  flagCostGaps(alt);
   alt.logisticsViable = true;
   return finishAlt(alt, consumer, need);
 }
@@ -463,9 +499,10 @@ function buildLocalChain(
   alt.assumptions.push("campaign-ratio");
   if (consumer.capacityTMin == null || existingOut <= 0) alt.assumptions.push("productivity-100");
   alt.investment = costForBuildings(toAdd, input.goodId, consumer.world);
-  if (alt.investment.coins == null) alt.missing.push("investment");
   alt.workforce = workforceForBuildings(toAdd);
   alt.recurrentMaintenance = maintenanceForBuildings(toAdd);
+  alt.materialsNeeded = materialsFor(toAdd);
+  flagCostGaps(alt);
   alt.logisticsViable = true;
   return finishAlt(alt, consumer, need);
 }
@@ -485,21 +522,22 @@ function transportReady(origin: ScenarioIsland): boolean {
   return origin.routeToConsumerOk !== false && origin.transportToConsumerTMin != null;
 }
 
-function pickOrigin(
-  input: ScenarioInput,
-  consumer: ScenarioIsland,
-): { origin: ScenarioIsland; surplus: number | null; missing: MissingDatum[] } | null {
+/**
+ * Every other island, ranked ready-transport-first then by shippable/surplus
+ * t/min. All are pertinent candidates — including ones missing data or
+ * without a ready route, which still surface as alternatives with their
+ * blockers shown rather than being silently dropped.
+ */
+function rankedOrigins(input: ScenarioInput, consumer: ScenarioIsland): ScenarioIsland[] {
   const others = input.islands.filter((row) => row.id !== consumer.id);
-  if (!others.length) return null;
   const ranked = others.map((origin) => {
     const surplus = verifiedSurplusTMin(origin);
-    const missing = originMissing(origin, surplus);
     const ready = transportReady(origin);
     const shippable =
       surplus != null && origin.transportToConsumerTMin != null && origin.routeToConsumerOk !== false
         ? Math.min(surplus, origin.transportToConsumerTMin)
         : null;
-    return { origin, surplus, missing, ready, shippable };
+    return { origin, surplus, ready, shippable };
   });
   ranked.sort((a, b) => {
     if (a.ready !== b.ready) return a.ready ? -1 : 1;
@@ -510,55 +548,49 @@ function pickOrigin(
     const surB = b.surplus ?? -1;
     return surB - surA;
   });
-  const best = ranked[0]!;
-  return { origin: best.origin, surplus: best.surplus, missing: best.missing };
+  return ranked.map((row) => row.origin);
 }
 
-function transportSurplus(
-  input: ScenarioInput,
+function transportSurplusFrom(
+  origin: ScenarioIsland,
   consumer: ScenarioIsland,
   need: number | null,
 ): ScenarioAlternative {
   const alt = blankAlt("transport-surplus");
-  const picked = pickOrigin(input, consumer);
-  if (!picked) {
-    alt.viability = "impossible";
-    alt.blockers.push("no-other-island");
-    return alt;
-  }
-  alt.originId = picked.origin.id;
-  alt.missing.push(...picked.missing);
+  alt.originId = origin.id;
+  const surplus = verifiedSurplusTMin(origin);
+  alt.missing.push(...originMissing(origin, surplus));
   if (need == null) {
     alt.missing.push(consumer.demandTMin == null ? "consumer-demand" : "consumer-capacity");
     return alt;
   }
   alt.assumptions.push("stock-is-not-surplus");
-  if (picked.origin.hasOtherConsumers === true) {
+  if (origin.hasOtherConsumers === true) {
     alt.assumptions.push("origin-needs-preserved");
   }
-  if (picked.surplus == null) {
+  if (surplus == null) {
     alt.missing.push("origin-capacity");
     alt.logisticsViable = null;
     return alt;
   }
-  if (picked.origin.transportToConsumerTMin == null) {
+  if (origin.transportToConsumerTMin == null) {
     // Configured cargo, stock and observed visits are not throughput.
     alt.missing.push("transport-capacity");
     alt.logisticsViable = null;
-    if (picked.origin.routeToConsumerOk === false) {
+    if (origin.routeToConsumerOk === false) {
       alt.viability = "impossible";
       alt.blockers.push("route-not-ready");
       alt.logisticsViable = false;
     }
-    return finishAlt(alt, picked.origin, need);
+    return finishAlt(alt, origin, need);
   }
-  if (picked.origin.routeToConsumerOk === false) {
+  if (origin.routeToConsumerOk === false) {
     alt.viability = "impossible";
     alt.blockers.push("route-not-ready");
     alt.logisticsViable = false;
     return alt;
   }
-  const shippable = Math.min(picked.surplus, picked.origin.transportToConsumerTMin);
+  const shippable = Math.min(surplus, origin.transportToConsumerTMin);
   alt.allocatedTMin = shippable;
   alt.coversNeed = shippable + 1e-9 >= need;
   alt.logisticsViable = true;
@@ -567,28 +599,23 @@ function transportSurplus(
   alt.workforce = {};
   alt.assumptions.push("transport-capacity-explicit");
   if (!alt.coversNeed) alt.missing.push("origin-capacity");
-  return finishAlt(alt, picked.origin, need);
+  return finishAlt(alt, origin, need);
 }
 
-function expandOriginAndTransport(
+function expandOriginAndTransportFrom(
   input: ScenarioInput,
+  origin: ScenarioIsland,
   consumer: ScenarioIsland,
   need: number | null,
 ): ScenarioAlternative {
   const alt = blankAlt("expand-origin-and-transport");
-  const picked = pickOrigin(input, consumer);
-  if (!picked) {
-    alt.viability = "impossible";
-    alt.blockers.push("no-other-island");
-    return alt;
-  }
-  alt.originId = picked.origin.id;
-  alt.missing.push(...picked.missing);
+  alt.originId = origin.id;
+  const surplus = verifiedSurplusTMin(origin);
+  alt.missing.push(...originMissing(origin, surplus));
   if (need == null) {
     alt.missing.push(consumer.demandTMin == null ? "consumer-demand" : "consumer-capacity");
     return alt;
   }
-  const surplus = picked.surplus;
   if (surplus == null) {
     return alt;
   }
@@ -599,38 +626,44 @@ function expandOriginAndTransport(
     alt.blockers.push("catalog");
     return alt;
   }
-  const rate = outputRateOnIsland(picked.origin, outId);
+  const rate = outputRateOnIsland(origin, outId);
   const extra = shortfall <= 0 ? 0 : Math.max(1, Math.ceil(shortfall / rate - 1e-9));
   if (extra > 0) {
     alt.buildingsToAdd = { [outId]: extra };
-    const site = siteBlockers(outId, picked.origin);
+    const site = siteBlockers(outId, origin);
     alt.blockers.push(...site.impossible);
     alt.missing.push(...site.missing);
   }
-  if (picked.origin.transportToConsumerTMin == null) {
+  if (origin.transportToConsumerTMin == null) {
     alt.missing.push("transport-capacity");
     alt.logisticsViable = null;
-    return finishAlt(alt, picked.origin, need);
+    return finishAlt(alt, origin, need);
   }
-  if (picked.origin.routeToConsumerOk === false) {
+  if (origin.routeToConsumerOk === false) {
     alt.viability = "impossible";
     alt.blockers.push("route-not-ready");
     alt.logisticsViable = false;
     return alt;
   }
   const produced = surplus + extra * rate;
-  const shippable = Math.min(produced, picked.origin.transportToConsumerTMin);
+  const shippable = Math.min(produced, origin.transportToConsumerTMin);
   alt.allocatedTMin = shippable;
   alt.coversNeed = shippable + 1e-9 >= need;
   alt.logisticsViable = true;
-  alt.investment = costForBuildings(alt.buildingsToAdd, input.goodId, picked.origin.world);
-  if (Object.keys(alt.buildingsToAdd).length && alt.investment.coins == null) {
-    alt.missing.push("investment");
-  }
+  alt.investment = costForBuildings(alt.buildingsToAdd, input.goodId, origin.world);
   alt.workforce = workforceForBuildings(alt.buildingsToAdd);
   alt.recurrentMaintenance = maintenanceForBuildings(alt.buildingsToAdd);
+  alt.materialsNeeded = materialsFor(alt.buildingsToAdd);
+  if (Object.keys(alt.buildingsToAdd).length) flagCostGaps(alt);
   alt.assumptions.push("origin-needs-preserved", "transport-capacity-explicit", "productivity-100");
-  return finishAlt(alt, picked.origin, need);
+  return finishAlt(alt, origin, need);
+}
+
+function noOriginAlt(kind: AlternativeKind): ScenarioAlternative {
+  const alt = blankAlt(kind);
+  alt.viability = "impossible";
+  alt.blockers.push("no-other-island");
+  return alt;
 }
 
 function nextDatum(alts: ScenarioAlternative[]): MissingDatum {
@@ -663,13 +696,28 @@ function verdictOf(
     }
     return { kind: "none-viable", reason: "no-viable-alternative" };
   }
-  const withCost = viable.filter((row) => row.investment.coins != null);
+  if (viable.length === 1) {
+    return { kind: "pick", winner: viable[0]!.kind, originId: viable[0]!.originId, reason: "only-viable" };
+  }
+  // A lower construction bill with unknown recurrent maintenance is not a
+  // known better balance. Both must be known before ranking on cost.
+  const withCost = viable.filter(
+    (row) => row.investment.coins != null && row.recurrentMaintenance != null,
+  );
   if (withCost.length !== viable.length) {
-    if (viable.length === 1) return { kind: "pick", winner: viable[0]!.kind, reason: "only-viable" };
     return { kind: "insufficient-data", nextDatum: "investment" };
   }
-  const ranked = [...withCost].sort((a, b) => (a.investment.coins ?? 0) - (b.investment.coins ?? 0));
-  return { kind: "pick", winner: ranked[0]!.kind, reason: "lowest-known-investment" };
+  const ranked = [...withCost].sort((a, b) => {
+    const invDiff = (a.investment.coins ?? 0) - (b.investment.coins ?? 0);
+    if (invDiff !== 0) return invDiff;
+    return (a.recurrentMaintenance ?? 0) - (b.recurrentMaintenance ?? 0);
+  });
+  return {
+    kind: "pick",
+    winner: ranked[0]!.kind,
+    originId: ranked[0]!.originId,
+    reason: "lowest-known-incremental-cost",
+  };
 }
 
 export function compareScenarios(input: ScenarioInput): ScenarioResult {
@@ -689,12 +737,20 @@ export function compareScenarios(input: ScenarioInput): ScenarioResult {
     };
   }
   const need = neededTMin(consumer);
-  const alternatives = [
-    expandLocal(input, consumer, need),
-    buildLocalChain(input, consumer, need),
-    transportSurplus(input, consumer, need),
-    expandOriginAndTransport(input, consumer, need),
-  ];
+  const origins = rankedOrigins(input, consumer);
+  const alternatives = origins.length
+    ? [
+        expandLocal(input, consumer, need),
+        buildLocalChain(input, consumer, need),
+        ...origins.map((origin) => transportSurplusFrom(origin, consumer, need)),
+        ...origins.map((origin) => expandOriginAndTransportFrom(input, origin, consumer, need)),
+      ]
+    : [
+        expandLocal(input, consumer, need),
+        buildLocalChain(input, consumer, need),
+        noOriginAlt("transport-surplus"),
+        noOriginAlt("expand-origin-and-transport"),
+      ];
   if (cutAdvice.reason === "consumers") notes.push("exporter-has-consumers");
   return {
     consumerId: input.consumerId,

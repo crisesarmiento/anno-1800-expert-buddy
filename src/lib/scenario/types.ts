@@ -5,6 +5,9 @@
 
 import type { BuildingId, GoodId, PopulationTier, World } from "../sim/types.ts";
 
+/** Verdict tie-break: investment then recurrent maintenance, both known. */
+export type VerdictReason = "only-viable" | "lowest-known-incremental-cost";
+
 export type ScenarioIslandId = string;
 
 /** true / false / unknown. Unknown is never coerced to false. */
@@ -79,6 +82,12 @@ export type ScenarioAlternative = {
   assumptions: string[];
   originId?: ScenarioIslandId;
   buildingsToAdd: Partial<Record<BuildingId, number>>;
+  /**
+   * Direct input goods consumed by buildingsToAdd, t/min at the added rate.
+   * Includes every input, not only the final good — a chain link already
+   * covered by another added building still appears here.
+   */
+  materialsNeeded: Partial<Record<GoodId, number>>;
   investment: ConstructionTotals;
   recurrentMaintenance: number | null;
   workforce: Partial<Record<PopulationTier, number>> | null;
@@ -96,7 +105,7 @@ export type CutAdvice = {
 };
 
 export type ScenarioVerdict =
-  | { kind: "pick"; winner: AlternativeKind; reason: string }
+  | { kind: "pick"; winner: AlternativeKind; originId?: ScenarioIslandId; reason: VerdictReason }
   | { kind: "insufficient-data"; nextDatum: MissingDatum }
   | { kind: "none-viable"; reason: string }
   | { kind: "already-covered" };

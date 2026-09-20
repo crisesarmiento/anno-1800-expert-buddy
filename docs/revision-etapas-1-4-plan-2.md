@@ -135,3 +135,25 @@ Límites / pendiente para P2-B/C:
 - Taller mantiene su paleta fría propia (`data-visual="taller"`) en vez de adoptar el bronce cálido de Inicio
   1:1 — es una decisión deliberada para no rehacer el sistema visual del taller en este PR; la estructura de
   header/nav sí es idéntica a las otras tres superficies.
+
+## P2-B decisiones económicas (2026-09-20)
+
+Estado: **hecho**. Un solo PR, solo escritorio; sin cambios de telemetría ni de contrato JSON.
+
+| Ítem del encargo | Estado | Evidencia / límite |
+| --- | --- | --- |
+| 1. Tabla isla/producto usable | **hecho** | Nueva tabla en `/taller` → Simulador: fila por isla con stock, producción t/min, consumo t/min, déficit/excedente verificado, exportación comprometida, transporte hacia el consumidor y estado de ruta. Valores desconocidos muestran "sin dato", nunca 0. |
+| 2. Materiales e insumos completos | **hecho** | `ScenarioAlternative.materialsNeeded` (nuevo campo) lista cada insumo directo de los edificios a sumar, a la tasa incremental — no solo el bien final. Se muestra en cada tarjeta de alternativa (`t.scenario.materialsLabel`). |
+| 3. Exportaciones comprometidas, transporte, inversión y mantenimiento incremental | **hecho** | La tabla y cada tarjeta de alternativa muestran `reservedExportTMin`/`hasOtherConsumers` del origen y el t/min de transporte explícito. Inversión y mantenimiento ya eran incrementales (solo sobre `buildingsToAdd`); ahora ambos se exigen conocidos antes de comparar (ver ítem 5). |
+| 4. Comparar todos los orígenes pertinentes | **hecho** | `pickOrigin` (single-best) se reemplazó por `rankedOrigins` + `transportSurplusFrom`/`expandOriginAndTransportFrom` por cada isla candidata. La UI agrupa las alternativas "Traer excedente" y "Ampliar origen y traer" por isla de origen en vez de mostrar una sola. Un origen sin ruta lista sigue apareciendo, marcado impossible con su bloqueador — no se oculta. |
+| 5. «Menor inversión» ≠ «mejor balance» | **hecho** | `verdictOf` ya no ordena solo por `investment.coins`: una alternativa entra al ranking de costo solo si inversión **y** mantenimiento recurrente son ambos conocidos (`flagCostGaps`); un mantenimiento desconocido ya no cuenta como cero. El veredicto expone el motivo (`only-viable` vs `lowest-known-incremental-cost`) y la UI lo traduce con una advertencia explícita de que no es necesariamente el mejor balance si falta otro costo. |
+
+Regresión: 3 pruebas nuevas en `engine.test.ts` (materiales del insumo directo en expand-local, comparación de 2 orígenes pertinentes en paralelo, y un veredicto que pasa a `insufficient-data` cuando la inversión es conocida pero el mantenimiento no). Las 20 pruebas previas del motor y las 4 de `observe.ts` siguen en verde sin cambios de comportamiento en los casos de un solo origen.
+
+Qué se puede confiar: ninguna recomendación de "traer de otra isla" oculta orígenes con ruta o excedente pertinente; una alternativa con mantenimiento desconocido ya no puede ganar el comparador solo por tener menor costo de construcción conocido; los insumos directos de una ampliación quedan a la vista antes de construir.
+
+Límites / pendiente:
+- `materialsNeeded` es de un nivel (insumo directo de cada edificio agregado), no traza la cadena completa hacia atrás cuando `expand-local` asume que el insumo ya se produce en otro lado — eso ya lo cubre `inputBlockers`/`missing: inputs` por separado.
+- No hay horizonte ni ROI: la comparación sigue siendo de costo conocido, no de retorno inventado (fuera del alcance de este PR, ver sección D del plan).
+- La cobertura de mantenimiento por edificio en el catálogo sigue parcial (17 de ~26 edificios); muchas alternativas seguirán cayendo en "faltan datos" con honestidad en vez de un veredicto — es el comportamiento esperado, no un bug.
+- `npm test` (75 archivos app / 641 pruebas, 15 archivos scripts / 83 pruebas), `npm run typecheck`, `npm run lint` y `npm run build` en verde. Verificación visual manual en `/taller` → Simulador con Playwright headless (1440×900): sin errores de consola; sin datos de guardado real disponibles en este entorno para capturar la tabla poblada, así que la vista con datos no se auditó pixel a pixel — el estado vacío honesto sí se confirmó.
