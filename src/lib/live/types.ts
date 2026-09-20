@@ -8,6 +8,7 @@ export const LIVE_MAX_INSTANCE_ID = 80;
 export const LIVE_MAX_ISLAND_SNAPSHOTS = 40;
 export const LIVE_MAX_ISLAND_STOCK = 24;
 export const LIVE_MAX_ISLAND_BUILDINGS = 40;
+export const LIVE_MAX_FLEET = 80;
 
 export type LiveSource = "telemetry" | "save" | "file";
 export type LiveQuestState = "active" | "ready" | "done" | "failed" | "expired";
@@ -209,6 +210,12 @@ export type LiveTelemetry = {
   goodsChanges?: LiveGoodChange[];
   routes?: LiveTradeRoute[];
   production?: LiveProductionMetric[];
+  /**
+   * Player ships (ownerId === 0) when VehicleName + Owner were read.
+   * Omitted when the save did not yield a verified player hull.
+   * Catalog upkeep is not stored here.
+   */
+  fleet?: LiveFleetShip[];
 };
 
 /** Presencia de estrato (needles del catálogo). Sin conteos. */
@@ -222,6 +229,42 @@ export type LiveFieldCoverage = {
   source: LiveEvidenceSource;
   observedAt?: string;
   scope?: string;
+};
+
+export type LiveShipKind = "trade" | "military" | "flagship" | "unknown";
+
+export type LiveShipAssignment = {
+  kind: "trade-route" | "unknown";
+  routeId?: number;
+  routeName?: string;
+};
+
+export type LiveShipLocation = {
+  regionId?: number;
+  areaId?: number;
+  name?: string;
+};
+
+/**
+ * One player hull. Owner must be Participant 0.
+ * Assignment stays unknown unless a TradeRouteID was present.
+ */
+export type LiveFleetShip = {
+  name?: string;
+  guid?: number;
+  id?: string;
+  typeName?: string;
+  kind?: LiveShipKind;
+  ownerId: number;
+  metaId?: number;
+  assignment?: LiveShipAssignment;
+  location?: LiveShipLocation;
+  coverage: {
+    identity: LiveFieldCoverage;
+    type?: LiveFieldCoverage;
+    assignment?: LiveFieldCoverage;
+    location?: LiveFieldCoverage;
+  };
 };
 
 export type LiveIslandNameSource = "city-name" | "city-name-guid" | "neutral";

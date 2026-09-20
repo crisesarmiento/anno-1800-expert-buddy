@@ -738,6 +738,52 @@ while ($true) {
       }
       $islandSnapshots += $islandOut
     }
+    $fleet = @()
+    foreach ($ship in @($scan.fleet)) {
+      if ($ship.ownerId -ne 0 -and $ship.ownerId -ne $null) { continue }
+      if ($ship.ownerId -eq $null) { continue }
+      $coverage = [ordered]@{
+        identity = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "player" }
+      }
+      $shipOut = [ordered]@{
+        ownerId  = 0
+        coverage = $coverage
+      }
+      if ($ship.name) { $shipOut.name = [string]$ship.name }
+      if ($ship.guid -ne $null) {
+        $shipOut.guid = [int]$ship.guid
+        $coverage.type = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+        if ($ship.id) { $shipOut.id = [string]$ship.id }
+        if ($ship.typeName) { $shipOut.typeName = [string]$ship.typeName }
+        if ($ship.kind) { $shipOut.kind = [string]$ship.kind }
+      }
+      if ($ship.metaId -ne $null) { $shipOut.metaId = [int]$ship.metaId }
+      if ($ship.assignment -and $ship.assignment.kind -eq "trade-route") {
+        $assignment = [ordered]@{ kind = "trade-route" }
+        if ($ship.assignment.routeId -ne $null) { $assignment.routeId = [int]$ship.assignment.routeId }
+        if ($ship.assignment.routeName) { $assignment.routeName = [string]$ship.assignment.routeName }
+        $shipOut.assignment = $assignment
+        $coverage.assignment = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+      }
+      elseif ($ship.routeId -ne $null) {
+        $assignment = [ordered]@{ kind = "trade-route"; routeId = [int]$ship.routeId }
+        if ($ship.routeName) { $assignment.routeName = [string]$ship.routeName }
+        $shipOut.assignment = $assignment
+        $coverage.assignment = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+      }
+      if ($ship.location -or $ship.regionId -ne $null -or $ship.areaId -ne $null) {
+        $location = [ordered]@{}
+        $regionId = if ($ship.location -and $ship.location.regionId -ne $null) { $ship.location.regionId } else { $ship.regionId }
+        $areaId = if ($ship.location -and $ship.location.areaId -ne $null) { $ship.location.areaId } else { $ship.areaId }
+        if ($regionId -ne $null) { $location.regionId = [int]$regionId }
+        if ($areaId -ne $null) { $location.areaId = [int]$areaId }
+        if ($location.Count -gt 0) {
+          $shipOut.location = $location
+          $coverage.location = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "area" }
+        }
+      }
+      $fleet += $shipOut
+    }
     $goodsChanges = @()
     $previousSavedAt = $null
     if ($previousPayload -and [string]$previousPayload.savedAt) {
@@ -820,6 +866,7 @@ while ($true) {
     }
     if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
     if ($goodsChanges.Count -gt 0) { $telemetry.goodsChanges = @($goodsChanges) }
+    if ($fleet.Count -gt 0) { $telemetry.fleet = @($fleet) }
 
     $payload = [ordered]@{
       schema      = "harbor-live-v1"

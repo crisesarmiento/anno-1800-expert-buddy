@@ -1,9 +1,11 @@
 import { uiFor } from "../i18n.ts";
 import { LIVE_MSG } from "./messages.ts";
+import { isPlayerParticipant } from "./evidence.ts";
 import { attachOcrIslandIdentity } from "./ocr-island.ts";
 import {
   LIVE_GAME,
   LIVE_MAX_BYTES,
+  LIVE_MAX_FLEET,
   LIVE_MAX_ISLAND_BUILDINGS,
   LIVE_MAX_ISLAND_SNAPSHOTS,
   LIVE_MAX_ISLAND_STOCK,
@@ -18,6 +20,7 @@ import {
   type LiveEconomy,
   type LiveEvidenceSource,
   type LiveFieldCoverage,
+  type LiveFleetShip,
   type LiveGoodChange,
   type LiveIngestResult,
   type LiveIslandNameSource,
@@ -45,6 +48,7 @@ import {
   type LiveRouteDelivery,
   type LiveRouteDeliveryGood,
   type LiveRouteShip,
+  type LiveShipKind,
   type LiveTradeRoute,
   type LiveWorkforce,
 } from "./types.ts";
@@ -73,6 +77,7 @@ const NATIVE_PROBE_REASONS = new Set<LiveNativeProbeReason>([
   "bad_payload",
 ]);
 const EVIDENCE_SOURCES = new Set<LiveEvidenceSource>(["save", "ocr", "manual"]);
+const SHIP_KINDS = new Set<LiveShipKind>(["trade", "military", "flagship", "unknown"]);
 const ISLAND_NAME_SOURCES = new Set<LiveIslandNameSource>([
   "city-name",
   "city-name-guid",
@@ -422,7 +427,81 @@ function normalizeTelemetry(value: unknown): LiveTelemetry | undefined {
     }
     if (production.length) telemetry.production = production;
   }
+  const fleet = normalizeFleet(value.fleet);
+  if (fleet) telemetry.fleet = fleet;
   return Object.keys(telemetry).length ? telemetry : undefined;
+}
+
+function normalizeFleet(value: unknown): LiveFleetShip[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const ships: LiveFleetShip[] = [];
+  for (const item of value.slice(0, LIVE_MAX_FLEET)) {
+    const ship = normalizeFleetShip(item);
+    if (!ship) continue;
+    ships.push(ship);
+  }
+  return ships.length ? ships : undefined;
+}
+
+function normalizeFleetShip(value: unknown): LiveFleetShip | undefined {
+  if (!asRecord(value)) return undefined;
+  const ownerId = value.ownerId;
+  if (typeof ownerId !== "number" || !Number.isSafeInteger(ownerId)) return undefined;
+  if (!isPlayerParticipant(ownerId)) return undefined;
+  const identity = asRecord(value.coverage)
+    ? normalizeCoverage(value.coverage.identity)
+    : undefined;
+  const ship: LiveFleetShip = {
+    ownerId: 0,
+    coverage: { identity: identity ?? { source: "save", scope: "player" } },
+  };
+  const name = clipName(value.name, 80);
+  if (name) ship.name = name;
+  if (typeof value.guid === "number" && Number.isSafeInteger(value.guid) && value.guid > 0) {
+    ship.guid = Math.trunc(value.guid);
+  }
+  const id = clipName(value.id, 48);
+  const typeName = clipName(value.typeName, 80);
+  if (id) ship.id = id;
+  if (typeName) ship.typeName = typeName;
+  if (SHIP_KINDS.has(value.kind as LiveShipKind)) ship.kind = value.kind as LiveShipKind;
+  if (typeof value.metaId === "number" && Number.isSafeInteger(value.metaId)) {
+    ship.metaId = Math.trunc(value.metaId);
+  }
+  if (asRecord(value.assignment)) {
+    const kind = value.assignment.kind;
+    if (kind === "trade-route" || kind === "unknown") {
+      const assignment: LiveFleetShip["assignment"] = { kind };
+      if (typeof value.assignment.routeId === "number" && Number.isSafeInteger(value.assignment.routeId)) {
+        assignment.routeId = Math.trunc(value.assignment.routeId);
+      }
+      const routeName = clipName(value.assignment.routeName, 120);
+      if (routeName) assignment.routeName = routeName;
+      ship.assignment = assignment;
+    }
+  }
+  if (asRecord(value.location)) {
+    const location: NonNullable<LiveFleetShip["location"]> = {};
+    if (typeof value.location.regionId === "number" && Number.isSafeInteger(value.location.regionId)) {
+      location.regionId = Math.trunc(value.location.regionId);
+    }
+    if (typeof value.location.areaId === "number" && Number.isSafeInteger(value.location.areaId)) {
+      location.areaId = Math.trunc(value.location.areaId);
+    }
+    const locName = clipName(value.location.name, 200);
+    if (locName) location.name = locName;
+    if (Object.keys(location).length) ship.location = location;
+  }
+  if (asRecord(value.coverage)) {
+    const typeCov = normalizeCoverage(value.coverage.type);
+    const assignmentCov = normalizeCoverage(value.coverage.assignment);
+    const locationCov = normalizeCoverage(value.coverage.location);
+    if (typeCov) ship.coverage.type = typeCov;
+    if (assignmentCov) ship.coverage.assignment = assignmentCov;
+    if (locationCov) ship.coverage.location = locationCov;
+  }
+  if (!ship.name && ship.guid == null && ship.metaId == null) return undefined;
+  return ship;
 }
 
 function normalizeNativeConnection(value: unknown): LiveNativeConnection | undefined {

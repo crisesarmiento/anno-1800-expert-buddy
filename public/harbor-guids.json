@@ -236,6 +236,66 @@
       "name": "Sails"
     },
     {
+      "guid": 1010221,
+      "id": "weapons",
+      "kind": "good",
+      "name": "Weapons"
+    },
+    {
+      "guid": 100438,
+      "id": "schooner",
+      "kind": "ship",
+      "name": "Schooner"
+    },
+    {
+      "guid": 100437,
+      "id": "gunboat",
+      "kind": "ship",
+      "name": "Gunboat"
+    },
+    {
+      "guid": 100439,
+      "id": "frigate",
+      "kind": "ship",
+      "name": "Frigate"
+    },
+    {
+      "guid": 100441,
+      "id": "clipper",
+      "kind": "ship",
+      "name": "Clipper"
+    },
+    {
+      "guid": 100440,
+      "id": "ship-of-the-line",
+      "kind": "ship",
+      "name": "Ship of the Line"
+    },
+    {
+      "guid": 1010062,
+      "id": "cargo-ship",
+      "kind": "ship",
+      "name": "Cargo Ship"
+    },
+    {
+      "guid": 100442,
+      "id": "battle-cruiser",
+      "kind": "ship",
+      "name": "Battle Cruiser"
+    },
+    {
+      "guid": 100443,
+      "id": "monitor",
+      "kind": "ship",
+      "name": "Monitor"
+    },
+    {
+      "guid": 100853,
+      "id": "oil-tanker",
+      "kind": "ship",
+      "name": "Oil Tanker"
+    },
+    {
       "guid": 180023,
       "id": "old-world",
       "kind": "island",

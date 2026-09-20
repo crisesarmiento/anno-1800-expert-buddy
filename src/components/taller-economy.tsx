@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { HarborCard } from "@/components/harbor-card";
 import { Button } from "@/components/ui/button";
+import { fleetAdvice } from "@/lib/fleet";
+import { fill } from "@/lib/i18n";
 import {
   appliedChangeStore,
   campaignHistoryStore,
@@ -54,6 +57,7 @@ export function TallerEconomyCard() {
   const branch = samplesOnBranch(samples);
   const verdict = treasuryHealth(branch);
   const liveCash = snapshot?.economy?.treasury;
+  const fleet = fleetAdvice(snapshot);
   const latest = branch.at(-1);
   const mark = marks.filter((row) => row.branchId === (latest?.branchId ?? "main")).at(-1);
   const after = mark ? observedAfterChange(branch, mark.sampleId) : null;
@@ -67,6 +71,19 @@ export function TallerEconomyCard() {
           <p className="text-sm text-muted-foreground">{t.economy.empty}</p>
         )}
         <p className="text-sm text-muted-foreground">{t.economy.incomplete}</p>
+        {fleet.upkeep.ownerValidated && fleet.upkeep.total != null ? (
+          <p className="text-sm" data-economy-fleet-upkeep="">
+            {fill(t.economy.fleetUpkeep, fleet.upkeep.total)}
+          </p>
+        ) : null}
+        {fleet.upkeep.ownerValidated && fleet.upkeep.withoutUpkeep > 0 ? (
+          <p className="text-sm text-muted-foreground">{t.economy.fleetUpkeepMissing}</p>
+        ) : null}
+        {fleet.ships.length > 0 ? (
+          <Link to="/taller" hash="fleet" className="inline-flex min-h-11 items-center text-sm text-primary">
+            {t.economy.viewFleet}
+          </Link>
+        ) : null}
         {verdict.kind === "isolated" ? (
           <p className="text-sm">{t.economy.isolated}</p>
         ) : null}

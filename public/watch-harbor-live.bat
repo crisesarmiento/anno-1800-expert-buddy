@@ -1361,6 +1361,66 @@ $guidJson = @'
       "name": "Sails"
     },
     {
+      "guid": 1010221,
+      "id": "weapons",
+      "kind": "good",
+      "name": "Weapons"
+    },
+    {
+      "guid": 100438,
+      "id": "schooner",
+      "kind": "ship",
+      "name": "Schooner"
+    },
+    {
+      "guid": 100437,
+      "id": "gunboat",
+      "kind": "ship",
+      "name": "Gunboat"
+    },
+    {
+      "guid": 100439,
+      "id": "frigate",
+      "kind": "ship",
+      "name": "Frigate"
+    },
+    {
+      "guid": 100441,
+      "id": "clipper",
+      "kind": "ship",
+      "name": "Clipper"
+    },
+    {
+      "guid": 100440,
+      "id": "ship-of-the-line",
+      "kind": "ship",
+      "name": "Ship of the Line"
+    },
+    {
+      "guid": 1010062,
+      "id": "cargo-ship",
+      "kind": "ship",
+      "name": "Cargo Ship"
+    },
+    {
+      "guid": 100442,
+      "id": "battle-cruiser",
+      "kind": "ship",
+      "name": "Battle Cruiser"
+    },
+    {
+      "guid": 100443,
+      "id": "monitor",
+      "kind": "ship",
+      "name": "Monitor"
+    },
+    {
+      "guid": 100853,
+      "id": "oil-tanker",
+      "kind": "ship",
+      "name": "Oil Tanker"
+    },
+    {
       "guid": 180023,
       "id": "old-world",
       "kind": "island",
@@ -1407,6 +1467,7 @@ namespace HarborBuddy {
       byte[] data = null;
       var routes = new List<RouteRow>();
       var islandsExtract = new IslandExtract();
+      var fleet = new List<FleetShip>();
       foreach (var kv in files) {
         if (kv.Key == "meta.a7s") {
           Visit(kv.Value, (path, attr, payload) => {
@@ -1464,6 +1525,7 @@ namespace HarborBuddy {
         });
         routes = ExtractRoutes(data, guids);
         islandsExtract = ExtractIslands(data, guids);
+        fleet = ExtractFleet(data, guids, routes);
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
@@ -1612,6 +1674,46 @@ namespace HarborBuddy {
         if (island.Buildings.Count > 0 && island.Buildings.Count <= 40) sb.Append(",\"buildings\":{\"source\":\"save\"}");
         sb.Append("}}");
       }
+      sb.Append("]");
+      sb.Append(",\"fleet\":[");
+      first = true;
+      int fleetCount = 0;
+      foreach (var ship in fleet) {
+        if (ship.OwnerId != 0) continue;
+        if (fleetCount >= 80) break;
+        fleetCount++;
+        if (!first) sb.Append(",");
+        first = false;
+        sb.Append("{\"ownerId\":0");
+        if (!string.IsNullOrEmpty(ship.Name)) sb.Append(",\"name\":\"").Append(Esc(ship.Name)).Append("\"");
+        if (ship.Guid.HasValue) {
+          sb.Append(",\"guid\":").Append(ship.Guid.Value);
+          if (!string.IsNullOrEmpty(ship.Id)) sb.Append(",\"id\":\"").Append(Esc(ship.Id)).Append("\"");
+          if (!string.IsNullOrEmpty(ship.TypeName)) sb.Append(",\"typeName\":\"").Append(Esc(ship.TypeName)).Append("\"");
+          if (!string.IsNullOrEmpty(ship.Kind)) sb.Append(",\"kind\":\"").Append(Esc(ship.Kind)).Append("\"");
+        }
+        if (ship.MetaId.HasValue) sb.Append(",\"metaId\":").Append(ship.MetaId.Value);
+        if (ship.RouteId.HasValue) {
+          sb.Append(",\"assignment\":{\"kind\":\"trade-route\",\"routeId\":").Append(ship.RouteId.Value);
+          if (!string.IsNullOrEmpty(ship.RouteName)) sb.Append(",\"routeName\":\"").Append(Esc(ship.RouteName)).Append("\"");
+          sb.Append("}");
+        }
+        if (ship.RegionId.HasValue || ship.AreaId.HasValue) {
+          sb.Append(",\"location\":{");
+          bool locFirst = true;
+          if (ship.RegionId.HasValue) { sb.Append("\"regionId\":").Append(ship.RegionId.Value); locFirst = false; }
+          if (ship.AreaId.HasValue) {
+            if (!locFirst) sb.Append(",");
+            sb.Append("\"areaId\":").Append(ship.AreaId.Value);
+          }
+          sb.Append("}");
+        }
+        sb.Append(",\"coverage\":{\"identity\":{\"source\":\"save\",\"scope\":\"player\"}");
+        if (ship.Guid.HasValue) sb.Append(",\"type\":{\"source\":\"save\"}");
+        if (ship.RouteId.HasValue) sb.Append(",\"assignment\":{\"source\":\"save\"}");
+        if (ship.RegionId.HasValue || ship.AreaId.HasValue) sb.Append(",\"location\":{\"source\":\"save\",\"scope\":\"area\"}");
+        sb.Append("}}");
+      }
       sb.Append("]}");
       return sb.ToString();
     }
@@ -1671,6 +1773,19 @@ namespace HarborBuddy {
       public readonly List<IslandRow> Islands = new List<IslandRow>();
       public long? SimTime;
       public string SnapshotId;
+    }
+    sealed class FleetShip {
+      public string Name;
+      public int? Guid;
+      public string Id;
+      public string TypeName;
+      public string Kind;
+      public int OwnerId;
+      public int? MetaId;
+      public int? RouteId;
+      public string RouteName;
+      public int? RegionId;
+      public int? AreaId;
     }
 
     static Dictionary<int, GuidRow> ParseGuids(string json) {
@@ -1815,6 +1930,88 @@ namespace HarborBuddy {
         }
       }
       return output;
+    }
+
+    static string ShipClass(string id) {
+      if (id == "schooner" || id == "clipper" || id == "cargo-ship" || id == "oil-tanker") return "trade";
+      if (id == "gunboat" || id == "frigate" || id == "ship-of-the-line" || id == "battle-cruiser" || id == "monitor") return "military";
+      return "";
+    }
+
+    static List<FleetShip> ExtractFleet(byte[] data, Dictionary<int, GuidRow> guids, List<RouteRow> routes) {
+      var output = new List<FleetShip>();
+      var root = ParseTree(data);
+      if (root == null) return output;
+      var routeNames = new Dictionary<int, string>();
+      foreach (var route in routes) {
+        if (route.Id.HasValue && !string.IsNullOrEmpty(route.Name)) routeNames[route.Id.Value] = route.Name;
+      }
+      CollectFleet(root, null, null, guids, routeNames, output, new HashSet<string>());
+      return output;
+    }
+
+    static void CollectFleet(
+      DbNode node,
+      int? regionId,
+      int? areaId,
+      Dictionary<int, GuidRow> guids,
+      Dictionary<int, string> routeNames,
+      List<FleetShip> output,
+      HashSet<string> seen
+    ) {
+      if (node == null || output.Count >= 80) return;
+      var sessionGuid = LeafInt(node, "SessionGUID");
+      if (sessionGuid.HasValue) regionId = sessionGuid;
+      var fromTag = AreaManagerId(node.Tag);
+      if (fromTag.HasValue) areaId = fromTag;
+      var nameable = Child(node, "Nameable");
+      if (nameable != null) {
+        var name = Utf16(Leaf(nameable, "VehicleName"));
+        if (!string.IsNullOrEmpty(name)) {
+          var owner = Child(node, "Owner");
+          var ownerId = owner != null ? LeafInt(owner, "id") : LeafInt(node, "Owner");
+          if (ownerId.HasValue && ownerId.Value == 0) {
+            var guid = LeafInt(node, "guid");
+            if (!guid.HasValue) guid = LeafInt(node, "GUID");
+            var meta = Child(node, "MetaPersistent");
+            int? metaId = null;
+            if (meta != null) {
+              var meta64 = LeafInt64(meta, "MetaID");
+              if (meta64.HasValue && meta64.Value >= int.MinValue && meta64.Value <= int.MaxValue)
+                metaId = (int)meta64.Value;
+            }
+            var trade = Child(node, "PropertyTradeRouteVehicle");
+            var routeId = trade != null ? LeafInt(trade, "TradeRouteID") : null;
+            string key = metaId.HasValue ? ("meta:" + metaId.Value) : ("name:" + name + ":g:" + (guid.HasValue ? guid.Value : 0) + ":a:" + (areaId.HasValue ? areaId.Value : 0));
+            if (!seen.Contains(key)) {
+              seen.Add(key);
+              var ship = new FleetShip {
+                Name = name.Length > 80 ? name.Substring(0, 80) : name,
+                Guid = guid,
+                OwnerId = 0,
+                MetaId = metaId,
+                RouteId = routeId,
+                RegionId = regionId,
+                AreaId = areaId
+              };
+              if (guid.HasValue) {
+                GuidRow row;
+                if (guids.TryGetValue(guid.Value, out row) && row.kind == "ship") {
+                  ship.Id = row.id;
+                  ship.TypeName = row.name;
+                  ship.Kind = ShipClass(row.id);
+                }
+              }
+              if (routeId.HasValue) {
+                string routeName;
+                if (routeNames.TryGetValue(routeId.Value, out routeName)) ship.RouteName = routeName;
+              }
+              output.Add(ship);
+            }
+          }
+        }
+      }
+      foreach (var child in node.Children) CollectFleet(child, regionId, areaId, guids, routeNames, output, seen);
     }
 
     static void CollectRouteShips(DbNode node, Dictionary<int, List<string>> byRoute) {
@@ -2707,6 +2904,52 @@ while ($true) {
       }
       $islandSnapshots += $islandOut
     }
+    $fleet = @()
+    foreach ($ship in @($scan.fleet)) {
+      if ($ship.ownerId -ne 0 -and $ship.ownerId -ne $null) { continue }
+      if ($ship.ownerId -eq $null) { continue }
+      $coverage = [ordered]@{
+        identity = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "player" }
+      }
+      $shipOut = [ordered]@{
+        ownerId  = 0
+        coverage = $coverage
+      }
+      if ($ship.name) { $shipOut.name = [string]$ship.name }
+      if ($ship.guid -ne $null) {
+        $shipOut.guid = [int]$ship.guid
+        $coverage.type = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+        if ($ship.id) { $shipOut.id = [string]$ship.id }
+        if ($ship.typeName) { $shipOut.typeName = [string]$ship.typeName }
+        if ($ship.kind) { $shipOut.kind = [string]$ship.kind }
+      }
+      if ($ship.metaId -ne $null) { $shipOut.metaId = [int]$ship.metaId }
+      if ($ship.assignment -and $ship.assignment.kind -eq "trade-route") {
+        $assignment = [ordered]@{ kind = "trade-route" }
+        if ($ship.assignment.routeId -ne $null) { $assignment.routeId = [int]$ship.assignment.routeId }
+        if ($ship.assignment.routeName) { $assignment.routeName = [string]$ship.assignment.routeName }
+        $shipOut.assignment = $assignment
+        $coverage.assignment = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+      }
+      elseif ($ship.routeId -ne $null) {
+        $assignment = [ordered]@{ kind = "trade-route"; routeId = [int]$ship.routeId }
+        if ($ship.routeName) { $assignment.routeName = [string]$ship.routeName }
+        $shipOut.assignment = $assignment
+        $coverage.assignment = [ordered]@{ source = "save"; observedAt = $currentSavedAt }
+      }
+      if ($ship.location -or $ship.regionId -ne $null -or $ship.areaId -ne $null) {
+        $location = [ordered]@{}
+        $regionId = if ($ship.location -and $ship.location.regionId -ne $null) { $ship.location.regionId } else { $ship.regionId }
+        $areaId = if ($ship.location -and $ship.location.areaId -ne $null) { $ship.location.areaId } else { $ship.areaId }
+        if ($regionId -ne $null) { $location.regionId = [int]$regionId }
+        if ($areaId -ne $null) { $location.areaId = [int]$areaId }
+        if ($location.Count -gt 0) {
+          $shipOut.location = $location
+          $coverage.location = [ordered]@{ source = "save"; observedAt = $currentSavedAt; scope = "area" }
+        }
+      }
+      $fleet += $shipOut
+    }
     $goodsChanges = @()
     $previousSavedAt = $null
     if ($previousPayload -and [string]$previousPayload.savedAt) {
@@ -2789,6 +3032,7 @@ while ($true) {
     }
     if ($goods.Count -gt 0) { $telemetry.goods = @($goods) }
     if ($goodsChanges.Count -gt 0) { $telemetry.goodsChanges = @($goodsChanges) }
+    if ($fleet.Count -gt 0) { $telemetry.fleet = @($fleet) }
 
     $payload = [ordered]@{
       schema      = "harbor-live-v1"

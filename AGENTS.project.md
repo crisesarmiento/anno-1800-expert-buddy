@@ -85,6 +85,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Save/OCR writer: `public/watch-harbor-live.ps1` (Windows). `src/lib/live/a7s-snapshot.ts` is a research util, not the Windows writer.
 - Honesty helpers: `src/lib/live/evidence.ts`
 - Verified missions (three channels, frozen timer, suggested reserves): `src/lib/missions`
+- Player fleet (owner 0, catalog upkeep inferred, escort never surplus): `src/lib/fleet`
 - Local campaign history (IndexedDB, not the shared JSON): `src/lib/history`
 - Production analysis: `src/lib/native-production.ts`
 - Produce-or-import scenarios (pure, inferred): `src/lib/scenario/`
@@ -93,6 +94,7 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 - Production UI: `src/components/native-production-card.tsx`
 - Scenario UI: `src/components/taller-scenario.tsx`
 - Route UI: `src/components/trade-routes.tsx`
+- Fleet UI: `src/components/fleet-view.tsx`
 
 Update schema, types, validation, fixtures, documentation, and tests together when the contract
 changes.
@@ -105,6 +107,7 @@ changes.
 - `/diario` is the campaign diary (`HarborApp`). Zero OCR technical panel, no production grids, no
   route diagnostics.
 - Detailed production belongs in `/taller`.
+- Fleet cost, role and commitments belong in `/taller` as a secondary view. Never a combat overlay.
 - Detailed route evidence belongs in `/rutas`.
 - Connect and install diagnostics belong in `/conectar` and `/instalar`, under Más — not in the
   primary glance.
@@ -145,8 +148,7 @@ Prefer improvements that strengthen evidence without increasing setup:
 
 1. Installation/health diagnostics for the optional OCR server.
 2. Evidence freshness and per-island capture guidance.
-3. Etapa 6: inventario de flota y gasto militar, sin desarmar defensas por costo ni acciones automáticas.
-4. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links. Nominal ship cargo capacity is still unread. Save-read quest instance/state from the watcher is still unread (`quests: []`).
+3. More catalog mappings, each backed by a known GUID and production rate. Per-building construction still missing for most chain links. Nominal ship cargo capacity is still unread. Save-read quest instance/state from the watcher is still unread (`quests: []`). ConstructionAI `ShipMaintenance` is still unpublished (no player owner).
 
 Do not pursue automatic route clicking, memory hooks, save mutation, or claims of real route
 throughput unless a new trustworthy data source is first demonstrated and documented.

@@ -32,6 +32,7 @@ describe("GUID table and FileDB snapshot", () => {
       islandSnapshots: [],
       snapshotId: null,
       simTime: null,
+      fleet: [],
     };
     const snap = snapshotFromScan(scan, { previousMoney: 9000, savedAt: "2026-09-03T00:00:00.000Z" });
     assert.equal(snap.schema, "harbor-live-v1");
@@ -72,6 +73,7 @@ function scanOf(over: Partial<SaveScan> = {}): SaveScan {
     islandSnapshots: [],
     snapshotId: null,
     simTime: null,
+    fleet: [],
     ...over,
   };
 }

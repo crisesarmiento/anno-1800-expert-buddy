@@ -1,6 +1,6 @@
 # Plan de implementación: asesor económico, logístico y militar
 
-Fecha: 2026-09-20. Estado: Etapa 0–4 en main. Etapa 5 (esta rama): misiones verificadas — tres canales, contrato opcional, fixtures de transición, fallback manual. Etapa 6 no implementada.
+Fecha: 2026-09-20. Estado: Etapa 0–5 en main. Etapa 6 (esta rama): sostenibilidad militar — inventario de flota del jugador, mantenimiento inferido de catálogo plegado en Taller, cobertura «riesgo no evaluable», sin acciones automáticas.
 Base revisada: main local `106afe1`. No se confirmó la punta remota por restricciones de conexión.
 
 ## Objetivo y decisiones

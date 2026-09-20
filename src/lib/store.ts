@@ -14,6 +14,7 @@ import {
   matchLiveSnapshot,
   type LiveSnapshot,
 } from "@/lib/live";
+import type { FleetManualRole, FleetRoleMap } from "@/lib/fleet";
 import { firstPlayableMissionId, missionsById } from "@/lib/data";
 import type { PulseSample } from "@/lib/dash";
 import { DEFAULT_LOCALE, LOCALE_META, isLocale, type Locale } from "@/lib/i18n";
@@ -59,6 +60,7 @@ type HarborState = {
   manualHistoryCampaignId: string | null;
   historyError: string | null;
   pendingCampaign: { candidates: CampaignCandidate[]; snapshot: LiveSnapshot } | null;
+  fleetRoles: FleetRoleMap;
   setMissionId: (id: string | null) => void;
   setSpoilers: (value: boolean) => void;
   setCalm: (value: CalmMode) => void;
@@ -79,6 +81,7 @@ type HarborState = {
   applyHistoryResult: (result: HistoryRecordResult) => void;
   chooseCampaign: (id: string) => void;
   clearPendingCampaign: () => void;
+  setFleetRole: (key: string, role: FleetManualRole) => void;
 };
 
 export function isLiveLocked(state: {
@@ -117,6 +120,7 @@ export const useHarbor = create<HarborState>()(
       manualHistoryCampaignId: null,
       historyError: null,
       pendingCampaign: null,
+      fleetRoles: {},
       setMissionId: (id) => {
         if (isLiveLocked(get())) return;
         const prev = get().missionId;
@@ -336,6 +340,10 @@ export const useHarbor = create<HarborState>()(
           });
       },
       clearPendingCampaign: () => set({ pendingCampaign: null }),
+      setFleetRole: (key, role) =>
+        set((state) => ({
+          fleetRoles: { ...state.fleetRoles, [key]: role },
+        })),
     }),
     {
       name: "harbor-buddy-es",
@@ -364,6 +372,7 @@ export const useHarbor = create<HarborState>()(
         activeIslandId: state.activeIslandId,
         historyCampaignId: state.historyCampaignId,
         manualHistoryCampaignId: state.manualHistoryCampaignId,
+        fleetRoles: state.fleetRoles,
       }),
     },
   ),
