@@ -1,7 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  Anchor,
   CheckCircle2,
   Route,
   Ship,
@@ -9,7 +7,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { HarborCard, IconWell } from "@/components/harbor-card";
-import { LanguageSelect } from "@/components/language-select";
+import { HarborNavigation } from "@/components/harbor-navigation";
 import { LiveStatus } from "@/components/live-status";
 import { Badge } from "@/components/ui/badge";
 import { fill, type UiDict } from "@/lib/i18n";
@@ -58,10 +56,16 @@ export function TradeRoutes() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="border-b border-border bg-card px-4 py-3 sm:px-6">
-        <div className="mx-auto flex max-w-5xl items-center gap-3">
+      <div className="border-b border-border bg-card px-4 sm:px-6">
+        <div className="mx-auto max-w-5xl">
+          <HarborNavigation />
+        </div>
+      </div>
+
+      <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6">
+        <div className="flex items-center gap-3">
           <IconWell>
-            <Anchor className="size-5" strokeWidth={1.75} />
+            <Route className="size-5" strokeWidth={1.75} />
           </IconWell>
           <div className="min-w-0">
             <p className="font-display text-lg leading-none font-semibold tracking-tight">
@@ -69,14 +73,7 @@ export function TradeRoutes() {
             </p>
             <p className="mt-1 truncate text-xs text-mist">{t.routes.subtitle}</p>
           </div>
-          <LanguageSelect className="ml-auto" />
-          <Link to="/" className="inline-flex min-h-11 items-center text-sm text-primary">
-            {t.backDesk}
-          </Link>
         </div>
-      </header>
-
-      <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6">
         <LiveStatus />
 
         {routes.length === 0 ? (

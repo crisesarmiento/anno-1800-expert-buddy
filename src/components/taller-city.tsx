@@ -85,9 +85,11 @@ export function TallerCity({
         </p>
       ) : null}
 
-      {stats.islands.map((island, index) => (
-        <CityCard key={island.id} island={island} seedIsland={seedIslands[index]!} mode={mode} />
-      ))}
+      <div className="grid gap-6 xl:grid-cols-2">
+        {stats.islands.map((island, index) => (
+          <CityCard key={island.id} island={island} seedIsland={seedIslands[index]!} mode={mode} />
+        ))}
+      </div>
     </div>
   );
 }

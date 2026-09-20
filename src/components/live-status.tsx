@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Cloud, Database, Route, ScanLine, TimerReset } from "lucide-react";
+import { ArrowRight, Cloud, Database, Route, ScanLine, TimerReset } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { fill } from "@/lib/i18n";
 import { coverageRowFor } from "@/lib/live/coverage";
@@ -32,16 +32,25 @@ export function LiveStatus() {
   if (!snapshot) {
     return (
       <div className="rounded-xl bg-card p-4 shadow-border sm:p-5" data-live-status="disconnected">
-        <div className="flex items-start gap-3">
-          <span className="stamp-seal grid size-11 shrink-0 place-items-center text-mist">
-            <Database className="size-5" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <p className="font-display text-lg font-medium">Sin partida conectada</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              Conectá el diario para ver qué save se leyó y qué datos son reales.
-            </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="stamp-seal grid size-11 shrink-0 place-items-center text-mist">
+              <Database className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-display text-lg font-medium">Sin partida conectada</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Conectá el diario para ver qué save se leyó y qué datos son reales.
+              </p>
+            </div>
           </div>
+          <Link
+            to="/conectar"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium text-primary"
+          >
+            {t.installMod}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </div>
       </div>
     );

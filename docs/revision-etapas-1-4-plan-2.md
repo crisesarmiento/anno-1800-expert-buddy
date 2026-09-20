@@ -98,3 +98,40 @@ Limites / condicionado:
 - Smoke + checklist reinicio vigilante: `docs/smoke-p1b-followup.md`.
 - `nameSource: city-name-guid` cuando solo hay `CityNameGuid` (sigue `[guid]`, sin inventar nombre).
 - Stock/edificios por isla: documentados como gap (AreaStorageManager no está bajo AreaManager en saves reales contrastados).
+
+## P2-A UI de escritorio (2026-09-20)
+
+Estado: **hecho parcial**. PR pequeño, solo escritorio; sin cambios de cálculo ni telemetría nueva.
+
+Hecho:
+- `HarborNavigation` (marca "Harbor Buddy", nav Inicio/Producción/Rutas/Diario, menú Más) ahora es el header
+  compartido de `/`, `/diario`, `/taller` y `/rutas` — antes cada superficie tenía su propia cabecera
+  (Diario: fila de 7 links + toggles que desbordaba horizontalmente en desktop; Taller: header mínimo sin
+  selector de idioma; Rutas: header propio con Volver/idioma duplicados). Diario conserva solo lo que le es
+  propio bajo el header compartido: spoilers y los dos escapes de calma.
+- Contexto de isla activa (`activeIslandId`/`liveSnapshot`, ya existentes en el store) se muestra junto a la
+  marca del header en las cuatro superficies, solo cuando hay una lectura — nunca inventa una isla sin save.
+- `LiveStatus` (usado por Rutas y por el panel de conexión del Diario) ahora ofrece "Conectar partida" desde
+  su estado vacío; antes el vacío de Rutas no tenía salida a `/conectar`.
+- Taller se separó en pestañas Economía / Islas / Flota / Simulador (`data-taller-view`), con el contenedor
+  ensanchado a `max-w-6xl` y las tarjetas de isla en grilla (`xl:grid-cols-2`) para comparar sin scroll extra
+  en desktop ancho. Ningún componente ni prop de las tarjetas existentes cambió — solo se reorganizó el JSX
+  de `TallerBench`.
+- Overflow horizontal del Diario (fila de nav que se cortaba en `~1280px`, con "Anno 1800 Buddy" partiéndose
+  en dos líneas) queda resuelto al pasar por el header compartido; verificado sin scroll horizontal en
+  1280/1440/1920 en `/`, `/diario`, `/taller`, `/rutas`.
+
+Qué se puede confiar: las cuatro superficies principales navegan entre sí de forma idéntica y sin ambigüedad
+de marca; el contexto de isla mostrado en el header nunca aparece sin una lectura que lo respalde; los vacíos
+de Rutas y del panel de conexión ya no son callejones sin salida.
+
+Límites / pendiente para P2-B/C:
+- No se tocó la lógica de cálculo, el contrato de telemetría ni el comparador económico — eso sigue en P2-B.
+- El contexto de header muestra isla, no campaña (no hay nombre de campaña legible fuera del selector de
+  `CampaignPicker`; mostrar el id crudo hubiera sido ruido, no evidencia).
+- "Menos alertas apiladas" se abordó unificando chrome (una sola fila de nav en vez de cabecera + fila de
+  links + fila de toggles en Diario); no se auditó cada aviso/alerta individual de cada tarjeta — eso queda
+  para una pasada de jerarquía visual dedicada si se pide.
+- Taller mantiene su paleta fría propia (`data-visual="taller"`) en vez de adoptar el bronce cálido de Inicio
+  1:1 — es una decisión deliberada para no rehacer el sistema visual del taller en este PR; la estructura de
+  header/nav sí es idéntica a las otras tres superficies.

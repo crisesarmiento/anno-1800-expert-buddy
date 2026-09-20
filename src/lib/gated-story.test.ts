@@ -17,6 +17,7 @@ import {
 const defaultPulse = { coins: "unknown", houses: "unknown", looking: "unknown" } as const;
 
 const welcome = readFileSync(new URL("../components/harbor-app.tsx", import.meta.url), "utf8");
+const nav = readFileSync(new URL("../components/harbor-navigation.tsx", import.meta.url), "utf8");
 const desk = readFileSync(new URL("../components/session-desk.tsx", import.meta.url), "utf8");
 const page = readFileSync(new URL("../components/gated-map-page.tsx", import.meta.url), "utf8");
 const layer = readFileSync(new URL("../components/gated-story-desk.tsx", import.meta.url), "utf8");
@@ -50,7 +51,7 @@ describe("gated story second-monitor layer", () => {
     assert.match(route, /createFileRoute\("\/mapa"\)/);
     assert.match(page, /GatedStoryDesk/);
     assert.match(page, /data-gated-map-page/);
-    assert.match(welcome, /to="\/mapa"/);
+    assert.match(welcome + nav, /to="\/mapa"|\["\/mapa",/);
     assert.doesNotMatch(welcome, /GatedStoryDesk/);
     assert.doesNotMatch(desk, /GatedStoryDesk/);
     assert.doesNotMatch(page, /Ver taller|TALLER_LINK|data-taller-link/);
