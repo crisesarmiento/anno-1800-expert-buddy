@@ -71,7 +71,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["title", "state"],
+        "required": ["title"],
         "properties": {
           "title": { "type": "string", "minLength": 1, "maxLength": 200 },
           "state": {
@@ -244,6 +244,25 @@
                         "visitCount": { "type": "integer", "minimum": 0 },
                         "medianAbsAmount": { "type": "integer", "minimum": 0 },
                         "lastAmount": { "type": "integer" }
+                      }
+                    }
+                  },
+                  "stations": {
+                    "type": "array",
+                    "maxItems": 40,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["guid", "visitCount", "medianAbsAmount", "lastAmount"],
+                      "properties": {
+                        "guid": { "type": "integer" },
+                        "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+                        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+                        "visitCount": { "type": "integer", "minimum": 0 },
+                        "medianAbsAmount": { "type": "integer", "minimum": 0 },
+                        "lastAmount": { "type": "integer" },
+                        "areaId": { "type": "integer" },
+                        "intervalMsMedian": { "type": "integer", "minimum": 1 }
                       }
                     }
                   }

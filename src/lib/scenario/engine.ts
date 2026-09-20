@@ -38,8 +38,15 @@ const EMPTY_COST: ConstructionTotals = {
 
 export function verifiedSurplusTMin(island: ScenarioIsland): number | null {
   if (island.capacityTMin == null || island.demandTMin == null) return null;
-  const reserved = island.reservedExportTMin ?? 0;
-  return Math.max(0, island.capacityTMin - island.demandTMin - reserved);
+  const leftover = island.capacityTMin - island.demandTMin;
+  if (island.reservedExportTMin == null) {
+    // Unknown reserved is not zero. It can only shrink leftover, so a
+    // non-positive leftover is still zero surplus.
+    if (leftover <= 0) return 0;
+    if (island.hasOtherConsumers === false) return leftover;
+    return null;
+  }
+  return Math.max(0, leftover - island.reservedExportTMin);
 }
 
 /**
@@ -97,6 +104,56 @@ function perBuildingTMin(buildingId: BuildingId, productivity = 100): number {
   const building = BUILDINGS[buildingId];
   if (!building) return 0;
   return outputTMinAt100(building, 1, productivity);
+}
+
+/** Per-building t/min for the scenario output. Unknown productivity stays catalog 100%. */
+function outputRateOnIsland(island: ScenarioIsland, buildingId: BuildingId): number {
+  const catalog = perBuildingTMin(buildingId, 100);
+  const count = island.buildings[buildingId] ?? island.buildingCount;
+  if (typeof count === "number" && count > 0 && island.capacityTMin != null && island.capacityTMin >= 0) {
+    const inferred = island.capacityTMin / count;
+    if (inferred > 0) return inferred;
+  }
+  return catalog;
+}
+
+function plannedCount(
+  island: ScenarioIsland,
+  buildingId: BuildingId,
+  toAdd: Partial<Record<BuildingId, number>>,
+): number {
+  return (island.buildings[buildingId] ?? 0) + (toAdd[buildingId] ?? 0);
+}
+
+function producerForInput(goodId: string): BuildingId | null {
+  const hit = Object.values(BUILDINGS).find((row) => row.output === goodId);
+  return hit ? hit.id : null;
+}
+
+function inputBlockers(
+  toAdd: Partial<Record<BuildingId, number>>,
+  island: ScenarioIsland,
+): { impossible: string[]; missing: MissingDatum[] } {
+  const entries = Object.entries(toAdd).filter(([, n]) => (n ?? 0) > 0) as Array<[BuildingId, number]>;
+  if (!entries.length) return { impossible: [], missing: [] };
+  const impossible: string[] = [];
+  const missing: MissingDatum[] = [];
+  for (const [id] of entries) {
+    const building = BUILDINGS[id];
+    if (!building?.inputs.length) continue;
+    const count = plannedCount(island, id, toAdd);
+    const outRate = perBuildingTMin(id) * count;
+    for (const inputGood of building.inputs) {
+      const producer = producerForInput(inputGood);
+      if (!producer) {
+        missing.push("inputs");
+        continue;
+      }
+      const inRate = perBuildingTMin(producer) * plannedCount(island, producer, toAdd);
+      if (inRate + 1e-9 < outRate) impossible.push(`inputs:${inputGood}`);
+    }
+  }
+  return { impossible, missing: [...new Set(missing)] };
 }
 
 function siteBlockers(
@@ -273,8 +330,9 @@ function finishAlt(
   need: number | null,
 ): ScenarioAlternative {
   const work = workforceBlockers(alt.workforce, island);
-  const blockers = [...alt.blockers, ...work.impossible];
-  const missing = [...new Set([...alt.missing, ...work.missing])];
+  const inputs = inputBlockers(alt.buildingsToAdd, island);
+  const blockers = [...alt.blockers, ...work.impossible, ...inputs.impossible];
+  const missing = [...new Set([...alt.missing, ...work.missing, ...inputs.missing])];
   let viability = alt.viability;
   if (blockers.length) viability = "impossible";
   else if (missing.length) viability = "unknown";
@@ -313,7 +371,7 @@ function expandLocal(input: ScenarioInput, consumer: ScenarioIsland, need: numbe
     alt.assumptions.push("local-already-covers");
     return alt;
   }
-  const rate = perBuildingTMin(outId);
+  const rate = outputRateOnIsland(consumer, outId);
   if (rate <= 0) {
     alt.viability = "impossible";
     alt.blockers.push("catalog");
@@ -323,7 +381,9 @@ function expandLocal(input: ScenarioInput, consumer: ScenarioIsland, need: numbe
   alt.buildingsToAdd = { [outId]: extra };
   alt.allocatedTMin = extra * rate;
   alt.coversNeed = alt.allocatedTMin + 1e-9 >= need;
-  alt.assumptions.push("productivity-100");
+  if (consumer.capacityTMin == null || (consumer.buildings[outId] ?? consumer.buildingCount) == null) {
+    alt.assumptions.push("productivity-100");
+  }
   const site = siteBlockers(outId, consumer);
   alt.blockers.push(...site.impossible);
   alt.missing.push(...site.missing);
@@ -332,9 +392,6 @@ function expandLocal(input: ScenarioInput, consumer: ScenarioIsland, need: numbe
   alt.workforce = workforceForBuildings(alt.buildingsToAdd);
   alt.recurrentMaintenance = maintenanceForBuildings(alt.buildingsToAdd);
   alt.logisticsViable = true;
-  if (BUILDINGS[outId]?.inputs.length) {
-    alt.assumptions.push("inputs-already-fed");
-  }
   return finishAlt(alt, consumer, need);
 }
 
@@ -361,21 +418,29 @@ function buildLocalChain(
     alt.blockers.push("catalog");
     return alt;
   }
-  const outRate = perBuildingTMin(outId);
+  const outRate = outputRateOnIsland(consumer, outId);
   if (outRate <= 0) {
     alt.viability = "impossible";
     alt.blockers.push("catalog");
     return alt;
   }
-  const targetOut = need === 0 ? 0 : Math.max(1, Math.ceil(need / outRate - 1e-9));
+  // Residual need already subtracted existing output. Do not subtract existing
+  // buildings again or the extra capacity is under-counted.
+  const extraOut = need === 0 ? 0 : Math.max(1, Math.ceil(need / outRate - 1e-9));
+  const existingOut = consumer.buildings[outId] ?? 0;
+  const totalOut = existingOut + extraOut;
   const campaignOut = links[links.length - 1]?.count ?? 1;
-  const scale = campaignOut > 0 ? targetOut / campaignOut : targetOut;
+  const scale = campaignOut > 0 ? totalOut / campaignOut : totalOut;
   const toAdd: Partial<Record<BuildingId, number>> = {};
   for (const link of links) {
-    const required = Math.max(0, Math.ceil(link.count * scale - 1e-9));
-    const have = consumer.buildings[link.buildingId] ?? 0;
-    const extra = Math.max(0, required - have);
-    if (extra > 0) toAdd[link.buildingId] = extra;
+    if (link.buildingId === outId) {
+      if (extraOut > 0) toAdd[outId] = extraOut;
+    } else {
+      const required = Math.max(0, Math.ceil(link.count * scale - 1e-9));
+      const have = consumer.buildings[link.buildingId] ?? 0;
+      const extra = Math.max(0, required - have);
+      if (extra > 0) toAdd[link.buildingId] = extra;
+    }
     const site = siteBlockers(link.buildingId, consumer);
     alt.blockers.push(...site.impossible);
     alt.missing.push(...site.missing);
@@ -393,9 +458,10 @@ function buildLocalChain(
     return finishAlt(alt, consumer, need);
   }
   alt.buildingsToAdd = toAdd;
-  alt.allocatedTMin = targetOut * outRate;
+  alt.allocatedTMin = extraOut * outRate;
   alt.coversNeed = need === 0 ? true : alt.allocatedTMin + 1e-9 >= need;
-  alt.assumptions.push("campaign-ratio", "productivity-100");
+  alt.assumptions.push("campaign-ratio");
+  if (consumer.capacityTMin == null || existingOut <= 0) alt.assumptions.push("productivity-100");
   alt.investment = costForBuildings(toAdd, input.goodId, consumer.world);
   if (alt.investment.coins == null) alt.missing.push("investment");
   alt.workforce = workforceForBuildings(toAdd);
@@ -404,30 +470,48 @@ function buildLocalChain(
   return finishAlt(alt, consumer, need);
 }
 
+function originMissing(origin: ScenarioIsland, surplus: number | null): MissingDatum[] {
+  const missing: MissingDatum[] = [];
+  if (origin.hasOtherConsumers === true && origin.reservedExportTMin == null) {
+    missing.push("origin-demand");
+  }
+  if (surplus == null) {
+    missing.push(origin.capacityTMin == null ? "origin-capacity" : "origin-demand");
+  }
+  return [...new Set(missing)];
+}
+
+function transportReady(origin: ScenarioIsland): boolean {
+  return origin.routeToConsumerOk !== false && origin.transportToConsumerTMin != null;
+}
+
 function pickOrigin(
   input: ScenarioInput,
   consumer: ScenarioIsland,
 ): { origin: ScenarioIsland; surplus: number | null; missing: MissingDatum[] } | null {
   const others = input.islands.filter((row) => row.id !== consumer.id);
   if (!others.length) return null;
-  let best: { origin: ScenarioIsland; surplus: number | null; missing: MissingDatum[] } | null =
-    null;
-  for (const origin of others) {
-    const missing: MissingDatum[] = [];
-    if (origin.hasOtherConsumers === true && origin.reservedExportTMin == null) {
-      missing.push("origin-demand");
-    }
+  const ranked = others.map((origin) => {
     const surplus = verifiedSurplusTMin(origin);
-    if (surplus == null) {
-      missing.push(origin.capacityTMin == null ? "origin-capacity" : "origin-demand");
-    }
-    if (surplus != null && surplus > (best?.surplus ?? -1) && !missing.length) {
-      best = { origin, surplus, missing };
-    } else if (!best) {
-      best = { origin, surplus, missing };
-    }
-  }
-  return best;
+    const missing = originMissing(origin, surplus);
+    const ready = transportReady(origin);
+    const shippable =
+      surplus != null && origin.transportToConsumerTMin != null && origin.routeToConsumerOk !== false
+        ? Math.min(surplus, origin.transportToConsumerTMin)
+        : null;
+    return { origin, surplus, missing, ready, shippable };
+  });
+  ranked.sort((a, b) => {
+    if (a.ready !== b.ready) return a.ready ? -1 : 1;
+    const shipA = a.shippable ?? -1;
+    const shipB = b.shippable ?? -1;
+    if (shipA !== shipB) return shipB - shipA;
+    const surA = a.surplus ?? -1;
+    const surB = b.surplus ?? -1;
+    return surB - surA;
+  });
+  const best = ranked[0]!;
+  return { origin: best.origin, surplus: best.surplus, missing: best.missing };
 }
 
 function transportSurplus(
@@ -499,13 +583,13 @@ function expandOriginAndTransport(
     return alt;
   }
   alt.originId = picked.origin.id;
+  alt.missing.push(...picked.missing);
   if (need == null) {
     alt.missing.push(consumer.demandTMin == null ? "consumer-demand" : "consumer-capacity");
     return alt;
   }
   const surplus = picked.surplus;
   if (surplus == null) {
-    alt.missing.push(...picked.missing);
     return alt;
   }
   const shortfall = Math.max(0, need - surplus);
@@ -515,7 +599,7 @@ function expandOriginAndTransport(
     alt.blockers.push("catalog");
     return alt;
   }
-  const rate = perBuildingTMin(outId);
+  const rate = outputRateOnIsland(picked.origin, outId);
   const extra = shortfall <= 0 ? 0 : Math.max(1, Math.ceil(shortfall / rate - 1e-9));
   if (extra > 0) {
     alt.buildingsToAdd = { [outId]: extra };
@@ -558,6 +642,7 @@ function nextDatum(alts: ScenarioAlternative[]): MissingDatum {
     "fertility",
     "resource",
     "workforce",
+    "inputs",
     "transport-capacity",
     "investment",
     "paused-count",

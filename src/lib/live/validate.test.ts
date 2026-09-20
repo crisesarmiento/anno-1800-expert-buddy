@@ -42,6 +42,26 @@ it("preserves capture outcome separately from historical observation", () => {
   assert.equal(invalid.ok && invalid.snapshot.connection?.nativeProbe?.result, undefined);
 });
 
+describe("P1-A quest GUID without state", () => {
+  it("does not default a GUID-only quest to active", () => {
+    const result = ingestLiveJsonText(
+      JSON.stringify({
+        schema: "harbor-live-v1",
+        source: "file",
+        updatedAt: "2026-09-20T12:00:00.000Z",
+        game: "anno-1800",
+        quests: [{ title: "Una chispa que vuelve", guid: 15000011 }],
+      }),
+    );
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.snapshot.quests[0]?.guid, 15000011);
+    assert.equal(result.snapshot.quests[0]?.state, undefined);
+    const match = matchLiveQuests(result.snapshot.quests);
+    assert.notEqual(match.kind, "confirmed");
+  });
+});
+
 describe("harbor-live ingest", () => {
   it("accepts the good fixture and matches Una chispa que vuelve", () => {
     const raw = JSON.stringify(fixture);

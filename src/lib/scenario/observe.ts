@@ -8,15 +8,8 @@ import { islandKey } from "../live/island-key.ts";
 import type { LiveIslandSnapshot, LiveSnapshot } from "../live/types.ts";
 import { liveBuildingToCatalog, liveGoodToCatalog } from "../sim/catalog-figures.ts";
 import { BUILDINGS, outputTMinAt100 } from "../sim/chains.ts";
-import type { BuildingId, GoodId, PopulationTier, World } from "../sim/types.ts";
+import type { BuildingId, GoodId, World } from "../sim/types.ts";
 import type { ScenarioInput, ScenarioIsland, Trilean } from "./types.ts";
-
-const TIER_FROM_POP: Record<keyof NonNullable<LiveIslandSnapshot["population"]>, PopulationTier> = {
-  farmers: "farmer",
-  workers: "worker",
-  artisans: "artisan",
-  engineers: "engineer",
-};
 
 function worldOf(regionId: number): World {
   if (regionId === 180025) return "new";
@@ -86,18 +79,12 @@ function productionOf(
 }
 
 function workforceAvailable(
-  island: LiveIslandSnapshot,
+  _island: LiveIslandSnapshot,
 ): ScenarioIsland["workforceAvailable"] {
-  const pop = island.population;
-  if (!pop) return {};
-  const out: ScenarioIsland["workforceAvailable"] = {};
-  for (const [key, tier] of Object.entries(TIER_FROM_POP) as Array<
-    [keyof typeof TIER_FROM_POP, PopulationTier]
-  >) {
-    const value = pop[key];
-    if (typeof value === "number") out[tier] = value;
-  }
-  return out;
+  // Population is not free workers. The save does not publish unused workforce,
+  // so availability stays unknown instead of copying headcount as if it were idle.
+  void _island;
+  return {};
 }
 
 function routeFacts(

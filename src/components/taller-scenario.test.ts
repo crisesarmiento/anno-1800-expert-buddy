@@ -32,6 +32,7 @@ describe("Taller produce-or-import", () => {
     for (const dict of Object.values(UI)) {
       assert.equal(typeof dict.scenario.verdictMissing, "string");
       assert.equal(typeof dict.scenario.nextDatum, "string");
+      assert.equal(typeof dict.scenario.nextInputs, "string");
       assert.equal(typeof dict.scenario.expandLocal, "string");
       assert.equal(typeof dict.scenario.transport, "string");
       assert.equal(typeof dict.scenario.transportManual, "string");

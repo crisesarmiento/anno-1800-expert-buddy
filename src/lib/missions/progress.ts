@@ -39,6 +39,7 @@ const DONE = "done";
 const ACTIVE = new Set(["active", "ready"]);
 
 export function isSaveReadQuest(quest: LiveQuest): boolean {
+  if (quest.state == null) return false;
   return Boolean(
     quest.instanceId ||
       quest.guid != null ||
@@ -80,7 +81,7 @@ export function readMissionProgress(
     if (quest.state === DONE && identity.missionId) {
       saveCompletedIds.push(identity.missionId);
     }
-    if (ACTIVE.has(quest.state) && identity.missionId && !currentSaveMissionId) {
+    if (quest.state != null && ACTIVE.has(quest.state) && identity.missionId && !currentSaveMissionId) {
       currentSaveMissionId = identity.missionId;
     }
   });
@@ -159,7 +160,14 @@ function classifyTransition(before: LiveQuest, after: LiveQuest): QuestTransitio
   if (delivered(before, after)) return "deliver";
   if (advanced(before, after)) return "advance";
   if (before.state === after.state && sameProgress(before, after)) return "unchanged";
-  if (ACTIVE.has(after.state) && !ACTIVE.has(before.state) && before.state !== DONE) return "accept";
+  if (
+    after.state != null &&
+    ACTIVE.has(after.state) &&
+    (before.state == null || !ACTIVE.has(before.state)) &&
+    before.state !== DONE
+  ) {
+    return "accept";
+  }
   return "advance";
 }
 

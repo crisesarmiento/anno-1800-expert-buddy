@@ -8,6 +8,7 @@ import {
   coverageFromSnapshot,
   effectiveRole,
   fleetAdvice,
+  rolesForCampaign,
   surplusLabel,
   type FleetManualRole,
 } from "@/lib/fleet";
@@ -37,7 +38,9 @@ function roleLabel(t: ReturnType<typeof useT>["fleet"], role: FleetManualRole) {
 
 export function FleetViewCard() {
   const snapshot = useHarbor((s) => s.liveSnapshot);
-  const roles = useHarbor((s) => s.fleetRoles);
+  const campaignId = useHarbor((s) => s.historyCampaignId ?? s.manualHistoryCampaignId);
+  const rolesByCampaign = useHarbor((s) => s.fleetRolesByCampaign);
+  const roles = rolesForCampaign(rolesByCampaign, campaignId);
   const setFleetRole = useHarbor((s) => s.setFleetRole);
   const t = useT();
   const [hullId, setHullId] = useState("frigate");

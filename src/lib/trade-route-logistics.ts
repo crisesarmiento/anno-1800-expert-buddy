@@ -7,6 +7,7 @@ import { playerIslandsFromSave } from "./live/evidence.ts";
 import type {
   LiveIslandSnapshot,
   LiveRouteDelivery,
+  LiveRouteStationDelivery,
   LiveSnapshot,
   LiveTradeRoute,
   LiveTradeRouteGood,
@@ -45,6 +46,7 @@ export type RouteLogistics = {
   nominalCapacity: null;
   delivery: LiveRouteDelivery | null;
   observedTMin: number | null;
+  stations: Array<LiveRouteStationDelivery & { inferredTMin: number | null }>;
   supplyKind: RouteSupplyKind;
   guaranteedSupply: false;
 };
@@ -119,15 +121,44 @@ function attachRealized(
   return [...byGuid.values()];
 }
 
+function rateFromInterval(amount: number, intervalMs: number | undefined): number | null {
+  if (!intervalMs || intervalMs <= 0 || amount <= 0) return null;
+  return Math.round((amount / (intervalMs / 60_000)) * 100) / 100;
+}
+
 /**
- * Inferred t/min from median |amount| and median interval.
- * Partial loads keep this below configured; never treat as nominal capacity.
+ * Inferred t/min for one destination/good series.
+ * A route-level interval mixed across stops is not a delivery rate.
  */
-export function inferredDeliveryTMin(delivery: LiveRouteDelivery | undefined): number | null {
-  if (!delivery?.intervalMsMedian || delivery.intervalMsMedian <= 0) return null;
-  const amount = delivery.goods.reduce((max, good) => Math.max(max, good.medianAbsAmount), 0);
-  if (amount <= 0) return null;
-  return Math.round((amount / (delivery.intervalMsMedian / 60_000)) * 100) / 100;
+export function inferredStationDeliveryTMin(
+  station: Pick<LiveRouteStationDelivery, "medianAbsAmount" | "intervalMsMedian" | "areaId">,
+): number | null {
+  if (station.areaId == null) return null;
+  return rateFromInterval(station.medianAbsAmount, station.intervalMsMedian);
+}
+
+/**
+ * Inferred t/min only when destination and good are known.
+ * A global median across load and unload is not a destination rate.
+ */
+export function inferredDeliveryTMin(
+  delivery: LiveRouteDelivery | undefined,
+  scope?: { areaId?: number; guid?: number },
+): number | null {
+  if (!delivery) return null;
+  const stations = delivery.stations ?? [];
+  if (scope?.areaId != null || scope?.guid != null) {
+    const match = stations.filter((row) => {
+      if (scope.areaId != null && row.areaId !== scope.areaId) return false;
+      if (scope.guid != null && row.guid !== scope.guid) return false;
+      return true;
+    });
+    if (match.length !== 1) return null;
+    return inferredStationDeliveryTMin(match[0]!);
+  }
+  const withDest = stations.filter((row) => row.areaId != null);
+  if (withDest.length === 1) return inferredStationDeliveryTMin(withDest[0]!);
+  return null;
 }
 
 export function routeSupplyKind(route: LiveTradeRoute): RouteSupplyKind {
@@ -158,6 +189,10 @@ export function inspectRouteLogistics(
   );
   const delivery = route.delivery ?? null;
   const quantities = attachRealized(configuredGoods(route), delivery ?? undefined);
+  const stations = (delivery?.stations ?? []).map((row) => ({
+    ...row,
+    inferredTMin: inferredStationDeliveryTMin(row),
+  }));
   return {
     islandByAreaId,
     ships,
@@ -166,6 +201,7 @@ export function inspectRouteLogistics(
     nominalCapacity: null,
     delivery,
     observedTMin: inferredDeliveryTMin(delivery ?? undefined),
+    stations,
     supplyKind: routeSupplyKind(route),
     guaranteedSupply: false,
   };

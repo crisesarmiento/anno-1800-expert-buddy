@@ -33,6 +33,11 @@ export type EssentialDrop = {
   pairs: number;
   previousSavedAt: string;
   savedAt: string;
+  scope: "island" | "global";
+  campaignId: string;
+  branchId: string;
+  regionId?: number;
+  areaId?: number;
 };
 
 function dated(sample: HistorySample) {
@@ -108,6 +113,19 @@ export function treasuryHealth(samples: HistorySample[]): TreasuryVerdict {
   return { kind: "stable", from, to, savedAt };
 }
 
+function islandDropKey(
+  sample: HistorySample,
+  regionId: number,
+  areaId: number,
+  goodId: string,
+): string {
+  return `${sample.campaignId}:${sample.branchId}:island:${regionId}:${areaId}:${goodId}`;
+}
+
+function globalDropKey(sample: HistorySample, goodId: string): string {
+  return `${sample.campaignId}:${sample.branchId}:global:${goodId}`;
+}
+
 export function essentialStockDrops(samples: HistorySample[]): EssentialDrop[] {
   if (samples.length < 3) return [];
   const counts = new Map<string, EssentialDrop>();
@@ -122,8 +140,9 @@ export function essentialStockDrops(samples: HistorySample[]): EssentialDrop[] {
       for (const change of delta.changes) {
         if (change.delta >= 0) continue;
         if (!ESSENTIAL_GOOD_IDS.includes(change.id as EssentialGoodId)) continue;
-        const prev = counts.get(change.id);
-        counts.set(change.id, {
+        const key = islandDropKey(current, island.regionId, island.areaId, change.id);
+        const prev = counts.get(key);
+        counts.set(key, {
           id: change.id,
           name: change.name,
           from: change.previousAmount,
@@ -131,6 +150,11 @@ export function essentialStockDrops(samples: HistorySample[]): EssentialDrop[] {
           pairs: (prev?.pairs ?? 0) + 1,
           previousSavedAt: change.previousSavedAt,
           savedAt: dated(current),
+          scope: "island",
+          campaignId: current.campaignId,
+          branchId: current.branchId,
+          regionId: island.regionId,
+          areaId: island.areaId,
         });
       }
     }
@@ -139,8 +163,9 @@ export function essentialStockDrops(samples: HistorySample[]): EssentialDrop[] {
       if (!ESSENTIAL_GOOD_IDS.includes(good.id as EssentialGoodId)) continue;
       const prior = before.get(good.id);
       if (!prior || good.amount >= prior.amount) continue;
-      const prev = counts.get(good.id);
-      counts.set(good.id, {
+      const key = globalDropKey(current, good.id);
+      const prev = counts.get(key);
+      counts.set(key, {
         id: good.id,
         name: good.name,
         from: prior.amount,
@@ -148,6 +173,9 @@ export function essentialStockDrops(samples: HistorySample[]): EssentialDrop[] {
         pairs: (prev?.pairs ?? 0) + 1,
         previousSavedAt: dated(previous),
         savedAt: dated(current),
+        scope: "global",
+        campaignId: current.campaignId,
+        branchId: current.branchId,
       });
     }
   }

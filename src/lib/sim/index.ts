@@ -33,10 +33,14 @@ export {
 } from "./catalog-figures.ts";
 export { GOOD_NAME_ES, goodNameEs } from "./goods.ts";
 export {
+  EXAMPLE_SEED_ISLAND_ID,
+  EXAMPLE_SEED_NOTES,
   SAVE_COUNT_CHIP_LABEL,
   SAVE_COUNT_DEGRADE_ES,
   applySaveCountsChip,
+  diagnosisSourceOf,
   fillFromSimMode,
+  isExampleCampaignSeed,
 } from "./save-count-chip.ts";
 export {
   GUID_TO_FACTORY,

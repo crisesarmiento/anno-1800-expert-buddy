@@ -206,6 +206,26 @@ describe("ingest optional quest fields", () => {
   });
 });
 
+describe("P1-A GUID without state is not save-read", () => {
+  it("does not treat a quest GUID with no state as active or save-read", () => {
+    const snapshot = {
+      schema: "harbor-live-v1" as const,
+      source: "file" as const,
+      updatedAt: "2026-09-20T12:00:00.000Z",
+      savedAt: "2026-09-20T12:00:00.000Z",
+      game: "anno-1800" as const,
+      quests: [{ title: "Una chispa que vuelve", guid: 15000011 }],
+    };
+    const view = readMissionProgress(snapshot, matchLiveSnapshot(snapshot));
+    assert.equal(view.saveRead.length, 0);
+    assert.equal(view.currentSaveMissionId, null);
+    assert.equal(view.manualFallback, true);
+    const match = matchLiveSnapshot(snapshot);
+    assert.notEqual(match.kind, "confirmed");
+    assert.notEqual(match.source, "quests");
+  });
+});
+
 describe("honesty: watcher empty list and no inherited live completions", () => {
   it("keeps the Windows watcher on quests:[] and does not copy save-read done into store.completed", () => {
     const ps1 = readFileSync(new URL("../../../public/watch-harbor-live.ps1", import.meta.url), "utf8");

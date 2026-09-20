@@ -26,7 +26,7 @@ export function suggestedReserves(snapshot: LiveSnapshot | null | undefined): Su
   }
   const out: SuggestedReserve[] = [];
   for (const quest of snapshot.quests) {
-    if (!ACTIVE.has(quest.state)) continue;
+    if (quest.state == null || !ACTIVE.has(quest.state)) continue;
     if (!isSaveReadQuest(quest)) continue;
     const missionId = catalogMissionId(quest);
     if (!missionId) continue;

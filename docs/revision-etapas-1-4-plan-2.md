@@ -55,3 +55,26 @@ Registrar acción aplicada con isla/bien, fecha y muestra base; comparar ventana
 - No se ejecutó build, empaquetado ni auditoría visual en esta revisión; Grokbot está trabajando en la etapa 5 en el mismo checkout. No se modificó código de implementación.
 
 Orden sugerido: completar misiones con sus límites explícitos; corregir A antes de ampliar recomendaciones automáticas; luego B–D, integrando presupuesto militar y seguimiento en E. La utilidad principal para el usuario es evitar decisiones económicas equivocadas, no aumentar la cantidad de indicadores.
+
+## Plan 2 — P1-A (cálculos y honestidad)
+
+Base de implementación: `62a54ea` (main, incluye etapa 6 #67 y el arreglo del BAT #68). Este bloque no reabre el BAT ni trabajo visual P1-B/P2.
+
+| Ítem | Estado | Evidencia / límite |
+| --- | --- | --- |
+| 1. Capacidad incremental (pescado 2/6, 1 pesquería) | **hecho** | `buildLocalChain` ya no resta otra vez los edificios existentes. Prueba: añade 2 pesquerías y 4 t/min, no 1 y 4. Productividad ≠ 100% y cadena parcial de schnapps cubiertas en test. |
+| 2. Reservas desconocidas ≠ 0 | **hecho** | `verifiedSurplusTMin` deja el excedente desconocido si hay otros consumidores y no hay reserva medida. |
+| 3. Origen con transporte viable | **hecho** | `pickOrigin` prioriza transporte conocido sobre un excedente mayor sin barco. |
+| 4. Insumos / mano de obra | **hecho** (lógica) / **parcial** (dato real) | Expandir fábrica exige insumos planificados. El adaptador ya no copia población como trabajadores libres. El save **no** publica mano de obra ociosa: sin dato, la alternativa queda desconocida, no viable. |
+| 5. Alertas de stock por ámbito | **hecho** | `essentialStockDrops` separa campaña/rama/isla/bien y el total global. Dos caídas de una vez en islas distintas no disparan el umbral. |
+| 6. Entrega por destino/bien | **hecho** (parser + contrato) / **parcial** (cobertura del save) | C#, JSON `stations[]`, watcher y consumidor TS. Tasa inferida sólo con `areaId`+bien. Si TradeRouteEntries no trae `AreaID`/`Identifier`, no hay tasa de destino: queda documentado, no se usa el intervalo mezclado. |
+| 7. GUID de misión sin estado ≠ activa/save-read | **hecho** | Ingest ya no rellena `state: "active"`. `isSaveReadQuest` exige estado explícito. |
+| 8. Seed de ejemplo ≠ diagnóstico de partida | **hecho** | Overlay de conteos sobre `campaign-ch1` queda `diagnosis: "mixed"`, no `save`. El seed de ejemplo solo es diagnóstico de ejemplo. |
+| 9. Dos barcos mismo nombre ≠ un casco; roles por campaña | **hecho** | Inventario no colapsa por nombre. Roles manuales viven en `fleetRolesByCampaign`. |
+| Tests `npm test` en Windows | **hecho** | `scripts/run-tests.mjs` enumera archivos y reporta conteos. Última corrida: scripts 15 archivos / 83 tests; app 74 archivos / 635 tests. Un glob que corre 0 tests no se declara verde. |
+
+**Qué se puede confiar** (con los datos que el lector sí aporta): déficit incremental de una cadena, no gastar un excedente desconocido, no elegir un origen sin transporte por tener más números, no mezclar alertas de islas distintas, no tratar un GUID de quest como misión activa, no pintar el seed de ejemplo como la partida.
+
+**Qué sigue condicionado:** ingresos/mantenimiento, mano de obra libre, reservas de exportación medidas, `AreaID` en cada visita de ruta, estado de quests desde el vigilante (`quests: []`), mantenimiento militar del save. Sin esos campos, la app declara el hueco; no completa con ceros.
+
+P1-B (telemetría C#/contrato/cobertura) y P2 (UI de escritorio, comparador, flota visible) quedan **pendiente**.

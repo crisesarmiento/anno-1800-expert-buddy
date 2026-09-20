@@ -16,6 +16,7 @@ export type MissingDatum =
   | "fertility"
   | "resource"
   | "workforce"
+  | "inputs"
   | "origin-demand"
   | "origin-capacity"
   | "transport-capacity"
