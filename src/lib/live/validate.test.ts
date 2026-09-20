@@ -122,6 +122,9 @@ describe("harbor-live ingest", () => {
         ?.goodsChanges,
     );
     assert.ok(
+      (schema.properties.telemetry as { properties?: { fleet?: unknown } }).properties?.fleet,
+    );
+    assert.ok(
       (
         schema.properties.connection as {
           properties?: { nativeProbe?: unknown };

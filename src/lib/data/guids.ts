@@ -1,6 +1,6 @@
 /** Campaign-sized GUID table. Grows when a save shows a new asset. English names match the game. */
 
-export type GuidKind = "building" | "good" | "island" | "person" | "quest";
+export type GuidKind = "building" | "good" | "island" | "person" | "quest" | "ship";
 
 export type GuidRow = {
   guid: number;
@@ -50,6 +50,17 @@ export const GUID_ROWS: GuidRow[] = [
   { guid: 1010203, id: "soap", kind: "good", name: "Soap" },
   { guid: 1010224, id: "steel", kind: "good", name: "Steel" },
   { guid: 1010210, id: "sails", kind: "good", name: "Sails" },
+  { guid: 1010221, id: "weapons", kind: "good", name: "Weapons" },
+
+  { guid: 100438, id: "schooner", kind: "ship", name: "Schooner" },
+  { guid: 100437, id: "gunboat", kind: "ship", name: "Gunboat" },
+  { guid: 100439, id: "frigate", kind: "ship", name: "Frigate" },
+  { guid: 100441, id: "clipper", kind: "ship", name: "Clipper" },
+  { guid: 100440, id: "ship-of-the-line", kind: "ship", name: "Ship of the Line" },
+  { guid: 1010062, id: "cargo-ship", kind: "ship", name: "Cargo Ship" },
+  { guid: 100442, id: "battle-cruiser", kind: "ship", name: "Battle Cruiser" },
+  { guid: 100443, id: "monitor", kind: "ship", name: "Monitor" },
+  { guid: 100853, id: "oil-tanker", kind: "ship", name: "Oil Tanker" },
 
   { guid: 180023, id: "old-world", kind: "island", name: "Old World" },
   { guid: 180025, id: "new-world", kind: "island", name: "New World" },

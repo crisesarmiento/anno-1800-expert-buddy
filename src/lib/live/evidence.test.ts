@@ -54,6 +54,7 @@ function scanOf(over: Partial<SaveScan> = {}): SaveScan {
     islandSnapshots: [],
     snapshotId: null,
     simTime: null,
+    fleet: [],
     ...over,
   };
 }

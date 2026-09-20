@@ -165,6 +165,11 @@
             }
           }
         },
+        "fleet": {
+          "type": "array",
+          "maxItems": 80,
+          "items": { "$ref": "#/$defs/fleetShip" }
+        },
         "routes": {
           "type": "array",
           "maxItems": 80,
@@ -268,6 +273,11 @@
               "islandRef": { "$ref": "#/$defs/islandRef" }
             }
           }
+        },
+        "fleet": {
+          "type": "array",
+          "maxItems": 80,
+          "items": { "$ref": "#/$defs/fleetShip" }
         }
       }
     }
@@ -335,6 +345,50 @@
       "properties": {
         "regionId": { "type": "integer" },
         "areaId": { "type": "integer" }
+      }
+    },
+    "fleetShip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ownerId", "coverage"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "guid": { "type": "integer", "exclusiveMinimum": 0 },
+        "id": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "typeName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "kind": { "type": "string", "enum": ["trade", "military", "flagship", "unknown"] },
+        "ownerId": { "type": "integer", "const": 0 },
+        "metaId": { "type": "integer" },
+        "assignment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["trade-route", "unknown"] },
+            "routeId": { "type": "integer" },
+            "routeName": { "type": "string", "minLength": 1, "maxLength": 120 }
+          }
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "regionId": { "type": "integer" },
+            "areaId": { "type": "integer" },
+            "name": { "type": "string", "minLength": 1, "maxLength": 200 }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["identity"],
+          "properties": {
+            "identity": { "$ref": "#/$defs/fieldCoverage" },
+            "type": { "$ref": "#/$defs/fieldCoverage" },
+            "assignment": { "$ref": "#/$defs/fieldCoverage" },
+            "location": { "$ref": "#/$defs/fieldCoverage" }
+          }
+        }
       }
     },
     "economy": {

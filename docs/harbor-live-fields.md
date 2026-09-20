@@ -35,6 +35,7 @@ Schema: `docs/harbor-live.schema.json`.
 | `telemetry.production` | Pantallas Producción + Finanzas por OCR                                                                                                  | Demanda/productividad y conteo por isla. `buildingCountObservedAt` (opcional) marca cuándo Finanzas dio ese conteo, independiente de `observedAt` (la muestra de Producción). Taller sólo aconseja si ambas muestras existen y conoce el ritmo del GUID. `islandRef` sólo si el nombre OCR mapea a **una** isla del save.                                                                                                                                                                                 |
 | `campaignId` / `playerId` / `snapshotId` / `simTime` | Save, cuando se verifica                                                                 | Opcionales. `campaignId` nunca sale del nombre de archivo ni del mtime. `simTime` es `lastSnapshot` o el máximo `SessionTotalTime` (8 bytes) de `GameSessionManager`. `islandName` sigue siendo región/sesión. |
 | `economy.treasury` | `GUID 1010017` del participante 0                                                                 | Opcional. Caja absoluta del jugador. No es el ticker de Balance. Ingreso y mantenimiento no se publican: en el save local `TaxBalance` cuelga de `ConstructionAI` (área 3), no de colonias `ownerId=0`. El sidecar `harbor-live.money.json` sigue siendo interno para `pulseHint.coins`. |
+| `telemetry.fleet[]` | GameObject `VehicleName` + `Owner/id === 0` | Opcional. Inventario de cascos del jugador: nombre, GUID/tipo, asignación si hay `TradeRouteID`, área. Sin dueño player se omite. El mantenimiento wiki no va en el JSON. Un barco en una ruta no se suma dos veces. |
 | `islandSnapshots[]` | FileDB anidado `GameSessions` → `AreaInfo` + `AreaManager_*` | Clave `regionId`+`areaId`, `ownerId`, nombre (`CityName`, guid traducido o `[guid]`). Stock opcional por isla. Cobertura `save`/`ocr`/`manual`. No reutiliza `islandName`. |
 
 El dump Lua (`tools/harbor-buddy-telemetry/dump_live.lua`) **no va en el zip**. Si algún día hay hook seguro, escribe el mismo schema y no inventa títulos. El `modinfo` 0.2.0 sigue vacío (`<ModOps></ModOps>`).
@@ -48,6 +49,7 @@ No se agregan aunque el `.a7s` “los tenga” por dentro:
 - Spoilers de diario más allá de GUIDs de quest mapeados.
 - Inject: Lua en el pack, parche de GUID, `ModOps` sobre assets vanilla.
 - Write al `.a7s`.
+- `ShipMaintenance` / `TaxBalance` de ConstructionAI (sin dueño jugador). El mantenimiento de flota en Taller es catálogo inferido.
 
 Si un JSON trae `population`, `goods`, `warehouse`, `tradeRoutes` (en raíz) u otros extras, el ingest **los tira** y sigue con el contrato de arriba. Las rutas válidas viven en `telemetry.routes`.
 

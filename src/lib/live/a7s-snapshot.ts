@@ -1,5 +1,6 @@
 import { lookupGuid } from "../data/guids.ts";
 import { unpackA7s, visitFileDb, leafI32, leafText } from "./a7s-read.ts";
+import { extractFleet, liveFleetFromExtracted } from "./a7s-fleet.ts";
 import {
   capIslandSnapshots,
   extractIslands,
@@ -9,6 +10,7 @@ import {
 import { isPlayerParticipant, type StorageOwner } from "./evidence.ts";
 import type {
   LiveBuildingHit,
+  LiveFleetShip,
   LiveIslandSnapshot,
   LiveNamedHit,
   LivePulseHint,
@@ -37,6 +39,7 @@ export type SaveScan = {
   islandSnapshots: LiveIslandSnapshot[];
   snapshotId: string | null;
   simTime: number | null;
+  fleet: LiveFleetShip[];
 };
 
 function addCount(map: Map<string, { name: string; count: number }>, id: string, name: string, n: number) {
@@ -70,6 +73,7 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     islandSnapshots: [],
     snapshotId: null,
     simTime: null,
+    fleet: [],
   };
 
   for (const file of files) {
@@ -155,6 +159,7 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     islandSnapshotFromExtracted(island, observedAt),
   );
   scan.islandSnapshots = capIslandSnapshots(liveIslands).kept;
+  scan.fleet = liveFleetFromExtracted(extractFleet(data.bytes), data.bytes);
 
   return scan;
 }
@@ -279,6 +284,7 @@ export function snapshotFromScan(
   if (chains.length) telemetry.chains = chains;
   if (hints.length) telemetry.hints = hints;
   if (goodsHits.length) telemetry.goods = goodsHits;
+  if (scan.fleet.length) telemetry.fleet = scan.fleet;
 
   const snapshot: LiveSnapshot = {
     schema: "harbor-live-v1",
