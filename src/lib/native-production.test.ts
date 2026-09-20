@@ -36,6 +36,7 @@ describe("native OCR production advice", () => {
     assert.equal(rows[0]?.recommendedCount, 2);
     assert.equal(rows[0]?.capacityTMin, 2);
     assert.equal(rows[0]?.islandName, "La Inapetente");
+    assert.equal(rows[0]?.evidence, "inferred");
   });
 
   it("detects factories that can be paused without using save-wide counts", () => {
@@ -54,6 +55,7 @@ describe("native OCR production advice", () => {
     );
     assert.equal(rows[0]?.status, "sobra");
     assert.equal(rows[0]?.pauseCount, 2);
+    assert.equal(rows[0]?.evidence, "inferred");
   });
 
   it("does not advise until Finance supplied a factory count", () => {

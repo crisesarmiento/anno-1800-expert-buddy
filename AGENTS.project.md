@@ -65,10 +65,12 @@ See `docs/filedb-spike-routes.md` and `docs/harbor-live-fields.md`.
 
 ## Sources of truth
 
+- Evidence matrix (origin, owner, unit, date, availability, validation): `docs/evidence-matrix.md`
 - JSON schema: `docs/harbor-live.schema.json`
 - TypeScript contract: `src/lib/live/types.ts`
 - Untrusted-input normalization: `src/lib/live/validate.ts`
-- Save/OCR writer: `public/watch-harbor-live.ps1`
+- Save/OCR writer: `public/watch-harbor-live.ps1` (Windows). `src/lib/live/a7s-snapshot.ts` is a research util, not the Windows writer.
+- Honesty helpers: `src/lib/live/evidence.ts`
 - Production analysis: `src/lib/native-production.ts`
 - Route analysis: `src/lib/trade-route-health.ts`
 - Production UI: `src/components/native-production-card.tsx`

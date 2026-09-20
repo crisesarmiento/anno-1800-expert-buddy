@@ -15,8 +15,11 @@ test("coins delta reads/writes a money sidecar, not the public harbor-live.json"
   assert.doesNotMatch(ps1, /\$prev = Get-Content -LiteralPath \$outJson/);
 });
 
-test("money is persisted for the next tick only after a real money reading", () => {
-  assert.match(ps1, /if \(\$scan\.PSObject\.Properties\.Name -contains "money"\) \{/);
+test("money is persisted for the next tick only after a real player money reading", () => {
+  assert.match(
+    ps1,
+    /if \(\$playerStorage -and \(\$scan\.PSObject\.Properties\.Name -contains "money"\)\) \{/,
+  );
   assert.match(ps1, /\[System\.IO\.File\]::WriteAllText\(\$moneyStatePath, \$moneyJson, \$utf8\)/);
 });
 
@@ -27,6 +30,10 @@ test("the money sidecar never becomes part of the harbor-live-v1 schema", () => 
 
 test("bundled .bat ships the same sidecar-based delta as the .ps1 source", () => {
   assert.match(bat, /\$moneyStatePath = Join-Path \$anno "harbor-live\.money\.json"/);
+  assert.match(
+    bat,
+    /if \(\$playerStorage -and \(\$scan\.PSObject\.Properties\.Name -contains "money"\)\) \{/,
+  );
   assert.doesNotMatch(bat, /\$prev = Get-Content -LiteralPath \$outJson/);
 });
 

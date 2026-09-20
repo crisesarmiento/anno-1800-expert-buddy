@@ -15,6 +15,10 @@ const TELEMETRY_GATES: { hit: string; missionId: string }[] = [
   { hit: "worker-house", missionId: "ch1-raise" },
 ];
 
+function noneMatch(rawTitles: string[]): LiveMatch {
+  return { missionId: null, confidence: 0, rawTitles, kind: "none", source: "none" };
+}
+
 export function matchLiveQuests(quests: LiveQuest[]): LiveMatch {
   const rawTitles = quests.map((quest) => quest.title).filter(Boolean);
   const preferred = quests.filter(
@@ -34,11 +38,11 @@ export function matchLiveQuests(quests: LiveQuest[]): LiveMatch {
     }
   }
 
-  if (confidence < MIN_SCORE) {
-    return { missionId: null, confidence: 0, rawTitles };
+  if (confidence < MIN_SCORE || !missionId) {
+    return noneMatch(rawTitles);
   }
 
-  return { missionId, confidence, rawTitles };
+  return { missionId, confidence, rawTitles, kind: "confirmed", source: "quests" };
 }
 
 function buildingHits(snapshot: LiveSnapshot): Set<string> {
@@ -54,7 +58,7 @@ export function inferMissionFromTelemetry(snapshot: LiveSnapshot): LiveMatch {
   ].filter(Boolean) as string[];
 
   if (hits.size === 0) {
-    return { missionId: null, confidence: 0, rawTitles: labels };
+    return noneMatch(labels);
   }
 
   let floorId = "ch1-spark";
@@ -76,15 +80,20 @@ export function inferMissionFromTelemetry(snapshot: LiveSnapshot): LiveMatch {
     if (missing.length > 0) break;
   }
 
+  if (!current?.id) return noneMatch(labels);
   return {
-    missionId: current?.id ?? null,
-    confidence: current ? 5 : 0,
+    missionId: current.id,
+    confidence: 5,
     rawTitles: labels,
+    kind: "suggested",
+    source: "buildings",
   };
 }
 
 export function matchLiveSnapshot(snapshot: LiveSnapshot): LiveMatch {
   const fromQuests = matchLiveQuests(snapshot.quests);
-  if (fromQuests.missionId && fromQuests.confidence >= MIN_SCORE) return fromQuests;
+  if (fromQuests.kind === "confirmed" && fromQuests.missionId && fromQuests.confidence >= MIN_SCORE) {
+    return fromQuests;
+  }
   return inferMissionFromTelemetry(snapshot);
 }

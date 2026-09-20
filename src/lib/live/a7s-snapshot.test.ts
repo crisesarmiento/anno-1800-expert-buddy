@@ -21,6 +21,7 @@ describe("GUID table and FileDB snapshot", () => {
       ]),
       goods: new Map([["wood", { name: "Timber", amount: 42 }]]),
       money: 8840,
+      storageOwner: "player",
       islands: new Set(["old-world"]),
       islandNames: new Map([["old-world", "Old World"]]),
       questGuids: [],
@@ -33,6 +34,7 @@ describe("GUID table and FileDB snapshot", () => {
     assert.equal(snap.schema, "harbor-live-v1");
     assert.equal(snap.sessionName, "Cristian S5");
     assert.equal(snap.islandName, "Old World");
+    assert.deepEqual(snap.quests, []);
     assert.equal(snap.pulseHint?.coins, "down");
     assert.equal(snap.pulseHint?.houses, "yellow");
     assert.equal(snap.workforce?.farmers, true);
@@ -55,6 +57,7 @@ function scanOf(over: Partial<SaveScan> = {}): SaveScan {
     buildingCounts: new Map(),
     goods: new Map(),
     money: 100,
+    storageOwner: "player",
     islands: new Set(),
     islandNames: new Map(),
     questGuids: [],
@@ -153,5 +156,35 @@ describe("pulseHint from save presence", () => {
       ),
       "ok",
     );
+  });
+});
+
+describe("evidence honesty from a save scan", () => {
+  it("does not publish FileDB quest GUIDs as confirmed active quests", () => {
+    const snap = snapshotFromScan(
+      scanOf({
+        questGuids: [15000000],
+        storageOwner: "player",
+      }),
+      {},
+    );
+    assert.deepEqual(snap.quests, []);
+  });
+
+  it("keeps islandName as the catalog session/region, not a player colony", () => {
+    const snap = snapshotFromScan(
+      scanOf({
+        islands: new Set(["old-world"]),
+        islandNames: new Map([["old-world", "Old World"]]),
+      }),
+      {},
+    );
+    assert.equal(snap.islandName, "Old World");
+    assert.equal(snap.telemetry?.islands?.[0]?.id, "old-world");
+  });
+
+  it("does not diagnose coins from unscoped money", () => {
+    const pulse = pulseHintFromScan(scanOf({ money: 999_999, storageOwner: "unknown" }), 1);
+    assert.equal(pulse.coins, "unknown");
   });
 });

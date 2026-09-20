@@ -12,9 +12,9 @@ El vigilante de Windows (`watch-harbor-live.ps1`) sugiere el `.a7s` de **sesión
 - `game`: `"anno-1800"`
 - `updatedAt` (escritura del JSON) y `savedAt` (mtime del `.a7s`)
 - `sessionName`: basename del `.a7s`
-- `islandName`: primer hit de isla del catálogo, si hay
+- `islandName`: primer hit de **región/sesión** del catálogo, si hay — no es la colonia del jugador
 - `workforce`: presencia `farmers` / `workers` / `artisans` / `engineers` (sin conteos)
-- `quests[]` con `title` y `state` `active` | `done`
+- `quests[]`: el vigilante escribe `[]`. Un GUID de quest no es una misión activa confirmada
 - `telemetry` de buildings / people / chains / islands / hints
 
 Lista have vs refused: `docs/harbor-live-fields.md`.

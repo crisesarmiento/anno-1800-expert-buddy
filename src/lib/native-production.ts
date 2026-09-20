@@ -1,3 +1,4 @@
+import { PRODUCTION_ADVICE_EVIDENCE } from "./live/evidence.ts";
 import type { LiveProductionMetric, LiveSnapshot } from "./live/types.ts";
 import { BUILDINGS, outputTMinAt100 } from "./sim/chains.ts";
 
@@ -15,6 +16,8 @@ export type NativeProductionAdvice = {
   productivity: number;
   pauseCount: number;
   observedAt: string;
+  /** Catalog math from OCR samples — never confirmed live surplus. */
+  evidence: "inferred";
   islandName?: string;
   /** When Finance last supplied buildingCount, independent of `observedAt` (Production's sample). */
   buildingCountObservedAt?: string;
@@ -53,6 +56,7 @@ function adviceFromMetric(metric: LiveProductionMetric): NativeProductionAdvice 
     productivity,
     pauseCount,
     observedAt: metric.observedAt,
+    evidence: PRODUCTION_ADVICE_EVIDENCE,
   };
   if (metric.islandName) advice.islandName = metric.islandName;
   if (metric.buildingCountObservedAt) advice.buildingCountObservedAt = metric.buildingCountObservedAt;

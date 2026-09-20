@@ -8,6 +8,8 @@ import {
   resolveIslandFocusId,
   scopeEstoAhoraLine,
 } from "./island-focus.ts";
+import { isSessionRegionHit, playerIslandFromSave } from "./live/evidence.ts";
+import type { LiveSnapshot } from "./live/types.ts";
 
 const welcome = readFileSync(new URL("../components/harbor-app.tsx", import.meta.url), "utf8");
 const desk = readFileSync(new URL("../components/session-desk.tsx", import.meta.url), "utf8");
@@ -75,6 +77,29 @@ describe("island selector chip: notebook texture, not the sim/Taller path", () =
     assert.ok(selectorAtDesk >= 0);
     assert.ok(estoAtDesk >= 0);
     assert.ok(selectorAtDesk < estoAtDesk);
+  });
+
+  it("never treats a live session/region name as the focused player island", () => {
+    const live: LiveSnapshot = {
+      schema: "harbor-live-v1",
+      source: "save",
+      updatedAt: "2026-09-19T00:00:00.000Z",
+      game: "anno-1800",
+      quests: [],
+      islandName: "Old World",
+      telemetry: {
+        islands: [
+          { id: "old-world", name: "Old World" },
+          { id: "bright-sands", name: "Bright Sands" },
+        ],
+      },
+    };
+    assert.equal(playerIslandFromSave(live), null);
+    assert.equal(isSessionRegionHit(live.islandName), true);
+    assert.equal(
+      islandFocusOptions().some((island) => island.name === "Old World"),
+      false,
+    );
   });
 
   it("keeps Home free of building grids, nextBuild, or quests even with the selector wired in", () => {
