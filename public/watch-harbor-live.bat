@@ -254,10 +254,10 @@ function Get-HousesPulse($scan, $buildings, $goods) {
   $hasMarket = @($buildings) | Where-Object { $_.id -eq "marketplace" } | Select-Object -First 1
   if (-not $hasMarket) { return "empty" }
   $hasFishery = @($buildings) | Where-Object { $_.id -eq "fishery" } | Select-Object -First 1
-  $fishAmount = 0
   $fishGood = @($goods) | Where-Object { $_.id -eq "fish" } | Select-Object -First 1
-  if ($fishGood) { $fishAmount = [int]$fishGood.amount }
-  if ($scan.farmers -and -not $hasFishery -and $fishAmount -le 0) { return "yellow" }
+  $hasFishStock = $false
+  if ($fishGood -and [int]$fishGood.amount -gt 0) { $hasFishStock = $true }
+  if ($scan.farmers -and -not $hasFishery -and -not $hasFishStock) { return "yellow" }
   return "ok"
 }
 
@@ -1399,6 +1399,8 @@ namespace HarborBuddy {
       var goods = new Dictionary<string, int>();
       var islands = new Dictionary<string, string>();
       int? money = null;
+      int? lastParticipant = null;
+      var playerStorage = false;
       int? pending = null;
       var farmers = false; var workers = false; var artisans = false; var engineers = false;
       string session = "";
@@ -1422,6 +1424,7 @@ namespace HarborBuddy {
       if (data != null) {
         Visit(data, (path, attr, payload) => {
           var v = AsI32(payload);
+          if (attr == "ParticipantID" && v.HasValue) lastParticipant = v;
           if (path.EndsWith("CountsPerGUID") && v.HasValue) {
             if (pending == null) pending = v;
             else {
@@ -1439,15 +1442,18 @@ namespace HarborBuddy {
             }
           }
           if (attr == "StrgLrg" && payload != null && payload.Length >= 8) {
-            for (int i = 0; i + 8 <= payload.Length; i += 8) {
-              int g = BitConverter.ToInt32(payload, i);
-              int amt = BitConverter.ToInt32(payload, i + 4);
-              if (g == 1010017) {
-                if (money == null || amt > money.Value) money = amt;
-                continue;
+            if (lastParticipant.HasValue && lastParticipant.Value == 0) {
+              playerStorage = true;
+              for (int i = 0; i + 8 <= payload.Length; i += 8) {
+                int g = BitConverter.ToInt32(payload, i);
+                int amt = BitConverter.ToInt32(payload, i + 4);
+                if (g == 1010017) {
+                  money = amt;
+                  continue;
+                }
+                GuidRow row;
+                if (guids.TryGetValue(g, out row) && row.kind == "good") goods[row.id] = amt;
               }
-              GuidRow row;
-              if (guids.TryGetValue(g, out row) && row.kind == "good") goods[row.id] = amt;
             }
           }
           if ((attr == "CurrentlyActiveSession" || attr == "LastActiveSession" || attr == "StartSessionGUID") && v.HasValue) {
@@ -1459,7 +1465,9 @@ namespace HarborBuddy {
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
-      if (money.HasValue) sb.Append(",\"money\":").Append(money.Value);
+      sb.Append(",\"storageOwner\":\"").Append(playerStorage ? "player" : "unknown").Append("\"");
+      if (playerStorage && money.HasValue) sb.Append(",\"money\":").Append(money.Value);
+      if (!playerStorage) goods.Clear();
       sb.Append(",\"farmers\":").Append(farmers ? "true" : "false");
       sb.Append(",\"workers\":").Append(workers ? "true" : "false");
       sb.Append(",\"artisans\":").Append(artisans ? "true" : "false");
@@ -2110,9 +2118,16 @@ while ($true) {
     foreach ($hit in @($scan.buildings)) {
       if ($hit.id -and $hit.name) { $buildings += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; count = [int]$hit.count } }
     }
+    $storageOwner = "unknown"
+    if ($scan.PSObject.Properties.Name -contains "storageOwner") {
+      $storageOwner = [string]$scan.storageOwner
+    }
+    $playerStorage = $storageOwner -eq "player"
     $goods = @()
-    foreach ($hit in @($scan.goods)) {
-      if ($hit.id -and $hit.name) { $goods += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; amount = [int]$hit.amount } }
+    if ($playerStorage) {
+      foreach ($hit in @($scan.goods)) {
+        if ($hit.id -and $hit.name) { $goods += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; amount = [int]$hit.amount } }
+      }
     }
     $islands = @()
     foreach ($hit in @($scan.islands)) {
@@ -2196,7 +2211,7 @@ while ($true) {
     if ($scan.engineers) { $workforce.engineers = $true; $hints += "engineers" }
 
     $coins = "unknown"
-    if ($scan.PSObject.Properties.Name -contains "money") {
+    if ($playerStorage -and ($scan.PSObject.Properties.Name -contains "money")) {
       $money = [int]$scan.money
       if ($money -lt 0) { $coins = "down" }
       elseif ($prevMoney -ne $null -and $money -ne $prevMoney) {
@@ -2242,6 +2257,7 @@ while ($true) {
     $islandName = $null
     if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
     if ($islandName) { $payload.islandName = $islandName }
+    # Session/region name, not the player's colony. GUID presence is not an active quest.
     $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
     $payload.pulseHint = $pulseHint

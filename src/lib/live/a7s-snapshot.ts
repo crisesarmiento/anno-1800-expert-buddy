@@ -1,5 +1,6 @@
 import { lookupGuid } from "../data/guids.ts";
 import { unpackA7s, visitFileDb, leafI32, leafText } from "./a7s-read.ts";
+import { isPlayerParticipant, type StorageOwner } from "./evidence.ts";
 import type {
   LiveBuildingHit,
   LiveNamedHit,
@@ -17,6 +18,8 @@ export type SaveScan = {
   buildingCounts: Map<string, { name: string; count: number }>;
   goods: Map<string, { name: string; amount: number }>;
   money: number | null;
+  /** Player (ParticipantID 0) storage only. Unknown owner is not a treasury. */
+  storageOwner: StorageOwner;
   islands: Set<string>;
   islandNames: Map<string, string>;
   questGuids: number[];
@@ -46,6 +49,7 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     buildingCounts: new Map(),
     goods: new Map(),
     money: null,
+    storageOwner: "unknown",
     islands: new Set(),
     islandNames: new Map(),
     questGuids: [],
@@ -71,8 +75,6 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
 
   let pendingGuid: number | null = null;
   let lastParticipant: number | null = null;
-  const humanGoods = new Map<string, { name: string; amount: number }>();
-  let humanMoney: number | null = null;
 
   visitFileDb(data.bytes, (path, attr, bytes) => {
     const value = leafI32(bytes);
@@ -96,19 +98,17 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     }
 
     if (attr === "StrgLrg") {
+      if (!isPlayerParticipant(lastParticipant)) return;
+      scan.storageOwner = "player";
       const pairs = parseStrgPairs(bytes);
-      const moneyPair = pairs.find((pair) => pair.guid === MONEY_GUID);
-      const useHuman = lastParticipant === 0 || (moneyPair != null && (humanMoney == null || moneyPair.amount > humanMoney));
-      const target = useHuman ? humanGoods : scan.goods;
       for (const pair of pairs) {
         if (pair.guid === MONEY_GUID) {
-          if (useHuman) humanMoney = pair.amount;
-          else if (scan.money == null) scan.money = pair.amount;
+          scan.money = pair.amount;
           continue;
         }
         const row = lookupGuid(pair.guid);
         if (row?.kind !== "good") continue;
-        target.set(row.id, { name: row.name, amount: pair.amount });
+        scan.goods.set(row.id, { name: row.name, amount: pair.amount });
       }
     }
 
@@ -129,10 +129,10 @@ export function scanSaveBytes(buf: Buffer): SaveScan {
     }
   });
 
-  if (humanGoods.size) {
-    scan.goods = humanGoods;
+  if (scan.storageOwner !== "player") {
+    scan.goods = new Map();
+    scan.money = null;
   }
-  if (humanMoney != null) scan.money = humanMoney;
 
   return scan;
 }
@@ -163,17 +163,24 @@ export function housesHint(scan: Pick<SaveScan, "farmers" | "workers" | "artisan
   const hasMarket = (scan.buildingCounts.get("marketplace")?.count ?? 0) > 0;
   if (!hasMarket) return "empty";
   const hasFishBuilding = (scan.buildingCounts.get("fishery")?.count ?? 0) > 0;
-  const fishAmount = scan.goods.get("fish")?.amount ?? 0;
-  if (scan.farmers && !hasFishBuilding && fishAmount <= 0) return "yellow";
+  if (scan.farmers && !hasFishBuilding) {
+    const fish = scan.goods.get("fish");
+    if (fish && fish.amount > 0) return "ok";
+    return "yellow";
+  }
   return "ok";
 }
 
 export function pulseHintFromScan(
-  scan: Pick<SaveScan, "farmers" | "workers" | "artisans" | "engineers" | "buildingCounts" | "goods" | "money">,
+  scan: Pick<
+    SaveScan,
+    "farmers" | "workers" | "artisans" | "engineers" | "buildingCounts" | "goods" | "money" | "storageOwner"
+  >,
   previousMoney?: number | null,
 ): LivePulseHint {
+  const coins = scan.storageOwner === "player" ? coinsHint(scan.money, previousMoney) : "unknown";
   return {
-    coins: coinsHint(scan.money, previousMoney),
+    coins,
     houses: housesHint(scan),
   };
 }
@@ -239,12 +246,8 @@ export function snapshotFromScan(
   if (scan.goods.has("schnapps")) hints.push("schnapps");
   if (scan.goods.has("steel")) hints.push("steel");
 
+  // Watcher emits quests: []. A FileDB GUID is not a confirmed active quest.
   const quests: LiveQuest[] = [];
-  for (const guid of scan.questGuids) {
-    const row = lookupGuid(guid);
-    if (!row || row.kind !== "quest") continue;
-    quests.push({ title: row.name, state: "active" });
-  }
 
   const pulseHint = pulseHintFromScan(scan, opts.previousMoney);
 

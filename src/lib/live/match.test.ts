@@ -20,6 +20,8 @@ describe("live mission match", () => {
     const match = matchLiveQuests([{ title: "Una chispa que vuelve", state: "active" }]);
     assert.equal(match.missionId, "ch1-spark");
     assert.ok(match.confidence >= 3);
+    assert.equal(match.kind, "confirmed");
+    assert.equal(match.source, "quests");
   });
 
   it("does not invent a mission from an empty save", () => {
@@ -29,7 +31,7 @@ describe("live mission match", () => {
     assert.equal(progress.matched, false);
   });
 
-  it("infers New World obreros when quests are empty", () => {
+  it("infers New World obreros when quests are empty, as suggested only", () => {
     const snapshot = snap({
       sessionName: "Cristian Sarmien5",
       islandName: "Old World",
@@ -50,10 +52,14 @@ describe("live mission match", () => {
     });
     const match = inferMissionFromTelemetry(snapshot);
     assert.equal(match.missionId, "ch3-refugees");
-    const progress = applyLiveToProgress(snapshot, matchLiveSnapshot(snapshot));
-    assert.equal(progress.matched, true);
-    assert.equal(progress.missionId, "ch3-refugees");
-    assert.ok(progress.completed.includes("ch3-rebels"));
+    assert.equal(match.kind, "suggested");
+    assert.equal(match.source, "buildings");
+    const live = matchLiveSnapshot(snapshot);
+    assert.equal(live.kind, "suggested");
+    const progress = applyLiveToProgress(snapshot, live);
+    assert.equal(progress.matched, false);
+    assert.equal(progress.missionId, null);
+    assert.deepEqual(progress.completed, []);
   });
 
   it("prefers the diary title over building inference", () => {
@@ -63,6 +69,9 @@ describe("live mission match", () => {
         buildings: [{ id: "obrero", name: "Obrero Residence" }],
       },
     });
-    assert.equal(matchLiveSnapshot(snapshot).missionId, "ch1-spark");
+    const live = matchLiveSnapshot(snapshot);
+    assert.equal(live.missionId, "ch1-spark");
+    assert.equal(live.kind, "confirmed");
+    assert.equal(live.source, "quests");
   });
 });

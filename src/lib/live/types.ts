@@ -149,7 +149,10 @@ export type LiveSnapshot = {
   telemetry?: LiveTelemetry;
   /** Nombre del .a7s (filesystem). No se parsea el binario. */
   sessionName?: string;
-  /** Primer hit de isla del catálogo, si hay. */
+  /**
+   * Primer hit de catálogo de sesión/región (Old World / New World / …).
+   * No es el rename del jugador ni una colonia. Ver docs/evidence-matrix.md.
+   */
   islandName?: string;
   /** mtime UTC del .a7s. Distinto de updatedAt (cuándo se escribió el JSON). */
   savedAt?: string;
@@ -157,10 +160,16 @@ export type LiveSnapshot = {
   connection?: LiveConnection;
 };
 
+export type LiveMatchKind = "none" | "confirmed" | "suggested";
+export type LiveMatchSource = "none" | "quests" | "buildings";
+
 export type LiveMatch = {
   missionId: string | null;
   confidence: number;
   rawTitles: string[];
+  /** Confirmed only from explicit quest titles in the JSON. Building inference is suggested. */
+  kind: LiveMatchKind;
+  source: LiveMatchSource;
 };
 
 export type LiveIngestOk = { ok: true; snapshot: LiveSnapshot };

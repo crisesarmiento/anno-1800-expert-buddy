@@ -15,6 +15,8 @@ namespace HarborBuddy {
       var goods = new Dictionary<string, int>();
       var islands = new Dictionary<string, string>();
       int? money = null;
+      int? lastParticipant = null;
+      var playerStorage = false;
       int? pending = null;
       var farmers = false; var workers = false; var artisans = false; var engineers = false;
       string session = "";
@@ -38,6 +40,7 @@ namespace HarborBuddy {
       if (data != null) {
         Visit(data, (path, attr, payload) => {
           var v = AsI32(payload);
+          if (attr == "ParticipantID" && v.HasValue) lastParticipant = v;
           if (path.EndsWith("CountsPerGUID") && v.HasValue) {
             if (pending == null) pending = v;
             else {
@@ -55,15 +58,18 @@ namespace HarborBuddy {
             }
           }
           if (attr == "StrgLrg" && payload != null && payload.Length >= 8) {
-            for (int i = 0; i + 8 <= payload.Length; i += 8) {
-              int g = BitConverter.ToInt32(payload, i);
-              int amt = BitConverter.ToInt32(payload, i + 4);
-              if (g == 1010017) {
-                if (money == null || amt > money.Value) money = amt;
-                continue;
+            if (lastParticipant.HasValue && lastParticipant.Value == 0) {
+              playerStorage = true;
+              for (int i = 0; i + 8 <= payload.Length; i += 8) {
+                int g = BitConverter.ToInt32(payload, i);
+                int amt = BitConverter.ToInt32(payload, i + 4);
+                if (g == 1010017) {
+                  money = amt;
+                  continue;
+                }
+                GuidRow row;
+                if (guids.TryGetValue(g, out row) && row.kind == "good") goods[row.id] = amt;
               }
-              GuidRow row;
-              if (guids.TryGetValue(g, out row) && row.kind == "good") goods[row.id] = amt;
             }
           }
           if ((attr == "CurrentlyActiveSession" || attr == "LastActiveSession" || attr == "StartSessionGUID") && v.HasValue) {
@@ -75,7 +81,9 @@ namespace HarborBuddy {
       }
       var sb = new StringBuilder();
       sb.Append("{\"sessionName\":\"").Append(Esc(session)).Append("\"");
-      if (money.HasValue) sb.Append(",\"money\":").Append(money.Value);
+      sb.Append(",\"storageOwner\":\"").Append(playerStorage ? "player" : "unknown").Append("\"");
+      if (playerStorage && money.HasValue) sb.Append(",\"money\":").Append(money.Value);
+      if (!playerStorage) goods.Clear();
       sb.Append(",\"farmers\":").Append(farmers ? "true" : "false");
       sb.Append(",\"workers\":").Append(workers ? "true" : "false");
       sb.Append(",\"artisans\":").Append(artisans ? "true" : "false");

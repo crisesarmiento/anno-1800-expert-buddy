@@ -12,7 +12,7 @@ export function applyLiveToProgress(
   checks: Record<string, number[]>;
   pulse: Partial<Pulse>;
 } {
-  if (!match.missionId || match.confidence < 3) {
+  if (match.kind !== "confirmed" || !match.missionId || match.confidence < 3) {
     return {
       matched: false,
       missionId: null,

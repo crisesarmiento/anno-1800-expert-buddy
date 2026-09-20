@@ -242,10 +242,10 @@ function Get-HousesPulse($scan, $buildings, $goods) {
   $hasMarket = @($buildings) | Where-Object { $_.id -eq "marketplace" } | Select-Object -First 1
   if (-not $hasMarket) { return "empty" }
   $hasFishery = @($buildings) | Where-Object { $_.id -eq "fishery" } | Select-Object -First 1
-  $fishAmount = 0
   $fishGood = @($goods) | Where-Object { $_.id -eq "fish" } | Select-Object -First 1
-  if ($fishGood) { $fishAmount = [int]$fishGood.amount }
-  if ($scan.farmers -and -not $hasFishery -and $fishAmount -le 0) { return "yellow" }
+  $hasFishStock = $false
+  if ($fishGood -and [int]$fishGood.amount -gt 0) { $hasFishStock = $true }
+  if ($scan.farmers -and -not $hasFishery -and -not $hasFishStock) { return "yellow" }
   return "ok"
 }
 
@@ -622,9 +622,16 @@ while ($true) {
     foreach ($hit in @($scan.buildings)) {
       if ($hit.id -and $hit.name) { $buildings += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; count = [int]$hit.count } }
     }
+    $storageOwner = "unknown"
+    if ($scan.PSObject.Properties.Name -contains "storageOwner") {
+      $storageOwner = [string]$scan.storageOwner
+    }
+    $playerStorage = $storageOwner -eq "player"
     $goods = @()
-    foreach ($hit in @($scan.goods)) {
-      if ($hit.id -and $hit.name) { $goods += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; amount = [int]$hit.amount } }
+    if ($playerStorage) {
+      foreach ($hit in @($scan.goods)) {
+        if ($hit.id -and $hit.name) { $goods += [ordered]@{ id = [string]$hit.id; name = [string]$hit.name; amount = [int]$hit.amount } }
+      }
     }
     $islands = @()
     foreach ($hit in @($scan.islands)) {
@@ -708,7 +715,7 @@ while ($true) {
     if ($scan.engineers) { $workforce.engineers = $true; $hints += "engineers" }
 
     $coins = "unknown"
-    if ($scan.PSObject.Properties.Name -contains "money") {
+    if ($playerStorage -and ($scan.PSObject.Properties.Name -contains "money")) {
       $money = [int]$scan.money
       if ($money -lt 0) { $coins = "down" }
       elseif ($prevMoney -ne $null -and $money -ne $prevMoney) {
@@ -754,6 +761,7 @@ while ($true) {
     $islandName = $null
     if ($islands.Count -gt 0) { $islandName = [string]$islands[0].name }
     if ($islandName) { $payload.islandName = $islandName }
+    # Session/region name, not the player's colony. GUID presence is not an active quest.
     $payload.quests = @()
     if ($workforce.Count -gt 0) { $payload.workforce = $workforce }
     $payload.pulseHint = $pulseHint

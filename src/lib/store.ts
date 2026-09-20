@@ -5,6 +5,7 @@ import {
   liveMissLine,
   liveOkLine,
   liveOkSaveLine,
+  liveSuggestedLine,
   matchLiveSnapshot,
   type LiveSnapshot,
 } from "@/lib/live";
@@ -209,6 +210,20 @@ export const useHarbor = create<HarborState>()(
         const match = matchLiveSnapshot(snapshot);
         const progress = applyLiveToProgress(snapshot, match);
         const importedAt = new Date().toISOString();
+        if (match.kind === "suggested" && match.missionId) {
+          const title = missionsById[match.missionId]?.title ?? match.missionId;
+          set({
+            liveEnabled: true,
+            liveSnapshot: snapshot,
+            liveMissionId: null,
+            liveConfidence: match.confidence,
+            liveFileName: fileName ?? get().liveFileName,
+            lastImportedAt: importedAt,
+            liveBanner: liveSuggestedLine(title, get().locale),
+            liveBannerFailed: false,
+          });
+          return;
+        }
         if (!progress.matched || !progress.missionId) {
           set({
             liveEnabled: true,

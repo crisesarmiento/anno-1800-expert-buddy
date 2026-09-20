@@ -6,3 +6,4 @@ export * from "./match.ts";
 export * from "./apply.ts";
 export * from "./export.ts";
 export * from "./handle-store.ts";
+export * from "./evidence.ts";

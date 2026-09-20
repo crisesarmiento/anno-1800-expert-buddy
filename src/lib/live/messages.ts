@@ -10,6 +10,10 @@ export function liveOkSaveLine(title: string, locale?: string | null) {
   return fill(uiFor(locale).liveMsg.okSave, title);
 }
 
+export function liveSuggestedLine(title: string, locale?: string | null) {
+  return fill(uiFor(locale).liveMsg.okSuggest, title);
+}
+
 export function liveMissLine(titles: string[], locale?: string | null) {
   const list = titles.filter(Boolean).slice(0, 6).join(" · ");
   return list ? fill(uiFor(locale).liveMsg.miss, list) : uiFor(locale).liveMsg.missEmpty;
